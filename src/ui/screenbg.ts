@@ -1,5 +1,5 @@
 import { artUrl } from './assets';
-import { BG_VARIANTS } from './bgacts';
+import { BG_VARIANTS, art26Keys } from './bgacts';
 import { el } from './dom';
 
 /**
@@ -70,7 +70,10 @@ export function clearKeepBg(root: HTMLElement): void {
  */
 export function tierBgKey(floor: number): string {
   const tier = floor <= 15 ? 'low' : floor <= 30 ? 'mid' : 'top';
-  return `bg/${tier}${BG_VARIANTS[Math.abs(floor) % BG_VARIANTS.length]}`;
+  // 2026-10-06 新背景（`art26Keys`）排在舊三張後面一起輪；沒進倉的跳過（只剩舊三張就是原本的輪法）。
+  // 清單還沒讀進來（一張都查不到）時退回該色調的第一張
+  const keys = [...BG_VARIANTS.map((v) => `bg/${tier}${v}`), ...art26Keys(tier)].filter((k) => !artUrl('bg', k).startsWith('data:'));
+  return keys[Math.abs(floor) % keys.length] ?? `bg/${tier}`;
 }
 
 /**
