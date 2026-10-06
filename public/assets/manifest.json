@@ -1949,7 +1949,8 @@
     "codex/relic_black_cat_mask_pure": "assets/icons/relic_black_cat_mask_pure.webp",
     "codex/relic_miasma_shard_pure": "assets/icons/relic_miasma_shard_pure.webp",
     "codex/relic_miasma_lantern_pure": "assets/icons/relic_miasma_lantern_pure.webp",
-    "codex/relic_master_bracer_pure": "assets/icons/relic_master_bracer_pure.webp"
+    "codex/relic_master_bracer_pure": "assets/icons/relic_master_bracer_pure.webp",
+    "icon/art26_logo": "assets/icons/art26_logo.webp"
   },
   "bg": {
     "bg/low": "assets/bg/low.webp",
