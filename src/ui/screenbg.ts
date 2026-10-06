@@ -73,7 +73,8 @@ export function tierBgKey(floor: number): string {
   // 2026-10-06 新背景（`art26Keys`）排在舊三張後面一起輪；沒進倉的跳過（只剩舊三張就是原本的輪法）。
   // 清單還沒讀進來（一張都查不到）時退回該色調的第一張
   const keys = [...BG_VARIANTS.map((v) => `bg/${tier}${v}`), ...art26Keys(tier)].filter((k) => !artUrl('bg', k).startsWith('data:'));
-  return keys[Math.abs(floor) % keys.length] ?? `bg/${tier}`;
+  // 用關內樓層（1～15）取餘數：每一關的第 1、2 層都輪到舊圖（15 是 3 的倍數，舊三張的輪法跟原本一模一樣）
+  return keys[((Math.abs(floor) - 1) % 15 + 1) % keys.length] ?? `bg/${tier}`;
 }
 
 /**

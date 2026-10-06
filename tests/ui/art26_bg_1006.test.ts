@@ -20,8 +20,12 @@ describe('新戰鬥背景跟舊的一起輪', () => {
       expect(fresh.length, `${tier} 至少兩張新圖`).toBeGreaterThanOrEqual(2);
       for (const k of fresh) expect(seen.has(k), k).toBe(true);
     }
-    expect(tierBgKey(1).startsWith('bg/art26_')).toBe(false);
-    expect(tierBgKey(2).startsWith('bg/art26_')).toBe(false);
+    // 每一關的第 1、2 層（含過關動畫用的 16、31 層）都是舊圖：新圖排在進關預載的最後面，慢網路下最晚到
+    for (const f of [1, 2, 16, 17, 31, 32]) expect(tierBgKey(f).startsWith('bg/art26_'), `${f} 層`).toBe(false);
+    // 舊三張在原本輪到的樓層照舊（關內樓層取餘數，15 是 3 的倍數）
+    expect(tierBgKey(16)).toBe('bg/mid_b');
+    expect(tierBgKey(31)).toBe('bg/top_b');
+    expect(tierBgKey(18)).toBe('bg/art26_mid_1');
   });
 
   it('新圖沒進倉的號碼會被跳過，全都沒有就退回原本三張輪', () => {

@@ -16,8 +16,8 @@ const OUT = resolve(process.argv[2] ?? 'tmp-art26');
 mkdirSync(OUT, { recursive: true });
 await loadPlaywright();
 const server = await startServer(resolve('dist'), 'qiuqiu-tower');
-// 樓層 → 新背景（screenbg.ts 的 tierBgKey：舊三張＋新三張，樓層取 6 的餘數，3～5 是新的）
-const FIGHTS = [[1, 3], [1, 4], [1, 5], [2, 21], [2, 22], [2, 23], [3, 33], [3, 34], [3, 35]];
+// 樓層 → 新背景（screenbg.ts 的 tierBgKey：舊三張＋新三張，關內樓層取 6 的餘數，每關第 3～5 層是新的）
+const FIGHTS = [[1, 3], [1, 4], [1, 5], [2, 18], [2, 19], [2, 20], [3, 33], [3, 34], [3, 35]];
 const tag = 'art26bg';
 const fight = async (page, act, floor) => {
   await page.evaluate(([a, f]) => { const app = window.__app; const r = app.run; r.act = a; r.floor = f; r.flags['tut:combat'] = true; app.startFight('wood_dummy'); }, [act, floor]);
