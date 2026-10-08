@@ -57,6 +57,8 @@ describe('火光／天色那層：跨級才換值，看起來跟平滑版一樣'
         for (const [at, v] of frames) { if (at <= p) held = v; else break; }
         worst = Math.max(worst, Math.abs(held - smooth(keys, p)) * 255);
       }
+      // 0.55：四捨五入到整級本來就最多差半級（0.5），加一點取樣與百分比只留兩位小數的誤差（實測約 0.51）。
+      // 不要為了讓別的改法過關把它調鬆——超過半級就是螢幕上真的會差一級顏色的時候變多了
       expect(worst, '任何時刻跟原本平滑曲線的差距（單位：螢幕顏色級數）').toBeLessThan(0.55);
     });
   }
