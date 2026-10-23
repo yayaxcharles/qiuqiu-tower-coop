@@ -333,3 +333,91 @@ out = ROOT / 'tools' / 'codex_jobs' / 'hell_all.json'
 out.write_text(json.dumps(jobs, ensure_ascii=False, indent=1), encoding='utf-8')
 n_boss = sum('_source' in k for k in jobs)
 print(len(jobs), '張（魔物', len(monsters), '隻、魔源', n_boss, '張、背景 3 張）→', out)
+
+# ===== 第二批（10-23 晚，使用者看完總覽說「多來點」，選了「每關多幾隻一般魔物」「每關多兩張背景」）=====
+# 每關多 4 隻一般魔物（一關 12 隻，一般戰才不會一直撞同一隻），主題照各關的「難」；
+# 背景補到每關三張，跟一般難度 art26 每層三張一樣，參考圖就用同一層的第 2、3 張排版。
+# 另寫兩份工單，第一批的 hell_all.json 不動。待機與背景先生（hell_more_idle），其他姿勢後生（hell_more_later，要附待機當參考）。
+idle_jobs, later_jobs = {}, {}
+# 第一關「快」
+mon('spark_beetle',
+    "a plump round beetle yokai with a glowing purple lantern-like abdomen that pulses brighter, stubby horn, tiny "
+    "folded wings, a bossy little face, a few smaller sparks of purple light orbiting it like loyal followers; six legs",
+    "standing on its six legs, abdomen glowing, tiny sparks circling",
+    "rearing up and flashing its abdomen at full brightness toward the LEFT, sparks shooting forward", size='512x512')
+mon('geta_runner',
+    "a tsukumogami made from a pair of tall wooden geta sandals joined by a purple cord, one big round eye on each sandal, "
+    "a long red tongue, a tiny loot bundle tied on top; two little wooden arms, the two sandals are its legs",
+    "poised mid-step about to sprint away, eyes looking back slyly",
+    "kicking forward to the LEFT with one sandal while hopping on the other", size='512x512')
+mon('ember_snail',
+    "a big snail yokai whose shell is a black iron brazier full of smouldering charcoal glowing purple and crimson, heat "
+    "shimmer lines drawn as solid wavy shapes above it, a grumpy face on stalk eyes; no legs, one snail foot",
+    "sliding slowly, the coals in its shell glowing hotter",
+    "spitting a burst of glowing embers to the LEFT from its mouth, shell flaring")
+mon('conch_oni',
+    "a stocky blue-grey oni with one horn, wearing a ragged tiger-skin loincloth and black arm guards, blowing a big "
+    "horagai conch-shell war horn with purple sound waves drawn as solid rings; two arms, two legs",
+    "standing with the conch raised to its lips, cheeks puffed, calling for help",
+    "swinging the heavy conch shell like a club down to the LEFT")
+# 第二關「亂」（牌一律畫成空白牌背，不要字）
+mon('paper_crane',
+    "a flock-leader origami crane yokai folded from plain blank playing cards with dark purple backs, sharp paper beak, "
+    "glowing purple eyes, loose blank cards fluttering around it; two wings, two thin legs",
+    "standing on one leg, wings half spread, cards drifting around it",
+    "flinging a fan of blank cards from its wings to the LEFT", size='512x512')
+mon('ink_brush',
+    "a tsukumogami giant calligraphy brush with a black lacquered handle and a wild mop of brush hair dripping thick "
+    "black-purple ink, a mischievous face on the handle, two thin arms; no legs, it hops on its brush tip",
+    "standing upright on its brush tip, ink dripping into a small puddle",
+    "sweeping a huge stroke of black ink to the LEFT like a wave")
+mon('dice_goblin',
+    "a small green-grey goblin with pointy ears and a toothy grin, juggling three oversized dark purple dice with white "
+    "dots, a gambler's headband; two arms, two legs",
+    "juggling the dice with a sly grin", "hurling the dice to the LEFT with both hands", size='512x512')
+mon('umbrella_thief',
+    "a karakasa obake: a torn oiled-paper umbrella yokai with one big eye, a long lolling tongue and a single wooden leg, "
+    "the open umbrella canopy full of stolen blank playing cards; one leg, two small arms poking from the canopy",
+    "hopping on its single leg, canopy tilted to show the hoard of cards, tongue out",
+    "lunging to the LEFT with the canopy open wide to scoop up cards, tongue lashing")
+# 第三關「狡猾」（要能多隻同場、互相配合）
+mon('spy_crow',
+    "a small karasu tengu crow scout in a dark purple ninja hood, holding a brass spyglass, a scroll tucked in its belt, "
+    "one eye narrowed knowingly; two wings, two legs",
+    "peering through the spyglass, head cocked", "diving to the LEFT, talons out, spyglass tucked away", size='512x512')
+mon('kagemusha_cat',
+    "a body-double cat warrior in plain black armour with a blank wooden face mask, holding a big rectangular wooden tower "
+    "shield to protect others, a short sword at its hip; two arms, two legs",
+    "standing firm, tower shield planted in front like a wall", "shoving forward to the LEFT with the tower shield")
+mon('war_drum_frog',
+    "a fat toad yokai drummer with a taiko drum strapped to its belly, rolled-up headband, purple warts, two heavy "
+    "drumsticks, cheeks puffed as it chants battle rhythms for its allies; two arms, two legs",
+    "beating a steady rhythm on its drum, eyes closed", "striking the drum hard, shockwave rings bursting out to the LEFT")
+mon('vengeful_doll',
+    "a hina doll yokai in a layered crimson-and-black court kimono, porcelain face with a cracked cheek, long black hair "
+    "floating, small purple flames around it that grow when angered; two arms, no visible legs, floats just above ground",
+    "floating calmly with sleeves folded, eyes downcast", "eyes blazing purple, sleeves thrown forward to the LEFT releasing flames",
+    size='512x512')
+assert len({k.rsplit('_', 1)[0] for k in {**idle_jobs, **later_jobs}}) == 12
+# 背景：跟第一批同一套提示詞（黑石地板、只用紫光、濃紫霧——第二關第一版就是太暖太淡被退）
+COLD = (" The floor is cold dark grey-violet STONE, not wood. Lit only by dim violet light and purple flames - no warm "
+        "orange or yellow lamps. Thick purple fog rolls along the floor")
+for fid, ref, room in [
+        ('bg_hell_1_2', 'art26_low_2', "a collapsed clockwork room at the bottom of the 'inner tower': huge broken bronze gears and "
+                                       "a snapped pendulum, purple sand pouring from cracks in the ceiling"),
+        ('bg_hell_1_3', 'art26_low_3', "a burned-out storeroom at the bottom of the 'inner tower': toppled stone braziers, cracked "
+                                       "barrels, burst fuse cords and scorch marks on the walls"),
+        ('bg_hell_2_2', 'art26_mid_2', "a ruined counting room in the middle of the 'inner tower': overturned money chests, "
+                                       "scattered blank playing cards and coins, a cracked giant abacus on the wall, hanging chains"),
+        ('bg_hell_2_3', 'art26_mid_3', "a sealed scroll archive in the middle of the 'inner tower': tall black cabinets bound with "
+                                       "chains and paper talismans, spilled ink pooling on the floor, broken padlocks"),
+        ('bg_hell_3_2', 'art26_top_2', "an open balcony at the top of the 'inner tower' at the edge of a purple storm: a broken "
+                                       "torii gate, a snapped shimenawa rope, purple lightning in a black sky"),
+        ('bg_hell_3_3', 'art26_top_3', "the war council hall at the top of the 'inner tower', open to the sky: torn folding screens, "
+                                       "toppled war drums, scattered war fans, an eclipse moon glowing through the broken roof"),
+]:
+    idle_jobs[fid + '.png'] = {"prompt": BG.replace('{ROOM}', room + "." + COLD).replace('{ID}', fid + '.png'),
+                               "ref": "tools/codex_jobs/hell_refs/%s.png" % ref}
+for name, part in [('hell_more_idle.json', idle_jobs), ('hell_more_later.json', later_jobs)]:
+    (ROOT / 'tools' / 'codex_jobs' / name).write_text(json.dumps(part, ensure_ascii=False, indent=1), encoding='utf-8')
+print('第二批：待機＋背景', len(idle_jobs), '張、其他姿勢', len(later_jobs), '張')

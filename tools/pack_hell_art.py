@@ -2,10 +2,10 @@
 """
 pack_hell_art.py — 難度 6「地獄」的 171 張綠幕原圖去背、轉 WebP。**不動任何舊素材、不寫 manifest**。
 
-用法：python tools/pack_hell_art.py
+用法：python tools/pack_hell_art.py [魔物編號 ...]   （不給＝全部；背景每次都重做，很快）
 
   魔物  tools/codex_raw/monster_hell_<id>_<姿勢>.png → public/assets/monsters/hell_<id>_<姿勢>.webp
-  背景  tools/codex_raw/bg_hell_{1,2,3}.png → public/assets/bg/bg_hell_{1,2,3}.webp
+  背景  tools/codex_raw/bg_hell_<關>[_2|_3].png → public/assets/bg/同名.webp（每關三張）
         原稿已是 1280x720（照 art26_low/mid/top_1 構圖生的），不裁；品質 85 照 add_art26_bg.py 的規矩。
 
 魔物的對齊規則照 add_sprite.py（不是 build_art_inbox.py 的「各姿勢取最大值當共用畫布」）：
@@ -50,6 +50,9 @@ def main() -> None:
         m = re.match(r"monster_hell_(.+)_(idle|attack|hurt|block|down)$", f.stem)
         if m:
             raws.setdefault(m.group(1), {})[m.group(2)] = f
+    only = set(sys.argv[1:])   # 只重做這幾隻（第二批進倉時不用把第一批 168 張再跑一次，逐點去背一輪要十幾分鐘）
+    if only:
+        raws = {k: v for k, v in raws.items() if k in only}
     n = total = 0
     sizes: dict[str, str] = {}
     short: list[str] = []
@@ -86,15 +89,14 @@ def main() -> None:
             total += save(canvas, OUT / "monsters" / f"hell_{mid}_{pose}.webp"); n += 1
         print(f"魔物 hell_{mid}（{sizes[base_mid]}）：{'／'.join(sorted(poses))}，畫布 {cw}x{ch}"
               + ("" if mid == base_mid else f"，照 hell_{base_mid} 對齊"))
-    for i in (1, 2, 3):
-        src = RAW / f"bg_hell_{i}.png"
-        if not src.exists():
-            print(f"  缺背景：{src.name}")
+    # 每關三張：bg_hell_<關>（第一批）、bg_hell_<關>_2、_3（第二批）；舊版留底的 *.prev-*.png 檔名有「.」，不收
+    for src in sorted(RAW.glob("bg_hell_*.png")):
+        if "." in src.stem:
             continue
-        dst = OUT / "bg" / f"bg_hell_{i}.webp"
+        dst = OUT / "bg" / f"{src.stem}.webp"
         Image.open(src).convert("RGB").save(dst, "WEBP", quality=85, method=6)
         n += 1; total += dst.stat().st_size
-        print(f"背景 bg_hell_{i}.webp {dst.stat().st_size // 1024} KB")
+        print(f"背景 {dst.name} {dst.stat().st_size // 1024} KB")
     print(f"完成 {n} 張，共 {total / 1024 / 1024:.2f} MB")
     print("體型：" + "、".join(f"{k}={v}" for k, v in sorted(sizes.items())))
     if short:
