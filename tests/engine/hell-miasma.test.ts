@@ -70,17 +70,26 @@ describe('地獄第一關：紫霧倒數', () => {
     expect(cs.log.filter((l) => l.includes('紫霧')).length).toBe(1);
   });
 
-  it('afterZeroEnemiesGain2ClawEachRound：歸零之後每一輪魔物 +2 爪力，累加', () => {
+  it('afterZeroEnemiesGain2ClawEachRound：歸零那一輪就先 +2，之後每一輪再加 2，累加', () => {
     const cs = start('hell_fuse_pair', { act: 1 });
     cs.hell!.miasmaLeft = 1;
     const base = cs.enemies.map((e) => getStatus(e, '爪力'));
-    miasmaTick(cs);                       // 歸零那一輪：還沒加
+    miasmaTick(cs);                       // 歸零那一輪：+2（跟「紫霧漫滿」同一拍）
     expect(cs.hell?.miasmaLeft).toBe(0);
-    cs.enemies.forEach((e, i) => expect(getStatus(e, '爪力')).toBe(base[i]));
-    miasmaTick(cs);
     cs.enemies.forEach((e, i) => expect(getStatus(e, '爪力')).toBe(base[i]! + 2));
     miasmaTick(cs);
     cs.enemies.forEach((e, i) => expect(getStatus(e, '爪力')).toBe(base[i]! + 4));
+    miasmaTick(cs);
+    cs.enemies.forEach((e, i) => expect(getStatus(e, '爪力')).toBe(base[i]! + 6));
+  });
+
+  it('倒數還沒到零的那幾輪不加爪力', () => {
+    const cs = start('hell_fuse_pair', { act: 1 });
+    cs.hell!.miasmaLeft = 3;
+    const base = cs.enemies.map((e) => getStatus(e, '爪力'));
+    miasmaTick(cs); miasmaTick(cs);
+    expect(cs.hell?.miasmaLeft).toBe(1);
+    cs.enemies.forEach((e, i) => expect(getStatus(e, '爪力')).toBe(base[i]));
   });
 
   it('倒下的魔物不加爪力；後來才進場的魔物從下一輪起加', () => {

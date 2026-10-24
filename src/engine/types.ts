@@ -585,6 +585,10 @@ export type EnemyEffect =
   | { kind: 'blockAllies'; amount: number }
   /** 塞牌：把 n 張雜牌塞進球球的棄牌堆，或洗進抽牌堆的隨機位置 */
   | { kind: 'giveCard'; cardId: string; n: number; to: 'discard' | 'draw' }
+  /** 地獄第二關：從這一招瞄準的那位手牌隨機順走 n 張，藏在這隻身上，牠倒下、離場或戰鬥結束時還回去（見 engine/hell.ts） */
+  | { kind: 'stealCard'; n: number }
+  /** 地獄第二關：封住下一個玩家回合的攻擊牌或技能牌（能力牌不封；連線兩位一起封，見 engine/hell.ts） */
+  | { kind: 'sealType'; type: 'attack' | 'skill' }
   | { kind: 'nothing' };
 export interface EnemyMove {
   intent: Intent; label: string; effects: EnemyEffect[];
@@ -1276,6 +1280,16 @@ export interface EnemyCombat extends Unit {
   faded?: boolean;
   stolen: number;     // 這隻偷走的小魚乾，擊倒牠時退回
   stolenFrom?: Record<number, number>;   // 從哪個座位偷了多少（退給被偷的人）
+  /**
+   * 地獄第二關的偷牌：這隻藏在身上的牌（`stolen` 已經是小魚乾的數量，所以另取名）。
+   * `seat`＝原主的座位。倒下、逃走、分裂、散去、換階段、戰鬥結束時由 `returnStolen` 還給同一位。
+   */
+  stolenCards?: { seat: number; card: CardInstance }[];
+  /**
+   * 偷牌招式出手時，那一位的手牌早在回合結束時棄光了，沒東西可偷——
+   * 還沒偷到的張數記在這裡，等那一位下一手牌抽好之後再從手牌裡拿（見 `resolveStealPending`）。
+   */
+  stealPending?: { seat: number; n: number }[];
   /** 分裂過了：一場只裂一次（見 EnemyDef.splitInto） */
   split?: boolean;
 }

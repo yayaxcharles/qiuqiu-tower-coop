@@ -97,6 +97,9 @@ export function combatFingerprint(cs: CombatState): string {
       `pby${e.poisonedBy ?? ''}`,   // 誰下的毒——毒死牠時擊倒獎勵算在這個人頭上，兩邊記的人不一樣會分岔
       // 誰丟的迷魂香（2026-09-23 第二批）：牠打倒同伴時擊倒獎勵歸這一位。有才串（迷魂本身在狀態那一欄）
       ...(e.dazedBy !== undefined ? [`dzb${e.dazedBy}`] : []),
+      // 地獄第二關偷來的牌與還沒兌現的待偷張數：有才串（一般難度的指紋一個位元都不變）。偷錯人、少偷一張，下一手牌就分岔
+      ...(e.stolenCards?.length ? [`scd[${e.stolenCards.map((x) => `${x.seat}:${x.card.uid}`).join(',')}]`] : []),
+      ...(e.stealPending?.length ? [`spd[${e.stealPending.map((x) => `${x.seat}:${x.n}`).join(',')}]`] : []),
       // 頭上預告的那一招：兩邊預告不同，下一拍就會打出不一樣的東西
       e.move.label,
       statusOf(e),

@@ -6,15 +6,17 @@
  * 機制只看**所在關數**（`act`），不看對手是不是地獄魔物（事件對手、問號格伏擊也照關數套）。
  */
 import { encounterById } from '../content/enemies';
+import { HAND_LIMIT } from './deck';
 import { log } from './actions';
+import { E, H } from './logfmt';
 import { addStatus } from './statuses';
-import type { CombatState } from './types';
+import type { CardType, CombatState, EnemyCombat, PlayerCombat } from './types';
 
 export interface HellState {
   act: 1 | 2 | 3;
   miasmaLeft?: number;                 // 只有第一關（與魔源第一形態）有；0＝已歸零
-  sealNext?: 'attack' | 'skill';       // Task 5
-  sealed?: 'attack' | 'skill';         // Task 5
+  sealNext?: 'attack' | 'skill';       // 魔物剛貼的封條：下一個玩家回合才生效
+  sealed?: 'attack' | 'skill';         // 這個玩家回合被封住的那一類牌（兩位一起封）
   lastPlays?: { attack: number; skill: number };  // Task 6
   seeThrough?: 'attack' | 'skill' | null;          // Task 6
 }
@@ -35,15 +37,16 @@ export function initHell(cs: CombatState, act: 1 | 2 | 3): void {
 
 /**
  * 每一輪結束呼叫一次（`finishEnemyTurn`，換回玩家回合之前）。
- * 倒數還沒歸零就減 1，減到 0 的那一輪寫一行戰報；已經是 0 就讓每隻活著的魔物 +2 爪力（累加）。
+ * 倒數還沒歸零就減 1；減到 0 的那一輪寫一行戰報，**而且那一輪就先加一次爪力**（跟「這一輪起少抽 1 張」同一拍，
+ * 玩家看到「紫霧漫滿」的同時就吃到），之後每一輪再各加一次（累加）。
  */
 export function miasmaTick(cs: CombatState): void {
   const h = cs.hell;
   if (!h || h.miasmaLeft === undefined) return;
   if (h.miasmaLeft > 0) {
     h.miasmaLeft -= 1;
-    if (h.miasmaLeft === 0) log(cs, '紫霧漫滿了！之後每一輪魔物全體爪力 +2，你每回合少抽 1 張牌');
-    return;
+    if (h.miasmaLeft > 0) return;
+    log(cs, '紫霧漫滿了！魔物全體爪力 +2，之後每一輪都再加；你每回合少抽 1 張牌');
   }
   for (const e of cs.enemies) if (!e.dead) addStatus(e, '爪力', MIASMA_CLAW);
 }
@@ -51,4 +54,101 @@ export function miasmaTick(cs: CombatState): void {
 /** 抽牌要少幾張：紫霧歸零回 1（固定、不累加），否則 0 */
 export function hellDrawPenalty(cs: CombatState): number {
   return cs.hell?.miasmaLeft === 0 ? 1 : 0;
+}
+
+// ===== 第二關「亂」：偷牌、封牌 =====
+
+/** 這個座位的玩家：偷牌的原主（連線兩位、單機一位；座位不存在回 undefined） */
+const seatOf = (cs: CombatState, seat: number): PlayerCombat | undefined => cs.players[seat];
+
+/** 紀錄裡的「你」：單機寫你，連線寫名字（跟 `stepEnemyTurn` 的震散紀錄同一個規矩） */
+const multi = (cs: CombatState): boolean => cs.players.length > 1;
+
+/** 從一位玩家的手牌隨機拿走一張，放進這隻魔物身上；回拿到的牌（手牌空就沒有） */
+function takeFromHand(cs: CombatState, e: EnemyCombat, p: PlayerCombat): boolean {
+  if (p.hand.length === 0) return false;
+  const card = p.hand.splice(cs.rng.int(0, p.hand.length - 1), 1)[0]!;
+  p.retained = p.retained.filter((u) => u !== card.uid);
+  (e.stolenCards ??= []).push({ seat: p.seat, card });
+  if (multi(cs)) log(cs, '{e}順走了{who}的「{card}」', { e: E(e), who: H(p), card: { card: card.cardId, hero: p.hero, up: card.upgraded } });
+  else log(cs, '{e}順走了你的「{card}」', { e: E(e), card: { card: card.cardId, hero: p.hero, up: card.upgraded } });
+  return true;
+}
+
+/**
+ * 偷牌：從 `victim`（這一招瞄準的那位，跟偷小魚乾同一個判準）的手牌隨機拿 n 張。
+ *
+ * 魔物出手時玩家的手牌早在回合結束時棄光了（保留的牌除外），所以手上拿不到的張數先記成待偷，
+ * 等那一位下一手牌抽好再拿（見 `resolveStealPending`）。倒下的那位不偷。
+ */
+export function stealCards(cs: CombatState, e: EnemyCombat, victim: PlayerCombat, n: number): void {
+  if (victim.down) return;
+  let left = n;
+  while (left > 0 && takeFromHand(cs, e, victim)) left -= 1;
+  if (left > 0) (e.stealPending ??= []).push({ seat: victim.seat, n: left });
+}
+
+/** 一位玩家的新手牌抽好之後呼叫（`startSeatTurn`）：兌現所有魔物記著的待偷張數 */
+export function resolveStealPending(cs: CombatState, p: PlayerCombat): void {
+  for (const e of cs.enemies) {
+    if (!e.stealPending) continue;
+    if (e.dead) { delete e.stealPending; continue; }
+    const mine = e.stealPending.filter((x) => x.seat === p.seat);
+    if (mine.length === 0) continue;
+    e.stealPending = e.stealPending.filter((x) => x.seat !== p.seat);
+    if (e.stealPending.length === 0) delete e.stealPending;
+    if (p.down) continue;
+    let left = mine.reduce((s, x) => s + x.n, 0);
+    while (left > 0 && takeFromHand(cs, e, p)) left -= 1;   // 手牌拿光了就算了，不再往後拖
+  }
+}
+
+/**
+ * 把這隻身上的牌還給原主：手牌沒滿放回手牌，滿了（`HAND_LIMIT`）進棄牌堆。
+ * 原主倒下或斷線也一樣還到那個座位的牌堆，不轉給別人。沒偷東西時什麼都不做。
+ */
+export function returnStolen(cs: CombatState, e: EnemyCombat): void {
+  delete e.stealPending;
+  const held = e.stolenCards;
+  if (!held || held.length === 0) return;
+  delete e.stolenCards;
+  for (const { seat, card } of held) {
+    const p = seatOf(cs, seat) ?? cs.player;
+    const toHand = p.hand.length < HAND_LIMIT;
+    if (toHand) p.hand.push(card); else p.discardPile.push(card);
+    const arg = { card: card.cardId, hero: p.hero, up: card.upgraded };
+    if (multi(cs)) log(cs, toHand ? '「{card}」回到{who}手上了' : '「{card}」回到{who}的棄牌堆了（手牌已滿）', { card: arg, who: H(p) });
+    else log(cs, toHand ? '「{card}」回到你手上了' : '「{card}」回到你的棄牌堆了（手牌已滿）', { card: arg });
+  }
+}
+
+/** 戰鬥收尾：每一隻身上的牌全部還回去（勝、敗、逃、事件，任何收法都走這裡；可以重複呼叫） */
+export function returnAllStolen(cs: CombatState): void {
+  for (const e of cs.enemies) returnStolen(cs, e);
+}
+
+/** 封牌：記下「下一個玩家回合封哪一類」。一般難度（`cs.hell` 沒有）什麼都不做 */
+export function sealType(cs: CombatState, e: EnemyCombat, type: 'attack' | 'skill'): void {
+  if (!cs.hell) return;
+  cs.hell.sealNext = type;
+  if (type === 'attack') log(cs, '{e}貼上封條：下一回合打不出攻擊牌', { e: E(e) });
+  else log(cs, '{e}貼上封條：下一回合打不出技能牌', { e: E(e) });
+}
+
+/** 玩家回合開始（`startPlayerTurn`，整場一次）：魔物上一輪貼的封條生效 */
+export function startSeal(cs: CombatState): void {
+  const h = cs.hell;
+  if (!h) return;
+  if (h.sealNext) { h.sealed = h.sealNext; delete h.sealNext; } else delete h.sealed;
+}
+
+/** 玩家回合結束（`beginEnemyTurn`）：封條只管那一個回合 */
+export function endSeal(cs: CombatState): void {
+  if (cs.hell) delete cs.hell.sealed;
+}
+
+/** 這類牌現在被封了嗎（`canPlay` 用）：能力牌從不被封 */
+export function isSealed(cs: CombatState, type: CardType): 'attack' | 'skill' | null {
+  const s = cs.hell?.sealed;
+  return s && type === s ? s : null;
 }

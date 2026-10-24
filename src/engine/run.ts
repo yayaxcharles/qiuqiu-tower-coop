@@ -11,6 +11,7 @@ import { potionById, potions } from '../content/potions';
 import { isMiasma, MIASMA_PURE, ownsRelic, relicById, relics } from '../content/relics';
 import { GUEST_KEEPERS, KEEPERS } from '../content/keepers';
 import { applyCarriedEffects, flushAllyRelics, startCombat, startJoinedSeat } from './combat';
+import { returnAllStolen } from './hell';
 import { FLOORS, generateMap, nextChoices, nodeById } from './map';
 import { rollQmark } from './qmark';
 import { Rng, seedFromString } from './rng';
@@ -427,6 +428,7 @@ export function applyBossPrefix(run: RunState, cs: CombatState): void {
 
 export function finishCombat(run: RunState, cs: CombatState, bonusFish = 0): CombatRewards | null {
   if (cs.phase === 'player') throw new Error('戰鬥尚未結束');
+  returnAllStolen(cs);   // 地獄第二關：不管怎麼收尾，偷來的牌先還回原主的牌堆（可重複呼叫）
   run.stats.turns += cs.turn;
   run.stats.cardsPlayed += cs.cardsPlayed;
   /*

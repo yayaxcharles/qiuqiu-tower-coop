@@ -9,7 +9,7 @@ import type { Hero } from './hero';
 import { E, H, K_, type LogArg } from './logfmt';
 import { cardStats, discardHand, moveCard } from './deck';
 import { applyEffects } from './effects';
-import { hellDrawPenalty, initHell, miasmaTick } from './hell';
+import { endSeal, hellDrawPenalty, initHell, isSealed, miasmaTick, resolveStealPending, returnStolen, startSeal } from './hell';
 import type { Rng } from './rng';
 import { addStatus, decayTurnStatuses, getStatus, removeStatus, tickPoison } from './statuses';
 import { DEBUFFS, TURN_DECAY } from './types';
@@ -178,6 +178,7 @@ export function startPlayerTurn(cs: CombatState): void {
   if (cs.phase !== 'player') return;
   cs.turn += 1;
   cs.hits.length = 0;   // 分段演出只看這一拍新增的幾筆，上一回合的不用留著（稽核 2026-09-05 夜 低-1）
+  startSeal(cs);        // 地獄第二關：魔物上一輪貼的封條這個回合生效（一般難度 cs.hell 沒有，直接回）
   // 每位玩家各開一次自己的回合（連線版第一步 2026-09-11）。單機就是跑一次，順序與結果完全沒變。
   // 中途被中毒打倒就整個停下來——後面的人不用再抽牌了
   for (const p of cs.players) { if (p.down) continue; startSeatTurn(cs, p); if (cs.phase !== 'player') return; }
@@ -452,6 +453,7 @@ function startSeatTurn(cs: CombatState, p: PlayerCombat): void {
   if (cs.turn === 1) for (const rid of p.relics) if ((relicById[rid]?.hooks.firstTurnDraw ?? 0) > 0) fireRelic(cs, rid, p);
   p.drawNextTurn = 0;
   drawCards(cs, n, p);
+  resolveStealPending(cs, p);   // 地獄第二關：魔物出手時沒牌可偷的張數，從新手牌裡補拿（沒有待偷的就直接回）
   // 每回合開始的秘寶效果（鐵砂袋、靈貓鈴）：排在抽牌之後，抽到的牌才算進這回合的手牌
   for (const rid of p.relics) {
     const h = relicById[rid]?.hooks.turnStart;
@@ -491,6 +493,9 @@ export function canPlay(cs: CombatState, uid: number, targetUid?: number, seat =
   const st = cardStats(card);
   if (st.keywords.includes('不可打出')) return { ok: false, reason: '不可打出' };
   if (st.def.type === 'attack' && p.noAttacks) return { ok: false, reason: '本回合不能再打攻擊牌' };
+  // 地獄第二關的封牌：魔物貼的封條只封攻擊或技能其中一類，能力牌從不被封（一般難度 cs.hell 沒有，這兩行不會成立）
+  if (isSealed(cs, st.def.type) === 'attack') return { ok: false, reason: '被封住了，這回合打不出攻擊牌' };
+  if (isSealed(cs, st.def.type) === 'skill') return { ok: false, reason: '被封住了，這回合打不出技能牌' };
   // 球球被定身：這回合攻擊牌整排打不出（毛線球怪的「纏住」）。
   // 這一側漏了很久——引擎本來只實作魔物被定身那一半，玩家身上的定身完全沒作用
   if (st.def.type === 'attack' && getStatus(p, '定身') > 0) return { ok: false, reason: '被定住了，這回合打不出攻擊牌' };
@@ -870,6 +875,7 @@ export function rampageTurnFor(cs: CombatState): number {
 export function beginEnemyTurn(cs: CombatState): boolean {
   if (cs.phase !== 'player' || cs.pending) return false;
   for (const p of cs.players) { p.ready = false; delete p.forcedReady; }   // 舉的手到這裡就兌現了
+  endSeal(cs);   // 地獄第二關：封條只管這一個玩家回合
   // 每位玩家各收一次自己的回合（連線版第一步 2026-09-11）。單機跑一次，順序與結果完全沒變
   for (const p of cs.players) { if (p.down) continue; endSeatTurn(cs, p); if (cs.phase !== 'player') return false; }
   return beginEnemyTurnRest(cs);
@@ -1148,6 +1154,7 @@ export function stepEnemyTurn(cs: CombatState): boolean {
       addStatus(e, '消散', -1);
       if (getStatus(e, '消散') === 0) {
         e.dead = true; e.escaped = true; e.faded = true;   // 自己散掉的才算「什麼都沒留下」（見 types.ts 的 faded）
+        returnStolen(cs, e);   // 地獄第二關：偷的牌還回去
         log(cs, '{e}散去了', { e: E(e) });
         markCombatWon(cs);
       }

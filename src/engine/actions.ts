@@ -7,6 +7,7 @@ import { applyEffects } from './effects';
 import { addStatus, computeAttack, computeBlock, getStatus, removeStatus } from './statuses';
 import { DEBUFFS } from './types';
 import { learnedMove, learnsPlayerCards, SHADOW_DANGDANG } from './mimic';
+import { returnAllStolen, returnStolen, sealType, stealCards } from './hell';
 import type { CardInstance, CombatState, EnemyCombat, EnemyEffect, EnemyMove, EnemyPhase, PlayerCombat, Unit, StatusName } from './types';
 
 /** 沉睡中的魔物頭上顯示的意圖。每次都是同一份物件，畫面比對「這一拍出的是哪一招」才穩 */
@@ -140,6 +141,7 @@ export function findEnemy(cs: CombatState, uid: number): EnemyCombat | undefined
 export function markCombatWon(cs: CombatState): void {
   if (aliveEnemies(cs).length !== 0 || cs.phase !== 'player') return;
   cs.phase = 'won';
+  returnAllStolen(cs);   // 地獄第二關：還活著或逃走的魔物身上若還有偷來的牌，收尾前一律還回去
   for (const p of cs.players) {
     p.qi = 0;
     p.nextAttackBonus = undefined;
@@ -362,7 +364,7 @@ export function damagePlayer(cs: CombatState, attacker: Unit, base: number,
       p.nextAttackBonus = undefined;
       p.energyGainBlockedThisPhase = undefined;
       // **每一位都倒下了**才算整場輸（規則四）。單機只有一位，跟以前同一件事
-      if (cs.players.every((x) => x.down)) cs.phase = 'lost';
+      if (cs.players.every((x) => x.down)) { cs.phase = 'lost'; returnAllStolen(cs); }
       else log(cs, '{who}倒下了，另一位還站著', { who: H(p) });
     }
   }
@@ -481,6 +483,7 @@ function checkPhase(cs: CombatState, e: EnemyCombat): void {
   // 血條式（hpBar）的階段不走這裡——那種要等整條血歸零，在 damageEnemy 裡切換。
   if (!next || next.hpBelow === undefined || e.hp > next.hpBelow || e.dead) return;
   e.phase += 1;
+  returnStolen(cs, e);   // 地獄第二關：換形態＝偷的牌一次還回來
   // 用 onEnterMove 時 moveIndex 設 -1：那招做完 advanceMove 會 +1，新階段從第一招開始（稽核 2026-09-04 L-5）
   e.moveIndex = next.onEnterMove ? -1 : 0;
   if (next.line) log(cs, '{e}：{line}', { e: E(e), line: { say: next.line } });
@@ -520,6 +523,7 @@ export function markPoisoner(t: EnemyCombat, name: StatusName, by: PlayerCombat 
 
 function killEnemy(cs: CombatState, e: EnemyCombat, by?: PlayerCombat): void {
   e.dead = true;
+  returnStolen(cs, e);   // 地獄第二關：被打倒（含自爆、中毒、反彈）就把偷來的牌還給原主
   // 同生共死組的成員倒下就開始倒數「重生中」；沒有同組概念的魔物、或同伴已經都不在的維持 0
   // （同伴都不在的不該再占召喚名額，稽核 2026-09-04 L-4）
   const reviving = willRevive(cs, e);
@@ -690,6 +694,7 @@ export function damageEnemy(cs: CombatState, e: EnemyCombat, base: number,
     const next = enemyById[e.enemyId]?.phases?.[e.phase];
     if (next?.hpBar) {
       e.phase += 1;
+      returnStolen(cs, e);   // 地獄第二關：換血條＝偷的牌一次還回來
       // 下一條血照這場的血量倍率放大（連線、難度），跟第一條血同一套（makeEnemy）。
       // 以前直接寫表上的數字：兩人連線時第一條是三倍、後兩條還是單人的量（2026-09-22 平衡量測發現，使用者拍板修）
       e.hp = Math.max(1, Math.round(next.hpBar * (cs.mods?.hpMul ?? 1)));
@@ -741,6 +746,7 @@ function splitEnemy(cs: CombatState, e: EnemyCombat, sp: { enemyId: string; n: n
   e.split = true;
   e.dead = true;
   e.escaped = true;
+  returnStolen(cs, e);   // 地獄第二關：本體消失，偷的牌還回去
   log(cs, '{e}裂開了', { e: E(e) });
   for (let i = 0; i < sp.n; i++) {
     if (aliveEnemies(cs).length >= 5) break;   // 畫面塞不下五個以上
@@ -1061,6 +1067,7 @@ export function runEnemyEffects(cs: CombatState, e: EnemyCombat, effects: EnemyE
       }
       case 'chargeNext': e.charged = true; break;
       case 'escape': e.dead = true; e.escaped = true; log(cs, '{e}帶著小魚乾逃走了', { e: E(e) });
+        returnStolen(cs, e);   // 地獄第二關：逃走帶不走偷來的牌
         markCombatWon(cs); break;
       case 'selfDestruct': {
         // 自爆（河豚精）：先打人（吃蜷縮、隱身照閃），然後自己倒下——這一下**算打倒**，戰利品照發
@@ -1081,6 +1088,8 @@ export function runEnemyEffects(cs: CombatState, e: EnemyCombat, effects: EnemyE
         break;
       }
       case 'giveCard': for (const t of targets) giveCards(cs, e, fx.cardId, fx.n, fx.to, t); break;   // 塞牌兩個人各吃一份
+      case 'stealCard': stealCards(cs, e, p, fx.n); break;   // 只偷這一招瞄準的那一位（`p`＝victim，跟偷小魚乾同一個判準）
+      case 'sealType': sealType(cs, e, fx.type); break;
       case 'nothing': break;
       default: { const _never: never = fx; void _never; break; }   // 漏接新的 EnemyEffect 種類會在型別檢查就爆
     }

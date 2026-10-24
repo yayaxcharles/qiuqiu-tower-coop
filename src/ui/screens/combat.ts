@@ -2017,6 +2017,11 @@ registerScreen('combat', (app, root, props) => {
       if (sum && !summonShown) text += t('＋召 {n} 隻', { n: sum.n });
       const steal = m.effects.find(has('stealFish'));
       if (steal) text += t('＋偷 {n}', { n: steal.n });
+      // 地獄第二關：偷牌與封牌也要在牌子上講（封哪一類要預告，玩家才來得及改打法）
+      const stealC = m.effects.find(has('stealCard'));
+      if (stealC) text += t('＋偷牌 {n}', { n: stealC.n });
+      const seal = m.effects.find(has('sealType'));
+      if (seal) text += seal.type === 'attack' ? t('＋封攻擊') : t('＋封技能');
       const heal = m.effects.find(has('heal'));
       if (heal && (hits.length || rnd || blk)) text += t('＋回 {n}', { n: heal.percent ? Math.round(e.maxHp * heal.percent / 100) : heal.n });
       // 照著學一動兩張時（二三關），普攻那張會把「照你的毒打」那張蓋掉——兩段都要寫出來
@@ -2110,6 +2115,8 @@ registerScreen('combat', (app, root, props) => {
         case 'heal': parts.push(t('自己回復 {n} 點生命', { n: fx.n })); break;
         case 'stealFish': parts.push(t('偷走你 {n} 條小魚乾', { n: fx.n })); break;
         case 'discardRandomHand': parts.push(t('讓你下回合少抽 {n} 張牌', { n: fx.n })); break;
+        case 'stealCard': parts.push(t('順走你手牌裡的 {n} 張牌，藏在牠身上：打倒牠才拿得回來', { n: fx.n })); break;
+        case 'sealType': parts.push(fx.type === 'attack' ? t('封住你下一回合的攻擊牌：整回合打不出來（能力牌不受影響）') : t('封住你下一回合的技能牌：整回合打不出來（能力牌不受影響）')); break;
         case 'escape': parts.push(t('逃走')); break;
         // ---- 2026-09-02 第二波魔物的四個新效果 ----
         case 'selfDestruct': parts.push(t('自爆：造成 {n} 點傷害，然後牠自己也倒下', { n: hitOf(fx)?.dmg ?? 0 })); break;
@@ -2205,6 +2212,8 @@ registerScreen('combat', (app, root, props) => {
         row.prepend(chip(t('越戰越勇'), null, String(left), 'bad'));
       }
       if (e.stolen > 0) row.prepend(chip(t('叼著小魚乾'), null, String(e.stolen), 'bad'));
+      // 地獄第二關偷來的牌：掛牌名（原主的牌名，連線時各看各的角色版本），打倒牠才拿得回來
+      if (e.stolenCards?.length) row.prepend(chip(t('偷走的牌'), null, e.stolenCards.map((x) => nameFor(cs.players[x.seat]?.hero, x.card.cardId) + (x.card.upgraded ? '＋' : '')).join('、'), 'bad'));
       if (e.charged) row.prepend(chip(t('蓄力'), null, '', 'bad'));
       if (e.invulnIn > 0) row.prepend(chip(t('無敵'), null, '', 'bad'));
       if (def?.reviveGroup && !def.neverRevive) row.prepend(chip(t('同生共死'), null, '', 'bad'));   // 蛙大名自己倒了就倒了，不掛這塊牌
