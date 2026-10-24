@@ -162,7 +162,31 @@ describe('地獄結局（單人）', () => {
   });
 });
 
+/** 連線六組搭檔的主角回話：[難度 1～5 原句, 地獄版]（原句假設兩人切磋收場，地獄是師父倒在裂縫邊醒來） */
+const COOP_REPLY: Record<string, [string, string]> = {
+  'dangdang+ninja': ['你終於認得我了喵。', '師父，你終於醒了喵。'],
+  'feifei+ninja': ['師父，這又不是切磋……您剛才連我都不認得了。我跟師兄喊了您一路呢。', '師父，您一個人跑來這裡……連我都不說。'],
+  'dangdang+feifei': ['您認得我了，對不對？', '師父，您醒了，對不對？'],
+  'fengfeng+ninja': ['不是切磋，我是來找你的喵。', '師父，我是來找你的喵。'],
+  'feifei+fengfeng': ['您認得我們了，對不對？', '師父，您醒了，對不對？'],
+  'dangdang+fengfeng': ['終於肯停了。我的手都快抬不起來。', '您醒了。……下次要封什麼東西，先叫上我。'],
+};
+
 describe('地獄結局（連線）', () => {
+  it.each(pairs.flatMap(([a, b]) => [[a, b], [b, a]] as [H, H][]))('%s＋%s：主角回話在地獄換新句、交代仍在、難度 5 是原句', (me, other) => {
+    coop(other);
+    const [oldLine, newLine] = COOP_REPLY[[me, other].sort().join('+')]!;
+    const deck = deckOf(me);
+    const v = victoryLinesFor(deck, 6, me);
+    const v5 = victoryLinesFor(deck, 5, me);
+    expect(v[1]).toEqual({ speaker: '旁白', text: ACCOUNT });
+    expect(v[3]!.text).toBe(newLine);
+    expect(v5[2]!.text).toBe(oldLine);
+    expect(v.map((l) => l.text)).not.toContain(oldLine);
+    expect(v5.map((l) => l.text)).not.toContain(newLine);
+    expect(v[3]!.speaker).toBe(v5[2]!.speaker);
+  });
+
   it.each(pairs.flatMap(([a, b]) => [[a, b], [b, a]] as [H, H][]))('%s＋%s：共用開頭、交代在第 2 句、重出江湖、其後與難度 5 逐句相同、圖的切點完好', (me, other) => {
     coop(other);
     const deck = deckOf(me);
@@ -171,7 +195,8 @@ describe('地獄結局（連線）', () => {
     expect(v[0]).toMatchObject({ speaker: '旁白', text: COOP_OPENING });
     expect(v[1]).toEqual({ speaker: '旁白', text: ACCOUNT });
     expect(v[2]).toMatchObject({ speaker: '大俠貓', text: '重出江湖。' });
-    expect(tt(v.slice(3))).toEqual(tt(v5.slice(2)));       // 主角回話與其後的句子照連線稿不動
+    expect(v[3]!.text).toBe(COOP_REPLY[pairs.find(([a, b]) => (a === me && b === other) || (a === other && b === me))!.join('+')]![1]);   // 主角回話換成地獄版（2026-10-24 核可）
+    expect(tt(v.slice(4))).toEqual(tt(v5.slice(3)));       // 其後的句子照連線稿不動
     expect(v.length).toBe(v5.length + 1);
     // 圖的切點：難度 6 跟難度 5 分到的張數一樣、每張都有句子、句子合起來等於整段結局、切點標記還在原本那句
     const s6 = endingSlides(me, deck, 6);

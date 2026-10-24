@@ -737,6 +737,19 @@ export const dialogue = {
   hellMasterFirstWords: '重出江湖。',
   /** 球球的地獄結局開頭；連線兩人合演的場景也共用這句（句子裡沒有指名誰在場） */
   hellVictoryHead: <HellVictoryHead>{ opening: '斷掉的注連繩接回去了，地板的裂縫慢慢合上。倒在一旁的師父咳了兩聲，睜開眼睛。' },
+  /**
+   * 連線六組搭檔在地獄結局的主角回話（鍵＝排序過的搭檔，同 `MIXED_SCENES`）：師父那句「重出江湖。」的下一句。
+   * 原句是寫給「兩人切磋收場」的（你終於認得我了、這又不是切磋……），地獄的師父是倒在裂縫邊醒來的，所以只在地獄換掉；
+   * 難度 1～5 照舊用場景稿裡的原句。`victoryLinesFor` 只換字、不動說話者與標記，切點（`slideBreak`）都不在這一句。
+   */
+  hellCoopReply: <Readonly<Record<string, string>>>{
+    'dangdang+ninja': '師父，你終於醒了喵。',
+    'feifei+ninja': '師父，您一個人跑來這裡……連我都不說。',
+    'dangdang+feifei': '師父，您醒了，對不對？',
+    'fengfeng+ninja': '師父，我是來找你的喵。',
+    'feifei+fengfeng': '師父，您醒了，對不對？',
+    'dangdang+fengfeng': '您醒了。……下次要封什麼東西，先叫上我。',
+  },
   /** 連線（兩位不同角色）的地獄塔頂段：只用旁白，兩台機器演同一段 */
   hellTopSceneCoop: <DialogueLine[]>[
     { speaker: '旁白', text: '推開最上層的門，地板裂開一道大縫，紫霧從底下一陣一陣往上湧。' },
@@ -1175,9 +1188,9 @@ function withMixed<T extends { prologue: DialogueLine[]; actClear1: DialogueLine
       actClear1: scenes.actClear1.map((l) => ({ ...l })),
       actClear2: scenes.actClear2.map((l) => ({ ...l })),
       topScene: (scenes.topScene ?? []).map((l) => ({ ...l })),
-      // 地獄：兩位不同角色合演時，塔頂段只用旁白、結局開頭用共用那句、主角回話照連線稿不動（見 `victoryLinesFor`）
+      // 地獄：兩位不同角色合演時，塔頂段只用旁白、結局開頭用共用那句、主角回話按搭檔換成 `hellCoopReply`（見 `victoryLinesFor`）
       hellTopScene: dialogue.hellTopSceneCoop.map((l) => ({ ...l })),
-      hellVictoryHead: { opening: dialogue.hellVictoryHead.opening },
+      hellVictoryHead: { opening: dialogue.hellVictoryHead.opening, reply: dialogue.hellCoopReply[key!] },
       victory: scenes.victory.map((l) => ({ ...l })),
       defeat: scenes.defeat.map((l) => ({ ...l })),
       victoryNarration: {},   // 打法插句是寫給單人結局的，連線場景自己收尾
@@ -2119,7 +2132,7 @@ export function victoryLinesFor(deckIds: readonly string[], difficulty: number, 
    * ①第一句旁白換成地獄版開頭（`story.hellVictoryHead`）；②緊接著插一句交代封印補回去了、師父為什麼倒下；
    * ③師父那句固定「重出江湖。」、主角回話有寫就換（見下面）；④不插打法旁白。
    * 後面的切點（`slideBreak`）、`narrationAfter`、伏筆旁白、尾聲都是照內容找出來的，插在第 1 句不受影響。
-   * 連線兩人合演的整段場景（`hasCoopScene`）也走這一條：開頭換成共用那句、交代同位置插、主角回話照連線稿不動；
+   * 連線兩人合演的整段場景（`hasCoopScene`）也走這一條：開頭換成共用那句、交代同位置插、主角回話換成 `hellCoopReply`；
    * 插在第一張圖的範圍內（切點在後面），不會讓任何一張圖拿到空陣列。
    */
   const hell = difficulty >= 6;
