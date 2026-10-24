@@ -2023,6 +2023,13 @@ registerScreen('combat', (app, root, props) => {
       if (stealC) text += t('＋偷牌 {n}', { n: stealC.n });
       const seal = m.effects.find(has('sealType'));
       if (seal) text += seal.type === 'attack' ? t('＋封攻擊') : t('＋封技能');
+      // 有傷害又有守：主分支只寫了攻，守要補上（地獄魔源哭面、墨筆落筆、藥蝠分藥；上線前修正 6，2026-10-24）
+      if ((hits.length || rnd || boom) && blk) text += t('＋守 {n}', { n: computeBlock(blk.amount, e) });
+      if ((hits.length || rnd || boom) && blkAll) text += t('＋守 {n}（全體）', { n: computeBlock(blkAll.amount, e) });
+      // 增益招同時加爪力（或別的狀態）與防禦：主分支只寫了守，自己得到的狀態也要寫（鐘鳴、沙落護體、倒轉沙漏）
+      if (!hits.length && !rnd && !boom && !byStatus.length && (blk || blkAll)) {
+        for (const f of m.effects) if (f.kind === 'statusSelf') text += t('＋{status} {n}', { status: term(f.name), n: f.amount });
+      }
       const heal = m.effects.find(has('heal'));
       if (heal && (hits.length || rnd || blk)) text += t('＋回 {n}', { n: heal.percent ? Math.round(e.maxHp * heal.percent / 100) : heal.n });
       // 照著學一動兩張時（二三關），普攻那張會把「照你的毒打」那張蓋掉——兩段都要寫出來

@@ -259,6 +259,8 @@
  "＋回 {n}": "+Heal {n}",
  "＋守 {n}": "+Def {n}",
  "＋毒 {n}": "+Poison {n}",
+ "＋守 {n}（全體）": "+Def {n} (All)",
+ "＋{status} {n}": "+{status} {n}",
  "，打完把你的{status}清掉": ", clears your {status} after",
  "{name}的": "{name}'s ",
  "{opening}（你倒下了，這次由同伴決定）": "{opening} (You're down — your partner decides this time)",
