@@ -1,4 +1,6 @@
 import { checkRun } from './save';
+import { ensureHell } from '../content/enemies';
+import { difficultyMods } from '../content/difficulty';
 import type { RunState } from './types';
 
 /**
@@ -74,7 +76,12 @@ export async function decodeRun(code: string): Promise<DecodeResult> {
     json = new TextDecoder().decode(raw);
   } catch { return { ok: false, why: '這串局面碼看起來不完整，複製的時候可能少了一段。' }; }
   try {
-    const run = checkRun(JSON.parse(json) as Partial<RunState>);
+    const parsed = JSON.parse(json) as Partial<RunState>;
+    // 地獄局的遭遇在另包：沒載好 `checkRun` 不驗遭遇，壞碼會被當好的存進去。先載再驗，才能維持「失敗不動存檔」
+    if (difficultyMods(typeof parsed.difficulty === 'number' ? parsed.difficulty : 1).hellMode) {
+      try { await ensureHell(); } catch { return { ok: false, why: '地獄資料載入失敗，請檢查網路後再試一次。' }; }
+    }
+    const run = checkRun(parsed);
     // 版本或內容對不上（分享的人跟你玩的版本不同、中間改過牌表）都會落在這裡
     if (!run) return { ok: false, why: '這局的版本跟你現在的遊戲對不上，可能是分享的人用的是舊版。' };
     return { ok: true, run };

@@ -316,7 +316,12 @@ export class CoopSession {
   }
 
   /** 這一局開始了。整局只有一份，設一次就不動 */
-  useRun(run: RunState): void { this.runState = run; }
+  /** 客戶端還沒 `useRun` 就到的整局動作（主機先開局先選祝福、我這邊還在抓地獄包）。`useRun` 時照順序補套 */
+  private readonly preRun: SequencedAction<RunAction>[] = [];
+  useRun(run: RunState): void {
+    this.runState = run;
+    for (const sa of this.preRun.splice(0)) this.ingestRun(sa);
+  }
 
   /**
    * 現在這一格的貨架（每個座位一份；沒有商店就餵 `null`）。走進罐頭鋪那一格時 `enterNode` 就先掛上，
@@ -783,6 +788,7 @@ export class CoopSession {
     }
     if (m.m === 'ract') {
       if (this.isHost) return true;   // 主機自己的走 submitRun
+      if (!this.runState) { this.preRun.push({ seq: m.seq, a: m.a }); return true; }   // 我還沒開局（難度 6 在等地獄包）：先留著，`useRun` 後照序補套
       this.ingestRun({ seq: m.seq, a: m.a });
       return true;
     }
@@ -977,7 +983,7 @@ export class CoopSession {
     this.backlog.length = 0;
     this.myChecks.clear(); this.theirChecks.clear();
     this.sentReq = 0; this.sentRunReq = 0; this.seenReq.clear(); this.seenRunReq.clear();
-    this.earlyShop.length = 0; this.shops = null;
+    this.earlyShop.length = 0; this.preRun.length = 0; this.shops = null;
     this.myMarks.clear(); this.theirMarks.clear(); this.myPath.length = 0; this.theirPath.length = 0;
     this.ballots.clear(); this.replayed.clear();
     if (this.replayTimer !== null) { clearTimeout(this.replayTimer); this.replayTimer = null; }

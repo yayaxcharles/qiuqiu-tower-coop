@@ -180,6 +180,8 @@ export class App {
   show(name: ScreenName, props: unknown = {}, opts: { quiet?: boolean } = {}): void {
     const r = screens.get(name);
     if (!r) throw new Error(`畫面尚未登記：${name}`);
+    // 只算換到**別的**畫面：連線大廳會因同伴進出安靜重畫自己，那不算玩家離開
+    if (this.stage.dataset['screen'] !== name) this.navSeq++;
     const track = this.bgmFor(name);
     if (track) setBgm(track);
     hideTooltip();   // 提示框的錨點就要被清掉了，不先關掉會變成孤兒黏在畫面上
@@ -321,19 +323,29 @@ export class App {
   hellPending(difficulty: number): boolean { return difficultyMods(difficulty).hellMode && !isHellLoaded(); }
 
   private hellLoading = false;
+  /** 換畫面的次數（`show` 換到別的畫面就加一）。地獄包載好時玩家若已走到別的畫面，回呼就不能再開局或拉回標題 */
+  private navSeq = 0;
+  private hellWaiters: { seq: number; go: () => void; fail: () => void }[] = [];
   /**
    * 難度 6 的魔物與遭遇資料另包：開新局、續玩、連線開局與接回都要先等它載好才往下（`go`），產生地圖與抽遭遇才拿得到地獄資料。
-   * 載不到（斷網）：跳提示、呼叫 `fail`（呼叫端回上一個畫面），**不開局**，下一次再按會重試。載的期間再按一次會被擋掉。
+   * 載不到（斷網）：跳提示、呼叫 `fail`（呼叫端回上一個畫面），**不開局**，下一次再按會重試。
+   * 載的期間再來的呼叫掛進清單、載完依序處理；載好時畫面已經換過（`navSeq` 變了）的那一筆就不叫 `go`／`fail`。
    */
   whenHellReady(difficulty: number, go: () => void, fail: () => void): void {
     if (!this.hellPending(difficulty)) { go(); return; }
+    this.hellWaiters.push({ seq: this.navSeq, go, fail });
     if (this.hellLoading) return;
     this.hellLoading = true;
     notice(i18nT('地獄資料載入中…'));
-    ensureHell().then(
-      () => { this.hellLoading = false; go(); },
-      () => { this.hellLoading = false; notice(i18nT('地獄資料載入失敗，請檢查網路後再試一次。')); fail(); },
-    );
+    const settle = (ok: boolean): void => {
+      this.hellLoading = false;
+      if (!ok) notice(i18nT('地獄資料載入失敗，請檢查網路後再試一次。'));
+      for (const w of this.hellWaiters.splice(0)) {
+        if (w.seq !== this.navSeq) continue;
+        (ok ? w.go : w.fail)();
+      }
+    };
+    ensureHell().then(() => settle(true), () => settle(false));
   }
 
   /** `hero`＝選角畫面挑的那一位（2026-09-12）。沒填就是球球，舊的呼叫端不用改 */

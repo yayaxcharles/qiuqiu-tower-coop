@@ -250,7 +250,7 @@ function startCoop(app: App, tx: Transport, isHost: boolean): void {
     app.whenHellReady(diff, () => { session.start(seed, diff, '', heroes); begin(seed, diff, heroes); }, giveUp);
   } else {
     // 客戶端等主機宣布，收到才開——不能自己挑種子，那樣兩邊一定不一樣。難度 6 要等地獄包載好才開局（兩邊都在開戰前載好）
-    session.onStartRun((seed, diff, _enc, heroes) => app.whenHellReady(diff, () => begin(seed, diff, heroes), giveUp));
+    session.onStartRun((seed, diff, _enc, heroes) => app.whenHellReady(diff, () => { if (session.stopped) return; begin(seed, diff, heroes); }, giveUp));
   }
 }
 
