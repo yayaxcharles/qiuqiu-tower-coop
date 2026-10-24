@@ -244,3 +244,21 @@ describe('難度 1～5 逐字不變（對改之前的指紋）', () => {
     expect(n).toBeGreaterThan(500);
   });
 });
+
+describe('地獄單人結局：相擁圖等到「抱進懷裡」那句才出現（2026-10-24）', () => {
+  it.each([['ninja', 'still_corrupt'], ['feifei', 'feifei_still_corrupt']] as [H, string][])('%s：前幾句配被魔氣纏住那張、抱進懷裡起才換相擁圖', (hero, first) => {
+    coop(null);
+    const s = endingSlides(hero, deckOf(hero), 6);
+    expect(s.length).toBe(3);
+    expect(s[0]!.img).toBe(`bg/${first}`);
+    expect(s[1]!.img).toBe(hero === 'ninja' ? 'bg/still_embrace' : 'bg/feifei_still_embrace');
+    expect(s[1]!.lines[0]!.text).toMatch(/懷裡/);
+    expect(s[0]!.lines.some((l) => /懷裡/.test(l.text))).toBe(false);
+    expect(tt(s.flatMap((x) => x.lines))).toEqual(tt(victoryLinesFor(deckOf(hero), 6, hero)));
+  });
+
+  it('難度 5 仍是兩張（不受影響）', () => {
+    coop(null);
+    expect(endingSlides('ninja', deckOf('ninja'), 5).length).toBe(2);
+  });
+});

@@ -185,6 +185,20 @@ export function endingSlides(hero: string | undefined, deckIds: string[], diffic
   if (coopArt) return coopSlides(coopArt.victory, vic);
   if (hasCoopScene(hero)) return [];
   const cut = Math.max(1, vic.findIndex((l) => l.slideBreak) + 1);
+  /*
+   * 地獄（2026-10-24 使用者裁定 B）：開頭幾句（注連繩接回去、師父睜開眼睛、重出江湖）師父才剛醒、人還跪在裂縫邊，
+   * 「抱在一起」那張要等到「把……攬／抱進懷裡」那句才對得上。球球、菲菲有「師父被魔氣纏住」那張，前幾句先配它，
+   * 抱進懷裡那句起才換相擁圖；噹噹、封封沒有對應的既有圖，維持原樣（只用既有圖，不生新圖）。
+   */
+  const hugAt = vic.findIndex((l, i) => i > 0 && /懷裡/.test(l.text));
+  const corrupt = hero === 'feifei' ? 'feifei_still_corrupt' : hero === undefined || hero === 'ninja' ? 'still_corrupt' : '';
+  if (difficulty >= 6 && corrupt && hugAt > 0 && hugAt < cut) {
+    return [
+      { img: `bg/${corrupt}`, lines: vic.slice(0, hugAt) },
+      { img: stillKey(hero, 'still_embrace'), lines: vic.slice(hugAt, cut) },
+      { img: stillKey(hero, 'still_home'), lines: vic.slice(cut) },
+    ];
+  }
   if (hero === 'fengfeng') {
     // 封封結局最後一段是幾天後的院子練劍（EP01），在村口熱湯那張之後，自己配一張圖。
     // 打法插句、伏筆旁白都插在前面（見 `victoryLinesFor`），院子那段的起點要照第一句找，不能寫死第 10 句；
