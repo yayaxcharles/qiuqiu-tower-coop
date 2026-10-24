@@ -7,7 +7,7 @@ import { BOSS_ART, BOSS_HURT_ART, BOSS_MOVE_ART, encounterById, enemyById, enemy
 import { potionById } from '../../content/potions';
 import { aliveEnemies, dazeTarget, isDazed, willRevive } from '../../engine/actions';
 import { relicCounterKey } from '../../engine/counters';
-import { tauntingEnemy } from '../../engine/hell';
+import { miasmaClaw, tauntingEnemy } from '../../engine/hell';
 import { rampageTurnFor, allReady, beginEnemyTurn, canPlay, endTurn, finishEnemyTurn, IDLE_FORCE_MS, playCard, potionBlockedReason, resolveChoice, stepEnemyTurn, usePotion, waitingFor } from '../../engine/combat';
 import { previewHpLoss } from '../../engine/preview';
 import { cardStats } from '../../engine/deck';
@@ -2405,7 +2405,7 @@ registerScreen('combat', (app, root, props) => {
     // 地獄第一關的紫霧倒數：放在回合數旁邊（沒有紫霧的戰鬥整個不出現）；歸零後換成「紫霧已滿」
     const miasma = cs.hell?.miasmaLeft;
     const miasmaChip = miasma === undefined ? null : el('b', { class: miasma === 0 ? 'miasma full' : 'miasma' }, miasma === 0 ? t('紫霧已滿') : t('紫霧 {n}', { n: miasma }));
-    if (miasmaChip) attachTextTooltip(miasmaChip, t('紫霧'), t('倒數歸零後，魔物每一輪全體爪力 +2，你每回合少抽 1 張牌。'));
+    if (miasmaChip) attachTextTooltip(miasmaChip, t('紫霧'), miasmaClaw(cs) === 2 ? t('倒數歸零後，魔物每一輪全體爪力 +2，你每回合少抽 1 張牌。') : t('倒數歸零後，魔物每一輪全體爪力 +{n}，你每回合少抽 1 張牌。', { n: miasmaClaw(cs) }));
     // 地獄第二關的封條：這個玩家回合哪一類牌被封（灰掉的牌看起來跟沒飯糰一樣，所以另外標明）；沒被封就整個不出現
     const sealed = cs.hell?.sealed;
     const sealChip = sealed === undefined ? null : el('b', { class: 'miasma seal' }, sealed === 'attack' ? t('封：攻擊') : t('封：技能'));

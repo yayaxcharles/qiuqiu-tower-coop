@@ -260,13 +260,14 @@ export const hellEnemies: EnemyDef[] = [
       mv('attack', '鑰匙串重擊', dmg(27)),
     ] },
   // ----- 關主 -----
-  { id: 'hell_hoarder_toad', name: '囤寶蛙大名', hp: [240, 240], pool: '塔主', pattern: 'cycle', size: 'large', art: 'codex/monster_hell_hoarder_toad',
+  { id: 'hell_hoarder_toad', name: '囤寶蛙大名', hp: [240, 240], pool: '塔主', pattern: 'cycle', size: 'large', art: 'codex/monster_hell_hoarder_toad', strengthEveryNTurns: 1,
     line: '這些都是本大名的，一張也不許少。', lines: ['（坐在牌堆上，大印章靠在膝蓋）', '你的牌，先借我保管。'],
     moves: [
-      mv('attack', '蓋印', dmg(12), seal('skill')),   // 封牌：蓋印封住技能牌
-      mv('special', '長舌捲牌', steal(2), dmg(10)),   // 偷牌
-      mv('block', '坐擁寶山', blk(16), { kind: 'heal', n: 8 }),
-      mv('attack', '大印連砸', dmg(9, 3)),
+      // 2026-10-24 改成「偷→封→打」連鎖：偷三張＋封技能、蓋印封攻擊、坐擁寶山塞壞牌、連砸再封技能；每個回合都在搶手牌或封牌
+      mv('special', '長舌捲牌', steal(3), dmg(12), seal('skill')),   // 偷牌＋封技能
+      mv('attack', '蓋印', dmg(16), seal('attack')),   // 封牌：蓋印封住攻擊牌
+      mv('block', '坐擁寶山', blk(16), { kind: 'heal', n: 8 }, dazed(2, 'draw')),   // 塞壞牌
+      mv('attack', '大印連砸', dmg(10, 3), seal('skill')),
     ] },
 
   // =====================================================================
@@ -394,43 +395,43 @@ export const hellEnemies: EnemyDef[] = [
   // 一、二形態在第三關本來就有看穿，這是設計稿的規矩（第三關的機制只看關數），不另外關掉。
   // 一、紫霧之繭（快）：開場就有紫霧倒數，比一般關主短 2 回合（`SOURCE_MIASMA_TURNS`）
   { id: 'hell_source', name: '魔源・紫冥', hp: [120, 120], pool: '塔主', pattern: 'cycle', size: 'large', art: 'codex/monster_hell_source',
-    hellMech: ['miasma'],
+    hellMech: ['miasma'], strengthEveryNTurns: 1,   // 2026-10-24：開場就每兩回合 +1 爪力
     line: '（紫霧裹成的巨繭，慢慢地脈動）', lines: ['（繭上的金色豎瞳，緩緩轉向你）', '……封印，斷了。'],
     moves: [
-      mv('attack', '紫霧噴吐', dmg(12), onPlayer('炸毛', 1)),
+      mv('attack', '紫霧噴吐', dmg(14), onPlayer('炸毛', 1)),
       mv('block', '繭甲', blk(14)),
       mv('buff', '魔氣湧', selfClaw(2)),
-      mv('attack', '破繭衝', dmg(10, 2)),
+      mv('attack', '破繭衝', dmg(12, 2)),
     ],
     phases: [
       // 二、破繭・千手（亂）：偷牌、封攻擊或技能、塞壞牌；換形態時偷的牌一次還回來（`returnStolen`）
       {
-        hpBar: 150, line: '破繭', pattern: 'cycle', hellMech: ['chaos'],
+        hpBar: 150, line: '破繭', pattern: 'cycle', hellMech: ['chaos'], strengthPerTurn: 2,
         onEnter: [blk(14)],
         moves: [
-          mv('attack', '千手攫牌', steal(2), dmg(8)),
-          mv('attack', '封印・攻', dmg(10), seal('attack')),
-          mv('debuff', '塞牌亂舞', dazed(2, 'draw'), slime(1), dmg(6)),
-          mv('block', '封印・技', blk(12), seal('skill')),
-          mv('attack', '千手連打', dmg(7, 3)),
+          mv('attack', '千手攫牌', steal(3), dmg(8), seal('skill')),
+          mv('attack', '封印・攻', dmg(12), seal('attack')),
+          mv('debuff', '塞牌亂舞', dazed(3, 'draw'), slime(2), dmg(6)),
+          mv('block', '封印・技', blk(12), seal('skill'), steal(1)),
+          mv('attack', '千手連打', dmg(9, 3), seal('attack')),
         ],
       },
       // 三、千面（狡猾）：每回合換一張面具（照表輪換，不擲骰），每三回合第三張面具召一隻第三關的小怪（同種最多 2 隻）
       {
-        hpBar: 170, line: '千面', pattern: 'cycle', hellMech: ['cunning'], summonGap: 3,
+        hpBar: 170, line: '千面', pattern: 'cycle', hellMech: ['cunning'], summonGap: 2, strengthPerTurn: 2,
         onEnter: [],
         moves: [
-          mv('attack', '怒面', dmg(20)),
-          mv('block', '哭面', blk(16), dmg(8)),
-          mv('summon', '笑面', { kind: 'summon', enemyId: 'hell_medicine_bat', n: 1, max: 2 }, onPlayer('炸毛', 1), dmg(6)),
+          mv('attack', '怒面', dmg(28)),
+          mv('block', '哭面', blk(16), dmg(10)),
+          mv('summon', '笑面', { kind: 'summon', enemyId: 'hell_medicine_bat', n: 1, max: 2 }, onPlayer('炸毛', 2), dmg(8)),
         ],
       },
       // 四、真身・九尾黑貓神（全部＋模仿）：三種機制同時開；每一動照抄你上一回合打出的牌（`mimic.ts`），
       // 抄來的招另外輪流附偷牌、封攻擊、塞牌、封技能（`learnRider`）。抄不到牌時才退回下面這三招
       {
-        hpBar: 220, line: '真身', pattern: 'cycle', hellMech: ['miasma', 'chaos', 'cunning'], learnsPlayerCards: true,
-        learnRider: [[steal(1)], [seal('attack')], [dazed(2, 'draw')], [seal('skill')]],
-        onEnter: [selfClaw(2)],
+        hpBar: 220, line: '真身', pattern: 'cycle', hellMech: ['miasma', 'chaos', 'cunning'], learnsPlayerCards: true, strengthPerTurn: 3,
+        learnRider: [[steal(2), seal('attack')], [seal('skill'), dazed(2, 'draw')], [steal(2), seal('skill')], [seal('attack'), dazed(3, 'draw')]],
+        onEnter: [selfClaw(3)],
         moves: [
           mv('attack', '九尾連擊', dmg(7, 3)),
           mv('attack', '黑貓神威', dmg(16), selfClaw(1)),
@@ -499,7 +500,7 @@ export const hellEncounters: EncounterDef[] = [
   enc('vault_tortoise', '大魔物', 2, ['vault_tortoise']),
   enc('card_dragon', '大魔物', 2, ['card_dragon']),
   enc('chain_warden', '大魔物', 2, ['chain_warden']),
-  enc('hoarder_toad', '塔主', 2, ['hoarder_toad'], { hpScale: 2.6, strength: 9 }),
+  enc('hoarder_toad', '塔主', 2, ['hoarder_toad'], { hpScale: 1.2, strength: 4 }),
 
   // ===== 第三關（組合佔一半以上，配合才成立）=====
   enc('spy_crow', '中', 3, ['spy_crow'], { hpScale: 1.54, strength: 4 }),
@@ -521,5 +522,5 @@ export const hellEncounters: EncounterDef[] = [
   enc('three_face_ashura', '大魔物', 3, ['three_face_ashura'], { hpScale: 1.1, strength: 6 }),
   enc('nue', '大魔物', 3, ['nue'], { hpScale: 1.1, strength: 6 }),
   enc('bone_commander', '大魔物', 3, ['bone_commander'], { hpScale: 1.1, strength: 6 }),
-  enc('source', '塔主', 3, ['source'], { hpScale: 3.0, strength: 12 }),
+  enc('source', '塔主', 3, ['source'], { hpScale: 1.2, strength: 4 }),
 ];

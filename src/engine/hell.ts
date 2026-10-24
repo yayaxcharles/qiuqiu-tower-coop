@@ -27,8 +27,21 @@ export const MIASMA_TURNS: Record<'normal' | 'elite' | 'boss', number> = { norma
 /** 紫霧歸零後，每一輪魔物各加的爪力 */
 export const MIASMA_CLAW = 2;
 
-/** 魔源（形態自己開紫霧）的倒數：比一般關主（10）短 2 回合，第一形態與真身重新起算都用這個 */
-export const SOURCE_MIASMA_TURNS = MIASMA_TURNS.boss - 2;
+/** 魔源（形態自己開紫霧）的倒數：比一般關主（10）短一半，第一形態與真身重新起算都用這個（2026-10-24 由 8 縮到 5） */
+export const SOURCE_MIASMA_TURNS = 5;
+
+/**
+ * 魔源每一輪紫霧加的爪力，照**目前的形態**（`EnemyCombat.phase`，0～3）：第一形態 4、真身（第四形態）5。
+ * 只有關主戰會用到；第一關的紫霧（一般戰、大魔物、時沙將軍）永遠照 `MIASMA_CLAW`。
+ */
+export const SOURCE_MIASMA_CLAW: readonly number[] = [4, 4, 4, 5];
+
+/** 這一輪紫霧要加多少爪力：第一關照 `MIASMA_CLAW`；其他關看場上帶紫霧的那隻關主現在的形態 */
+export function miasmaClaw(cs: CombatState): number {
+  if (!cs.hell || cs.hell.act === 1) return MIASMA_CLAW;
+  const src = cs.enemies.find((e) => !e.dead && formMechs(e)?.includes('miasma') === true);
+  return src ? SOURCE_MIASMA_CLAW[Math.min(src.phase, SOURCE_MIASMA_CLAW.length - 1)] ?? MIASMA_CLAW : MIASMA_CLAW;
+}
 
 /** 開戰時呼叫一次（`startCombat`，第一回合開始之前）：掛上地獄狀態，第一關再加紫霧倒數 */
 export function initHell(cs: CombatState, act: 1 | 2 | 3): void {
@@ -85,12 +98,14 @@ export function onHellFormChange(cs: CombatState, e: EnemyCombat): void {
 export function miasmaTick(cs: CombatState): void {
   const h = cs.hell;
   if (!h || h.miasmaLeft === undefined) return;
+  const claw = miasmaClaw(cs);
   if (h.miasmaLeft > 0) {
     h.miasmaLeft -= 1;
     if (h.miasmaLeft > 0) return;
-    log(cs, '紫霧漫滿了！魔物全體爪力 +2，之後每一輪都再加；你每回合少抽 1 張牌');
+    if (claw === MIASMA_CLAW) log(cs, '紫霧漫滿了！魔物全體爪力 +2，之後每一輪都再加；你每回合少抽 1 張牌');
+    else log(cs, '紫霧漫滿了！魔物全體爪力 +{n}，之後每一輪都再加；你每回合少抽 1 張牌', { n: claw });
   }
-  for (const e of cs.enemies) if (!e.dead) addStatus(e, '爪力', MIASMA_CLAW);
+  for (const e of cs.enemies) if (!e.dead) addStatus(e, '爪力', claw);
 }
 
 /** 抽牌要少幾張：紫霧歸零回 1（固定、不累加），否則 0 */

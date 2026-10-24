@@ -4,7 +4,7 @@ import { enemyById } from '../../src/content/enemies';
 import { damageEnemy } from '../../src/engine/actions';
 import { COOP_HP_BY_ENCOUNTER } from '../../src/engine/coopscale';
 import { endTurn, playCard, startCombat } from '../../src/engine/combat';
-import { cunningActive, formMechs, hellDrawPenalty, mechActive, SOURCE_MIASMA_TURNS, tauntingEnemy } from '../../src/engine/hell';
+import { cunningActive, formMechs, hellDrawPenalty, mechActive, MIASMA_CLAW, miasmaClaw, miasmaTick, SOURCE_MIASMA_CLAW, SOURCE_MIASMA_TURNS, tauntingEnemy } from '../../src/engine/hell';
 import { learnsPlayerCards } from '../../src/engine/mimic';
 import { Rng, seedFromString } from '../../src/engine/rng';
 import { advanceAct, beginCombat, finishCombat, newRun } from '../../src/engine/run';
@@ -14,8 +14,8 @@ import { nodesOnFloor } from '../../src/engine/map';
 import { inst } from '../helpers';
 
 const SOURCE = 'hell_source';
-// 遭遇 hpScale 3.0（2026-10-24 調平衡）乘在四條血上：120/150/170/220 → 360/450/510/660
-const BARS = [360, 450, 510, 660];
+// 遭遇 hpScale 1.2（2026-10-24 改走機制後的上限）乘在四條血上：120/150/170/220 → 144/180/204/264
+const BARS = [144, 180, 204, 264];
 
 function start(encounterId = SOURCE, hell: false | { act: 1 | 2 | 3 } = { act: 3 }, seed = 'src'): CombatState {
   return startCombat({
@@ -81,9 +81,9 @@ describe('魔源：四形態血條', () => {
 });
 
 describe('魔源：形態機制＝關數給的 ∪ 形態給的', () => {
-  it('phase1HasMiasmaInAct3：第三關開場就有紫霧，倒數比一般關主短 2 回合', () => {
+  it('phase1HasMiasmaInAct3：第三關開場就有紫霧，倒數 5 回合（一般關主 10）', () => {
     const cs = start();
-    expect(SOURCE_MIASMA_TURNS).toBe(8);
+    expect(SOURCE_MIASMA_TURNS).toBe(5);
     expect(cs.hell?.miasmaLeft).toBe(SOURCE_MIASMA_TURNS);
     expect(hellDrawPenalty(cs)).toBe(0);
     for (let i = 0; i < SOURCE_MIASMA_TURNS; i++) endTurn(cs);
@@ -110,7 +110,7 @@ describe('魔源：形態機制＝關數給的 ∪ 形態給的', () => {
     expect(mechActive(cs, 'chaos')).toBe(true);
   });
 
-  it('第二、三形態沒有紫霧；第四形態重新起算 8 回合並寫戰報', () => {
+  it('第二、三形態沒有紫霧；第四形態重新起算 5 回合並寫戰報', () => {
     const cs = start();
     const e = toForm(cs, 3);
     expect(cs.hell?.miasmaLeft).toBeUndefined();
@@ -171,7 +171,7 @@ describe('魔源：第二形態偷牌封牌、換形態還牌', () => {
     const kinds = new Set(def.moves.flatMap((m) => m.effects.map((f) => f.kind)));
     for (const k of ['stealCard', 'sealType', 'giveCard']) expect(kinds.has(k as 'stealCard'), k).toBe(true);
     const seals = def.moves.flatMap((m) => m.effects).filter((f) => f.kind === 'sealType').map((f) => (f as { type: string }).type).sort();
-    expect(seals).toEqual(['attack', 'skill']);
+    expect([...new Set(seals)]).toEqual(['attack', 'skill']);   // 2026-10-24 多處帶封條，只看兩類都有
     // 真的偷到：第一招是千手攫牌（換形態後從表上第一招開始）
     e.move = def.moves[0]!;
     e.moveIndex = 0;
@@ -347,5 +347,47 @@ describe('魔源倒下，牠召來的藥蝠跟著散去（最終審查 2026-10-2
     expect(boss.dead).toBe(true);
     expect(alive(cs, 'nekomata_tail').length, '尾巴不跟著散').toBeGreaterThan(0);
     expect(cs.phase).not.toBe('won');
+  });
+});
+
+describe('關主機制旋鈕（2026-10-24：用機制不用血量）', () => {
+  it('魔源紫霧爪力照形態：第一形態每輪 +4，第一關的紫霧仍是 +2', () => {
+    const cs = start();
+    const e = cs.enemies[0]!;
+    const before = getStatus(e, '爪力');
+    cs.hell!.miasmaLeft = 1;
+    miasmaTick(cs);
+    expect(getStatus(e, '爪力') - before).toBe(SOURCE_MIASMA_CLAW[0]);
+    expect(miasmaClaw(cs)).toBe(4);
+    const a1 = start('hell_fuse_pair', { act: 1 });
+    expect(miasmaClaw(a1)).toBe(MIASMA_CLAW);
+    expect(MIASMA_CLAW).toBe(2);
+  });
+
+  it('真身（第四形態）的紫霧爪力 +5，形態二、三沒有紫霧也不吃這個值', () => {
+    const cs = start();
+    const e = toForm(cs, 4);
+    expect(miasmaClaw(cs)).toBe(5);
+    const before = getStatus(e, '爪力');
+    cs.hell!.miasmaLeft = 1;
+    miasmaTick(cs);
+    expect(getStatus(e, '爪力') - before).toBe(5);
+  });
+
+  it('魔源各形態每回合自己長爪力：第二、三形態 +2、真身 +3，第一形態每回合 +1', () => {
+    const d = enemyById[SOURCE]!;
+    expect(d.strengthEveryNTurns).toBe(1);
+    expect(d.phases!.map((p) => p.strengthPerTurn)).toEqual([2, 2, 3]);
+    expect(d.phases![1]!.summonGap).toBe(2);
+    expect(d.phases![2]!.learnRider!.every((r) => r.length === 2)).toBe(true);
+  });
+
+  it('第二關關主囤寶蛙：一招偷 3 張、每個回合都帶封條或塞牌，連續偷→封→打', () => {
+    const d = enemyById['hell_hoarder_toad']!;
+    const kinds = d.moves.map((m) => m.effects.map((f) => f.kind));
+    expect(d.moves[0]!.effects.find((f) => f.kind === 'stealCard')).toMatchObject({ n: 3 });
+    expect(d.moves.every((m) => m.effects.some((f) => f.kind === 'sealType' || f.kind === 'giveCard'))).toBe(true);
+    expect(kinds.flat().filter((k) => k === 'sealType').length).toBe(3);
+    expect(d.strengthEveryNTurns).toBe(1);
   });
 });

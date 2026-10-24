@@ -23,7 +23,7 @@ describe.skipIf(N <= 0)('地獄關主勝率', () => {
     const src = rows[2]!.bs;
     const forms = [0, 1, 2, 3].map((k) => src.filter((b) => (b.phase ?? 0) >= k).length);
     const lines = ['boss reached won win%'];
-    for (const r of rows) lines.push(`${r.id} ${r.n} ${r.w} ${r.n ? (r.w / r.n * 100).toFixed(0) : '-'}%`);
+    for (const r of rows) lines.push(`${r.id} ${r.n} ${r.w} ${r.n ? (r.w / r.n * 100).toFixed(0) : '-'}% 回合 ${r.n ? (r.bs.reduce((x, b) => x + b.turns, 0) / r.n).toFixed(1) : '-'} 進場血 ${r.n ? (r.bs.reduce((x, b) => x + b.hpIn / b.maxHp, 0) / r.n * 100).toFixed(0) : '-'}%`);
     lines.push(`source form reach f1/f2/f3/f4: ${forms.join('/')}`);
     lines.push(`runs ${rs.length} clear ${rs.filter((r) => r.won).length} (${(rs.filter((r) => r.won).length / rs.length * 100).toFixed(1)}%)`);
     console.log(lines.join('\n'));
