@@ -532,6 +532,7 @@ export function finishCombat(run: RunState, cs: CombatState, bonusFish = 0): Com
     + (mod?.extraCard ? 1 : 0);
   const exclude = excludeFor(0);
   const extraChoices = extraChoicesFor(0);
+  const hell = runMods(run).hellMode;   // 地獄：四選一＋保底兩張攻擊牌（`rollRewards`）
   const upgradeChance = upgradeChanceFor(run);   // 戰鬥獎勵開出升級牌的機率（數字見 upgradeChanceFor）
   /*
    * 戰利品**開一份、兩個人共用**（牌照使用者規則三各挑一張，見 `takeCardReward`）。
@@ -541,7 +542,7 @@ export function finishCombat(run: RunState, cs: CombatState, bonusFish = 0): Com
    */
   // `heroes`／`hero` 是秘寶職業鎖（`RelicDef.notFor`）用的；2026-09-14 深夜起沒有任何秘寶上鎖，這幾條路目前沒有測試守得到，
   // 哪天再鎖秘寶，先從 2e326a6／9f0ea98 把五個入口的濾網測試撿回來
-  const r = rollRewards(runRng(run), kind, me(run).relics, winGold, late, { exclude, rareBonus: (me(run).rarePity ?? 0) * 4, extraChoices, upgradeChance, hero: heroOf(me(run)), heroes: heroesIn(run), players: run.players.length,
+  const r = rollRewards(runRng(run), kind, me(run).relics, winGold, late, { exclude, rareBonus: (me(run).rarePity ?? 0) * 4, extraChoices, upgradeChance, hero: heroOf(me(run)), heroes: heroesIn(run), players: run.players.length, ...(hell ? { hell } : {}),
     ...(run.players.length > 1 ? { ownedPerSeat: run.players.map((p) => p.relics) } : {}) });
   /*
    * **兩個人時每個人再各抽一份三選一**（2026-09-13 使用者要求）。
@@ -562,7 +563,7 @@ export function finishCombat(run: RunState, cs: CombatState, bonusFish = 0): Com
       const mine = rollRewards(runRng(run), kind, run.players[i]!.relics, winGold, late, {
         exclude: excludeFor(i), rareBonus: (run.players[i]!.rarePity ?? 0) * 4,
         extraChoices: extraChoicesFor(i), upgradeChance,
-        hero: heroOf(me(run, i)), heroes: heroesIn(run), players: run.players.length,
+        hero: heroOf(me(run, i)), heroes: heroesIn(run), players: run.players.length, ...(hell ? { hell } : {}),
       });
       per.push(mine.cards);
       upPer.push(mine.upgradedCard);

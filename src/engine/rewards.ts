@@ -80,13 +80,13 @@ function rollRarity(rng: Rng, available: Set<Rarity>, late = false, rareBonus = 
  * `hero` 可以給一串（2026-09-14 連線稽核 高-8）：**共用的貨架**（罐頭鋪）要擺「這一局有人用得到」的牌，
  * 跟秘寶的 `relicOk` 同一條規則。單機只給一位，濾出來的清單跟以前一模一樣，亂數走向不變。
  */
-export function rollCardChoices(rng: Rng, pool: Pool, n: number, exclude: string[] = [], late = false, rareBonus = 0, odds?: readonly [Rarity, number][], hero: Hero | readonly Hero[] = 'ninja', players = 1): CardDef[] {
+export function rollCardChoices(rng: Rng, pool: Pool, n: number, exclude: string[] = [], late = false, rareBonus = 0, odds?: readonly [Rarity, number][], hero: Hero | readonly Hero[] = 'ninja', players = 1, only?: (c: CardDef) => boolean): CardDef[] {
   const out: CardDef[] = [];
   const taken = new Set(exclude);
   const heroes: readonly Hero[] = typeof hero === 'string' ? [hero] : hero;
   for (let i = 0; i < n; i++) {
-    // 能不能開出來一律問 `pickable`（起手、雜牌、待圖、職業、連線牌五道關卡都在那裡）
-    const remaining = cards.filter((c) => c.pool === pool && heroes.some((h) => pickable(c, h, players)) && !taken.has(c.id));
+    // 能不能開出來一律問 `pickable`（起手、雜牌、待圖、職業、連線牌五道關卡都在那裡）；`only`＝再加一道（地獄補攻擊牌用）
+    const remaining = cards.filter((c) => c.pool === pool && heroes.some((h) => pickable(c, h, players)) && !taken.has(c.id) && (!only || only(c)));
     if (remaining.length === 0) break;
     const rar = rollRarity(rng, new Set(remaining.map((c) => c.rarity)), late, rareBonus, odds);
     const pick = rng.pick(remaining.filter((c) => c.rarity === rar));
@@ -214,6 +214,27 @@ export function settleRelicPicks(rng: Rng, offered: readonly string[], picks: re
   return valid.map((p, i) => (p === null ? null : i === winner ? prize : leftoverFor(i)));
 }
 
+/** 地獄：戰後選牌至少要幾張攻擊牌 */
+export const HELL_MIN_ATTACKS = 2;
+
+/**
+ * 地獄的戰後選牌保底兩張攻擊牌（使用者試玩 2026-10-24：「攻擊手段太少」）：不足就從忍術池補抽攻擊牌，
+ * 原地換掉非攻擊牌（先換忍術池的，絕學最後才動）。池子抽不出來就盡量。只有地獄會叫。
+ */
+function ensureAttacks(rng: Rng, picks: CardDef[], ex: string[], late: boolean, bonus: number, hero: Hero, players: number): CardDef[] {
+  const out = picks.slice();
+  const isAtk = (c: CardDef): boolean => c.type === 'attack';
+  while (out.filter(isAtk).length < HELL_MIN_ATTACKS) {
+    const at = out.findIndex((c) => !isAtk(c) && c.pool !== '絕學');
+    const idx = at >= 0 ? at : out.findIndex((c) => !isAtk(c));
+    if (idx < 0) break;
+    const fresh = rollCardChoices(rng, '忍術', 1, [...ex, ...out.map((c) => c.id)], late, bonus, undefined, hero, players, isAtk)[0];
+    if (!fresh) break;
+    out[idx] = fresh;
+  }
+  return out;
+}
+
 /**
  * `opts.exclude`＝這次不要再開的牌（牌組裡已經有兩張的：第三張同名牌幾乎沒人要，開出來等於少一個選項）；
  * `opts.rareBonus`＝稀有保底權重。兩者都只影響牌，不影響小魚乾／忍具／秘寶。
@@ -239,20 +260,24 @@ export function rollRewards(rng: Rng, kind: CombatRewards['kind'], owned: string
      * 完全靜音：畫面正常、牌也照常三選一，只是那些牌永遠不在池子裡。
      * 單機傳 1（或不傳）時行為與修改前一模一樣，`pickable` 那一關直接放行。
      */
-    players?: number } = {}): CombatRewards {
+    players?: number;
+    /** 地獄（難度 6）：戰後選牌多一張、至少兩張攻擊牌。難度 1～5 不傳，抽法與亂數走向一個字都不變 */
+    hell?: boolean } = {}): CombatRewards {
   const ex = opts.exclude ?? [];
   const hero = opts.hero ?? 'ninja';   // 職業獨占牌的過濾（2026-09-05）
   const players = opts.players ?? 1;   // 連線牌的過濾（2026-09-13）
   const bonus = opts.rareBonus ?? 0;
   const extra = opts.extraChoices ?? 0;   // 掌門印：牌多幾張可選
+  const hellExtra = opts.hell ? 1 : 0;   // 地獄：多一張可選（四選一），且保底兩張攻擊牌（`ensureAttacks`）
   if (kind === '塔主') return { kind, cards: [], fish: 100 + winGoldBonus, potion: null, relic: owned.includes('tower_token') ? null : 'tower_token' };
   // 升級牌：依機率挑三選一裡的一張改成升級版（機率見 run.ts upgradeChanceFor）
   const withUpgrade = (cards: CardDef[]): { upgradedCard?: string } =>
     cards.length && (opts.upgradeChance ?? 0) > 0 && rng.chance(opts.upgradeChance ?? 0) ? { upgradedCard: rng.pick(cards).id } : {};
   if (kind === '大魔物') {
     const jue = rollCardChoices(rng, '絕學', 1, ex, late, bonus, undefined, hero, players);
-    const rest = rollCardChoices(rng, '忍術', 2 + extra, ex, late, bonus, undefined, hero, players);
-    const cards = rng.shuffle([...jue, ...rest]);
+    const rest = rollCardChoices(rng, '忍術', 2 + extra + hellExtra, ex, late, bonus, undefined, hero, players);
+    let cards = rng.shuffle([...jue, ...rest]);
+    if (opts.hell) cards = ensureAttacks(rng, cards, ex, late, bonus, hero, players);
     // 忍具每一位各發一支同樣的：要這一局每一位都用得到（`potionOk`，2026-09-23）
     const potion = rng.chance(0.5) ? rollPotion(rng, opts.heroes ?? [hero]) : null;
     const seats = opts.ownedPerSeat;
@@ -264,12 +289,13 @@ export function rollRewards(rng: Rng, kind: CombatRewards['kind'], owned: string
   }
   // 小魚乾 10～20 → 15～25：原本一關打完約 90 條，罐頭鋪一張常見牌 50、
   // 等於整關只逛得起一次店，商店形同虛設
-  let picks = rollCardChoices(rng, '忍術', 3 + extra, ex, late, bonus, undefined, hero, players);
+  let picks = rollCardChoices(rng, '忍術', 3 + extra + hellExtra, ex, late, bonus, undefined, hero, players);
   // 後期（8F 起、第二關起）四分之一的戰利品把一張忍術換成絕學：
   // 絕學原本只有精英、關主、事件、商店拿得到，一般戰鬥打四十場看到的永遠是忍術池那三十幾張
   if (late && rng.chance(0.25)) {
     const jue = rollCardChoices(rng, '絕學', 1, ex, late, bonus, undefined, hero, players);
-    if (jue.length) picks = rng.shuffle([...picks.slice(0, 2 + extra), ...jue]);
+    if (jue.length) picks = rng.shuffle([...picks.slice(0, 2 + extra + hellExtra), ...jue]);
   }
+  if (opts.hell) picks = ensureAttacks(rng, picks, ex, late, bonus, hero, players);
   return { kind, cards: picks, fish: rng.int(15, 25) + winGoldBonus, potion: rng.chance(0.4) ? rollPotion(rng, opts.heroes ?? [hero]) : null, relic: null, ...withUpgrade(picks) };
 }
