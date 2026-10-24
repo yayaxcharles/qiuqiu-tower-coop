@@ -60,7 +60,7 @@ export const hellEnemies: EnemyDef[] = [
   { id: 'hell_geta_runner', name: '木屐小跑', hp: [16, 20], pool: '弱', pattern: 'cycle', size: 'small', art: 'codex/monster_hell_geta_runner',
     line: '拿了就跑，不送！', lines: ['（一隻腳已經抬起來了）'],
     moves: [
-      mv('special', '順手牽魚', { kind: 'stealFish', n: 6 }, dmg(2)),
+      mv('attack', '順手牽魚', { kind: 'stealFish', n: 6 }, dmg(2)),
       mv('attack', '踢', dmg(4)),
       mv('special', '溜走', { kind: 'escape' }),
     ] },
@@ -68,7 +68,7 @@ export const hellEnemies: EnemyDef[] = [
   { id: 'hell_loot_weasel', name: '奪寶鼬', hp: [38, 42], pool: '中', pattern: 'cycle', size: 'medium', art: 'codex/monster_hell_loot_weasel',
     line: '值錢的都交出來！', lines: ['（背上的袋子鼓鼓的）'],
     moves: [
-      mv('special', '搶袋子', { kind: 'stealFish', n: 10 }, dmg(3)),
+      mv('attack', '搶袋子', { kind: 'stealFish', n: 10 }, dmg(3)),
       mv('attack', '鐮爪', dmg(8)),
       mv('attack', '鐮爪', dmg(8)),
       mv('special', '帶著贓物逃', { kind: 'escape' }),
@@ -90,7 +90,7 @@ export const hellEnemies: EnemyDef[] = [
   { id: 'hell_miasma_bud', name: '毒瘴花苞', hp: [42, 46], pool: '中', pattern: 'cycle', size: 'medium', art: 'codex/monster_hell_miasma_bud',
     line: '（花苞慢慢張開一條縫）', lines: ['（裡面有東西在發光）'],
     moves: [
-      mv('debuff', '吐瘴氣', onPlayer('懶洋洋', 1), dmg(3)),
+      mv('attack', '吐瘴氣', onPlayer('懶洋洋', 1), dmg(3)),
       mv('attack', '張口一咬', dmg(8)),
       mv('block', '收攏花瓣', blk(8), { kind: 'heal', n: 4 }),
     ] },
@@ -136,7 +136,7 @@ export const hellEnemies: EnemyDef[] = [
     moves: [
       mv('buff', '沙落護體', blk(14), selfClaw(1)),
       mv('attack', '石拳砸地', dmg(14)),
-      mv('debuff', '流沙', dmg(6), onPlayer('懶洋洋', 2)),
+      mv('attack', '流沙', dmg(6), onPlayer('懶洋洋', 2)),
     ] },
   // ----- 關主 -----
   { id: 'hell_hourglass_shogun', name: '沙漏將軍', hp: [150, 150], pool: '塔主', pattern: 'cycle', size: 'large', art: 'codex/monster_hell_hourglass_shogun',
@@ -155,57 +155,57 @@ export const hellEnemies: EnemyDef[] = [
   { id: 'hell_pickpocket_monkey', name: '扒手猴', hp: [46, 52], pool: '中', pattern: 'cycle', size: 'medium', art: 'codex/monster_hell_pickpocket_monkey',
     line: '借我看一下～', lines: ['（手裡已經多了一張不是自己的牌）'],
     moves: [
-      mv('special', '順走一張', steal(1), dmg(6)),   // 偷牌（魔物倒下時還牌）
+      mv('attack', '順走一張', steal(1), dmg(6)),   // 偷牌（魔物倒下時還牌）
       mv('attack', '抓', dmg(9)),
       mv('debuff', '嬉鬧', dazed(1, 'draw')),
     ] },
   { id: 'hell_ofuda_ghost', name: '符紙鬼', hp: [40, 46], pool: '中', pattern: 'cycle', size: 'small', art: 'codex/monster_hell_ofuda_ghost',
     line: '（紙條輕輕飄到你面前）', lines: ['（朱紅的印章閃了一下）'],
     moves: [
-      mv('debuff', '貼符', seal('attack'), dmg(4)),   // 封牌：封攻擊
+      mv('attack', '貼符', seal('attack'), dmg(4)),   // 封牌：封攻擊
       mv('attack', '飄', dmg(10)),
-      mv('debuff', '貼符', seal('skill'), dmg(4)),   // 封牌：封技能
+      mv('attack', '貼符', seal('skill'), dmg(4)),   // 封牌：封技能
     ] },
   { id: 'hell_shuffle_fox', name: '洗牌狐', hp: [52, 58], pool: '中', pattern: 'cycle', size: 'medium', art: 'codex/monster_hell_shuffle_fox',
     line: '來來來，猜猜你的牌在哪？', lines: ['（空中的牌轉成一個圈）'],
     moves: [
-      mv('special', '洗牌', drop(2), dmg(6)),
+      mv('attack', '洗牌', drop(2), dmg(6)),
       mv('attack', '狐火', dmg(12)),
       mv('block', '假動作', blk(8), onPlayer('炸毛', 1)),
     ] },
   { id: 'hell_trash_goblin', name: '垃圾小妖', hp: [40, 44], pool: '中', pattern: 'cycle', size: 'small', art: 'codex/monster_hell_trash_goblin',
     line: '嘿嘿，送你一包好東西！', lines: ['（拖著另一包垃圾，魚骨頭還插在頭上）'],
     moves: [
-      mv('debuff', '扔垃圾', slime(1), dmg(6)),
+      mv('attack', '扔垃圾', slime(1), dmg(6)),
       mv('block', '拖袋子', blk(8)),
       mv('debuff', '亂丟', slime(2)),
     ] },
   { id: 'hell_paper_crane', name: '紙牌鶴', hp: [44, 50], pool: '中', pattern: 'cycle', size: 'small', art: 'codex/monster_hell_paper_crane',
     line: '（翅膀一拍，牌片滿天飛）', lines: ['（紙做的嘴喀喀響）'],
     moves: [
-      mv('debuff', '折牌', dazed(1, 'draw'), dmg(6)),
+      mv('attack', '折牌', dazed(1, 'draw'), dmg(6)),
       mv('attack', '紙刃', dmg(4, 3)),
       mv('debuff', '撒牌', dazed(2, 'discard')),
     ] },
   { id: 'hell_dice_goblin', name: '骰子鬼', hp: [42, 48], pool: '中', pattern: 'cycle', size: 'small', art: 'codex/monster_hell_dice_goblin',
     line: '賭一把，輸了算你的！', lines: ['（三顆大骰子在空中轉個不停）'],
     moves: [
-      mv('special', '擲骰', drop(1), dmg(7)),
+      mv('attack', '擲骰', drop(1), dmg(7)),
       mv('attack', '豪賭', { kind: 'damageRandom', min: 3, max: 15 }),
-      mv('special', '擲骰', drop(1), dmg(7)),
+      mv('attack', '擲骰', drop(1), dmg(7)),
     ] },
   { id: 'hell_ink_brush', name: '墨筆怪', hp: [54, 60], pool: '中', pattern: 'cycle', size: 'medium', art: 'codex/monster_hell_ink_brush',
     line: '來，我幫你畫一筆。', lines: ['（筆尖滴著黑紫色的墨）'],
     moves: [
-      mv('debuff', '潑墨', seal('skill'), dmg(6)),   // 封牌：封技能
+      mv('attack', '潑墨', seal('skill'), dmg(6)),   // 封牌：封技能
       mv('attack', '一筆勾銷', dmg(13)),
-      mv('block', '落筆', blk(8), dmg(6)),
+      mv('attack', '落筆', blk(8), dmg(6)),
     ] },
   // ----- 強 -----
   { id: 'hell_magpie_tengu', name: '喜鵲天狗', hp: [66, 72], pool: '強', pattern: 'cycle', size: 'medium', art: 'codex/monster_hell_magpie_tengu',
     line: '亮晶晶的東西，都是我的！', lines: ['（窩裡堆滿了閃亮的小東西）'],
     moves: [
-      mv('special', '叼走', drop(2), dmg(13)),
+      mv('attack', '叼走', drop(2), dmg(13)),
       mv('attack', '俯衝', dmg(27)),
       mv('debuff', '撒寶', dazed(2, 'discard')),
     ] },
@@ -214,7 +214,7 @@ export const hellEnemies: EnemyDef[] = [
     moves: [
       mv('debuff', '吐雜物', slime(2)),
       mv('attack', '咬', dmg(27)),
-      mv('special', '吞牌', steal(1), dmg(11)),   // 偷牌
+      mv('attack', '吞牌', steal(1), dmg(11)),   // 偷牌
     ] },
   { id: 'hell_ink_octopus', name: '墨汁章魚', hp: [64, 72], pool: '強', pattern: 'cycle', size: 'medium', art: 'codex/monster_hell_ink_octopus',
     line: '嘿嘿，看不見了吧。', lines: ['（八隻腳抱著捲軸，臉上沾著墨）'],
@@ -226,14 +226,14 @@ export const hellEnemies: EnemyDef[] = [
   { id: 'hell_lock_spider', name: '鎖頭蜘蛛', hp: [68, 76], pool: '強', pattern: 'cycle', size: 'medium', art: 'codex/monster_hell_lock_spider',
     line: '（鎖鏈嘩啦嘩啦地響）', lines: ['（鎖孔旁一排紫色的小眼睛盯著你）'],
     moves: [
-      mv('debuff', '鎖鏈纏', seal('attack'), dmg(11)),   // 封牌：封攻擊
+      mv('attack', '鎖鏈纏', seal('attack'), dmg(11)),   // 封牌：封攻擊
       mv('attack', '咬', dmg(25)),
       mv('debuff', '結網', dazed(2, 'draw')),
     ] },
   { id: 'hell_umbrella_thief', name: '破傘賊', hp: [66, 72], pool: '強', pattern: 'cycle', size: 'medium', art: 'codex/monster_hell_umbrella_thief',
     line: '（破傘一撐，裡面全是別人的牌）', lines: ['（獨腳跳了一下，舌頭甩出來）'],
     moves: [
-      mv('special', '舌頭一捲', steal(1), dmg(11)),   // 偷牌（魔物倒下時還牌）
+      mv('attack', '舌頭一捲', steal(1), dmg(11)),   // 偷牌（魔物倒下時還牌）
       mv('attack', '單腳跳踢', dmg(25)),
       mv('block', '撐傘', blk(10), selfClaw(1)),
     ] },
@@ -248,14 +248,14 @@ export const hellEnemies: EnemyDef[] = [
   { id: 'hell_card_dragon', name: '紙牌龍', hp: [112, 112], pool: '大魔物', pattern: 'cycle', size: 'large', art: 'codex/monster_hell_card_dragon',
     line: '（紙片沙沙響，盤成一圈）', lines: ['（身上的牌片翻飛）', '（張開嘴，一疊牌噴出來）'],
     moves: [
-      mv('debuff', '吐牌', dazed(2, 'draw'), dmg(12)),
+      mv('attack', '吐牌', dazed(2, 'draw'), dmg(12)),
       mv('attack', '龍尾', dmg(13, 2)),
-      mv('special', '吞牌', steal(2), dmg(15)),   // 偷牌
+      mv('attack', '吞牌', steal(2), dmg(15)),   // 偷牌
     ] },
   { id: 'hell_chain_warden', name: '鎖鏈獄卒', hp: [124, 124], pool: '大魔物', pattern: 'cycle', size: 'large', art: 'codex/monster_hell_chain_warden',
     line: '（鐵鍊在地上拖出長長的聲音）', lines: ['（腰上的鑰匙串叮噹作響）', '犯人，就該乖乖待著。'],
     moves: [
-      mv('debuff', '甩鏈', dmg(21), seal('attack')),   // 封牌：封攻擊
+      mv('attack', '甩鏈', dmg(21), seal('attack')),   // 封牌：封攻擊
       mv('block', '銬住', blk(12), onPlayer('炸毛', 2)),
       mv('attack', '鑰匙串重擊', dmg(27)),
     ] },
@@ -264,7 +264,7 @@ export const hellEnemies: EnemyDef[] = [
     line: '這些都是本大名的，一張也不許少。', lines: ['（坐在牌堆上，大印章靠在膝蓋）', '你的牌，先借我保管。'],
     moves: [
       // 2026-10-24 改成「偷→封→打」連鎖：偷三張＋封技能、蓋印封攻擊、坐擁寶山塞壞牌、連砸再封技能；每個回合都在搶手牌或封牌
-      mv('special', '長舌捲牌', steal(3), dmg(12), seal('skill')),   // 偷牌＋封技能
+      mv('attack', '長舌捲牌', steal(3), dmg(12), seal('skill')),   // 偷牌＋封技能
       mv('attack', '蓋印', dmg(16), seal('attack')),   // 封牌：蓋印封住攻擊牌
       mv('block', '坐擁寶山', blk(16), { kind: 'heal', n: 8 }, dazed(2, 'draw')),   // 塞壞牌
       mv('attack', '大印連砸', dmg(10, 3), seal('skill')),
@@ -305,7 +305,7 @@ export const hellEnemies: EnemyDef[] = [
   { id: 'hell_medicine_bat', name: '藥蝠', hp: [42, 48], pool: '中', pattern: 'cycle', size: 'small', art: 'codex/monster_hell_medicine_bat',
     line: '來，吃藥！很苦但有效！', lines: ['（葫蘆搖得叮叮咚咚）'],
     moves: [
-      mv('block', '分藥', { kind: 'blockAllies', amount: 8 }, dmg(6)),
+      mv('attack', '分藥', { kind: 'blockAllies', amount: 8 }, dmg(6)),
       mv('attack', '潑藥水', dmg(12)),
       mv('debuff', '苦藥', onPlayer('懶洋洋', 2)),
     ] },
@@ -338,7 +338,7 @@ export const hellEnemies: EnemyDef[] = [
     line: '嗯，依我看，該這麼打。', lines: ['（搧著羽扇，眼睛瞇成一條線）'],
     moves: [
       mv('buff', '下軍令', allyClaw(2)),
-      mv('debuff', '撥算盤', { kind: 'stripPlayer', names: ['隱身', '潛水'] }, dmg(10)),
+      mv('attack', '撥算盤', { kind: 'stripPlayer', names: ['隱身', '潛水'] }, dmg(10)),
       mv('attack', '羽扇擊', dmg(17)),
     ] },
   { id: 'hell_kagemusha_cat', name: '影武者貓', hp: [80, 88], pool: '強', pattern: 'cycle', size: 'medium', art: 'codex/monster_hell_kagemusha_cat',
@@ -411,7 +411,7 @@ export const hellEnemies: EnemyDef[] = [
         moves: [
           mv('attack', '千手攫牌', steal(3), dmg(8), seal('skill')),
           mv('attack', '封印・攻', dmg(12), seal('attack')),
-          mv('debuff', '塞牌亂舞', dazed(3, 'draw'), slime(2), dmg(6)),
+          mv('attack', '塞牌亂舞', dazed(3, 'draw'), slime(2), dmg(6)),
           mv('block', '封印・技', blk(12), seal('skill'), steal(1)),
           mv('attack', '千手連打', dmg(9, 3), seal('attack')),
         ],
@@ -422,8 +422,8 @@ export const hellEnemies: EnemyDef[] = [
         onEnter: [],
         moves: [
           mv('attack', '怒面', dmg(28)),
-          mv('block', '哭面', blk(16), dmg(10)),
-          mv('summon', '笑面', { kind: 'summon', enemyId: 'hell_medicine_bat', n: 1, max: 2 }, onPlayer('炸毛', 2), dmg(8)),
+          mv('attack', '哭面', blk(16), dmg(10)),
+          mv('attack', '笑面', { kind: 'summon', enemyId: 'hell_medicine_bat', n: 1, max: 2 }, onPlayer('炸毛', 2), dmg(8)),
         ],
       },
       // 四、真身・九尾黑貓神（全部＋模仿）：三種機制同時開；每一動照抄你上一回合打出的牌（`mimic.ts`），
