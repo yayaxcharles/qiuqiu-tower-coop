@@ -781,9 +781,13 @@ export class App {
         });
       };
       // 塔頂門外段落只在第三關最終頭目前播放一次；前兩關的關主不應提前消耗這段劇情。
-      // 地獄（難度 6）的尾王是魔源、不是大俠貓：門外那段演的是師父在門後，跟魔源開場「你把師父怎麼了」矛盾，整段不播（單人、連線同一條路）
-      const top = run.act >= ACTS && !runMods(run).hellMode ? storyFor(localHero()).topScene : [];
-      const topSlides = topSceneSlides(localHero());
+      // 地獄（難度 6）的尾王是魔源、不是大俠貓：原本那段演的是師父在門後，跟魔源開場「你把師父怎麼了」矛盾，
+      // 改播地獄版（`hellTopScene`：師父倒在裂縫邊；兩位不同角色合演時 `storyFor` 已換成只有旁白的連線版）。
+      // 原版的圖畫的是大俠貓站著出手，地獄版不配圖、照字面播純對白
+      const hell = runMods(run).hellMode;
+      const topStory = run.act >= ACTS ? storyFor(localHero()) : undefined;
+      const top = topStory ? (hell ? topStory.hellTopScene : topStory.topScene) : [];
+      const topSlides = hell ? [] : topSceneSlides(localHero());
       if (top.length) this.playOnce(`topScene:${run.act}`, top, playBoss, STORY_LITERAL, topSlides);
       else playBoss();
     } else go();

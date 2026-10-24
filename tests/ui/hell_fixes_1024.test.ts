@@ -8,13 +8,15 @@ const APP = APP_RAW.replace(/\r\n/g, '\n');
 const COMBAT = COMBAT_RAW.replace(/\r\n/g, '\n');
 
 describe('地獄最終審查修正（2026-10-24）', () => {
-  it('hellNoTopScene：地獄模式不播塔頂門外那段（大俠貓在門口，跟魔源開場「你把師父怎麼了」矛盾）', () => {
+  it('hellTopScene：地獄模式不播原版塔頂門外那段（大俠貓在門口，跟魔源開場「你把師父怎麼了」矛盾），改播地獄版', () => {
+    // 2026-10-24 起改成「地獄播 hellTopScene」（原本是整段不播）；細節與逐字稿子在 tests/content/hell_story.test.ts
     const m = APP.match(/const top = ([^\n]*topScene[^\n]*);/);
     expect(m, '找得到 top 那一行').not.toBeNull();
     const expr = m![1]!;
-    expect(expr).toContain('runMods(run).hellMode');
-    // 單人與連線（withMixed 包過的四位角色）都走同一個 storyFor，條件擋在前面就兩邊一起擋
-    expect(expr.indexOf('runMods(run).hellMode')).toBeLessThan(expr.indexOf('storyFor'));
+    expect(expr).toContain('hell ? topStory.hellTopScene : topStory.topScene');
+    expect(APP).toContain('const hell = runMods(run).hellMode;');
+    // 單人與連線（withMixed 包過的四位角色）都走同一個 storyFor，連線版在 storyFor 裡換好
+    expect(APP).toContain('const topStory = run.act >= ACTS ? storyFor(localHero()) : undefined;');
   });
 
   it('sealChip：戰鬥畫面在 cs.hell.sealed 有值時才顯示「封：攻擊／技能」', () => {

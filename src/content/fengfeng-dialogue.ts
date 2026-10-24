@@ -1,4 +1,4 @@
-import type { DeckLeaning, DialogueLine } from './dialogue';
+import type { DeckLeaning, DialogueLine, HellVictoryHead } from './dialogue';
 
 export const fengfengSelection: DialogueLine[] = [
   {
@@ -207,6 +207,17 @@ export const fengfengVictory: DialogueLine[] = [
     "text": "看過兩邊了，沒人。等我收劍，你再進來。"
   }
 ];
+/** 地獄（難度 6）的塔頂段與結局開頭（2026-10-24 使用者核可；用法見 `dialogue.hellEndingLine` 的說明）。`reply` 只換字，`narrationAfter` 標記留在原句 */
+export const fengfengHellTopScene: DialogueLine[] = [
+  { speaker: "旁白", text: "菲菲扶著球球退到牆邊。師父倒在裂開的地板旁，手裡攥著半截斷掉的注連繩；紫霧正從縫裡往上湧。" },
+  { speaker: "球球", text: "封封，師父叫不醒喵！" },
+  { speaker: "封封", text: "繩子斷了一半，另一半在底下。你們顧著師父，別靠近裂縫。" },
+  { speaker: "旁白", text: "裂縫深處亮起一顆紫色的心臟，一隻巨大的繭慢慢浮了上來。封封拔劍，站到裂縫前。" },
+];
+export const fengfengHellVictoryHead: HellVictoryHead = {
+  opening: "注連繩接了回去，裂縫合上，紫霧散了。師父睜開眼睛，看著封封還舉著的劍。",
+  reply: "您醒了。先坐下，我把劍收好。",
+};
 export const fengfengVictoryVariants: DialogueLine[] = [
   {
     "speaker": "旁白",
@@ -513,6 +524,7 @@ export const fengfengDialogue = {
   prologue: fengfengPrologue, actClear1: fengfengActClear1, actClear2: fengfengActClear2,
   defeat: fengfengDefeat, victoryTeaser: fengfengVictoryTeaser, victory: fengfengVictory,
   victoryNarration: fengfengVictoryNarration, hardModeEpilogue: fengfengHardModeEpilogue, topScene: fengfengTopScene,
+  hellTopScene: fengfengHellTopScene, hellVictoryHead: fengfengHellVictoryHead,
   battleStart: fengfengShortLines.START ?? [], battleWin: fengfengShortLines.WIN ?? [],
   hungry: fengfengShortLines.HUNGRY ?? [], lowHp: fengfengShortLines.LOW ?? [],
   chestLines: fengfengShortLines.CHEST ?? [], restNapLines: fengfengShortLines.NAP ?? [],

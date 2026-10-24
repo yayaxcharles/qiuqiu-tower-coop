@@ -9,6 +9,9 @@ import {
   fengfengFirstMeet,
 } from './fengfeng-dialogue';
 import { TOP_ECHOES, VICTORY_MAX_LINES, victoryEchoes, type VictoryCtx } from './victory-echoes';
+/** 地獄結局的開頭：換掉第一句旁白；`reply` 有寫就一併換掉師父那句之後的主角回話（球球沿用原句，不寫） */
+export interface HellVictoryHead { opening: string; reply?: string }
+
 export interface DialogueLine {
   /**
    * `大俠貓`＝結局裡師父醒來之後的說話者（2026-09-25 劇情草稿第 3 節）：醒了就不再是「塔主」，
@@ -48,6 +51,18 @@ export function qiuqiuLineOk(text: string): boolean {
 export function feifeiLineOk(text: string): boolean {
   return !/喵$/u.test(text.replace(/[！？。…～、,.!?]+$/u, ''));
 }
+
+/**
+ * 球球的地獄塔頂段：取代原本的 `topScene`（地獄的尾王是魔源，師父倒在裂縫邊）。
+ * **不放進 `dialogue` 物件**：那個物件裡的「球球」台詞是給關主區塊逐句配菲菲／噹噹版用的（`*_boss_lines.test.ts` 會掃），
+ * 這一段是他自己的劇本、不分角色換口氣（跟菲菲、噹噹、封封各自的 `hellTopScene` 同一種放法）。
+ */
+export const ninjaHellTopScene: DialogueLine[] = [
+  { speaker: '旁白', text: '推開最上層的門，裡面沒有半個人影。地板裂開一道大縫，紫霧從底下一陣一陣往上湧。' },
+  { speaker: '旁白', text: '師父倒在裂縫邊，手裡攥著半截斷掉的注連繩。' },
+  { speaker: '球球', text: '師父！……還有呼吸喵。底下那個是什麼東西喵？' },
+  { speaker: '旁白', text: '裂縫深處亮起一顆紫色的心臟，一隻巨大的繭慢慢浮了上來。' },
+];
 
 export const dialogue = {
   prologue: <DialogueLine[]>[
@@ -712,8 +727,22 @@ export const dialogue = {
     stealth: '師父走過來，球球往旁邊一閃。看見師父伸手要抱他，他才停下來。',
     block: '球球還縮著身子。師父蹲下來拍了拍他的背，他才抬起頭，鬆開護住腦袋的雙爪。',
   },
-  /** 地獄結局多的一句（難度 6）：封印補回去，加上師父走火入魔的原因 */
-  hellEndingLine: '原來塔底的封印早就斷了。師父想一個人把魔源封回去，反被魔氣纏上，才會走火入魔；現在注連繩接回去了，塔不會再長了。',
+  /**
+   * 地獄（難度 6）的結局與塔頂段（2026-10-24 使用者核可的稿子）：尾王是塔底的魔源，師父倒在裂縫邊，不是切磋收場。
+   * `victoryLinesFor` 在難度 6 做三件事：①第一句旁白換成各角色的 `hellVictoryHead.opening`（菲菲、噹噹、封封多換一句主角回話 `reply`）、
+   * ②緊接著插這一句交代、③師父那句固定 `hellMasterFirstWords`、不插打法旁白。其後所有句子與切點照舊。
+   */
+  hellEndingLine: '原來塔底的封印早就斷了。師父一個人進來想把魔源封回去，反被魔氣纏上，才會倒在這裡。現在注連繩接回去了，紫霧散了，塔也不會再長了。',
+  /** 地獄結局師父那句固定「重出江湖。」（在 DAXIA_TITLES 裡，`dialogue.test.ts` 守著），不照牌組傾向換 */
+  hellMasterFirstWords: '重出江湖。',
+  /** 球球的地獄結局開頭；連線兩人合演的場景也共用這句（句子裡沒有指名誰在場） */
+  hellVictoryHead: <HellVictoryHead>{ opening: '斷掉的注連繩接回去了，地板的裂縫慢慢合上。倒在一旁的師父咳了兩聲，睜開眼睛。' },
+  /** 連線（兩位不同角色）的地獄塔頂段：只用旁白，兩台機器演同一段 */
+  hellTopSceneCoop: <DialogueLine[]>[
+    { speaker: '旁白', text: '推開最上層的門，地板裂開一道大縫，紫霧從底下一陣一陣往上湧。' },
+    { speaker: '旁白', text: '師父倒在裂縫邊，手裡攥著半截斷掉的注連繩，怎麼叫都叫不醒。' },
+    { speaker: '旁白', text: '裂縫深處亮起一顆紫色的心臟，一隻巨大的繭慢慢浮了上來。兩人對看一眼，一起站到師父前面。' },
+  ],
   hardModeEpilogue: '回村以後，球球常向師妹講起塔裡的事。說到怎麼救出師父時，他總要站起來比畫幾下。',
   // 三關制之後這句只在「真通關」時出現：塔清完了，沒有更多樓層，改成收尾的話
   victoryTeaser: '師父，明天也陪我練功喵。',
@@ -814,6 +843,19 @@ export const feifeiDialogue = {
     { speaker: '旁白', text: '大俠貓慢慢轉過身。菲菲把師兄扶到門邊坐好，自己往前走了兩步，從竹筒裡抽出三根針。' },
     { speaker: '菲菲', text: '師兄，門口交給你。這次……換我先上。' },
   ],
+  /** 她的地獄塔頂段與結局開頭（見 `dialogue.hellEndingLine` 的說明） */
+  hellTopScene: <DialogueLine[]>[
+    { speaker: '旁白', text: '推開最上層的門，菲菲先看見師兄。他擋在裂開的地板前，額頭擦破了；師父倒在他身後，手裡攥著半截斷掉的注連繩。' },
+    { speaker: '菲菲', text: '師兄！師父他……' },
+    { speaker: '球球', text: '師父只是昏過去了喵。師妹快退，底下有東西要上來了喵！' },
+    { speaker: '菲菲', text: '我不退。……每次叫我退的都是你，受傷的也都是你。' },
+    { speaker: '旁白', text: '裂縫深處亮起一顆紫色的心臟，一隻巨大的繭慢慢浮了上來。菲菲把師兄扶到師父身邊，從竹筒裡抽出三根針。' },
+    { speaker: '菲菲', text: '師兄，師父交給你。這次……換我先上。' },
+  ],
+  hellVictoryHead: <HellVictoryHead>{
+    opening: '斷掉的注連繩接回去，裂縫慢慢合上。師父咳了兩聲，睜開眼睛。塔頂另一端，球球靠著牆抬起頭。菲菲看看師父，又看看師兄，握針的手終於垂了下來。',
+    reply: '師父，您一個人跑來這裡……連我都不說。師兄也是，連個消息都沒有。',
+  },
   /** 她的個人化旁白（師父講完之後插一句）。口徑跟球球那三句一樣，只是換成她的打法 */
   /*
    * **她沒有隱身流，換成毒流**（使用者 2026-09-14 裁定）。
@@ -943,6 +985,19 @@ export const dangdangDialogue = {
     { speaker: '菲菲', text: '噹、噹噹……師兄的腳扭到了，我扶不動他。' },
     { speaker: '噹噹', text: '扶他到門邊坐好。我站穩了，這一掌我接。' },
   ],
+  /** 他的地獄塔頂段與結局開頭（見 `dialogue.hellEndingLine` 的說明） */
+  hellTopScene: <DialogueLine[]>[
+    { speaker: '旁白', text: '最上層的門半掩著。地板裂開一道大縫，師父倒在裂縫邊，菲菲跪著替球球壓住傷口。紫霧從縫裡一陣一陣往上湧。' },
+    { speaker: '球球', text: '噹噹？你怎麼也上來了喵？' },
+    { speaker: '噹噹', text: '我來了。門補好了，換村貓守。' },
+    { speaker: '菲菲', text: '噹、噹噹……師父叫不醒，底下好像有東西在動。' },
+    { speaker: '旁白', text: '裂縫深處亮起一顆紫色的心臟，一隻巨大的繭慢慢浮了上來。噹噹把扣帶拉到最緊，擋到三人前面。' },
+    { speaker: '噹噹', text: '你們顧好師父。底下上來的，我先接。' },
+  ],
+  hellVictoryHead: <HellVictoryHead>{
+    opening: '注連繩接了回去，裂縫合上，紫霧一下子散了。師父撐著地坐起來，噹噹這才把架著的手臂放下。',
+    reply: '您醒了。……下次要封什麼東西，先叫上我。',
+  },
   /*
    * 打法不同、結局多插一句旁白。他的分法跟另外兩位不一樣：
    * **招架流**（純擋）對上**反彈流**（挨了打再還回去）。
@@ -1103,7 +1158,8 @@ export const MIXED_LINES: Readonly<Record<string, Readonly<Record<string, Readon
 
 /** 混搭時把整份故事的句子換過一遍；不換就原樣回（陣列參照不動，既有測試照舊） */
 function withMixed<T extends { prologue: DialogueLine[]; actClear1: DialogueLine[]; actClear2: DialogueLine[]; defeat: DialogueLine[];
-  victory: DialogueLine[]; victoryNarration: Partial<Record<string, string>>; hardModeEpilogue: string; victoryTeaser: string; topScene?: DialogueLine[] }>(hero: string | undefined, s: T): T {
+  victory: DialogueLine[]; victoryNarration: Partial<Record<string, string>>; hardModeEpilogue: string; victoryTeaser: string; topScene?: DialogueLine[];
+  hellTopScene: DialogueLine[]; hellVictoryHead: HellVictoryHead }>(hero: string | undefined, s: T): T {
   const key = pairKey(hero);
   const scenes = key === null ? undefined : MIXED_SCENES[key];
   if (!mixedOn(hero) && !scenes) return s;
@@ -1119,6 +1175,9 @@ function withMixed<T extends { prologue: DialogueLine[]; actClear1: DialogueLine
       actClear1: scenes.actClear1.map((l) => ({ ...l })),
       actClear2: scenes.actClear2.map((l) => ({ ...l })),
       topScene: (scenes.topScene ?? []).map((l) => ({ ...l })),
+      // 地獄：兩位不同角色合演時，塔頂段只用旁白、結局開頭用共用那句、主角回話照連線稿不動（見 `victoryLinesFor`）
+      hellTopScene: dialogue.hellTopSceneCoop.map((l) => ({ ...l })),
+      hellVictoryHead: { opening: dialogue.hellVictoryHead.opening },
       victory: scenes.victory.map((l) => ({ ...l })),
       defeat: scenes.defeat.map((l) => ({ ...l })),
       victoryNarration: {},   // 打法插句是寫給單人結局的，連線場景自己收尾
@@ -1517,6 +1576,10 @@ export function firstMeetLine(hero: string | undefined, enemyId: string): string
 export function storyFor(hero: string | undefined): {
   prologue: DialogueLine[]; actClear1: DialogueLine[]; actClear2: DialogueLine[];
   topScene: DialogueLine[];
+  /** 地獄（難度 6）取代 `topScene` 播的塔頂段 */
+  hellTopScene: DialogueLine[];
+  /** 地獄結局的開頭（`victoryLinesFor` 用） */
+  hellVictoryHead: HellVictoryHead;
   defeat: DialogueLine[]; victoryTeaser: string;
   victory: DialogueLine[]; victoryNarration: Partial<Record<DeckLeaning, string>>;
   hardModeEpilogue: string;
@@ -1531,6 +1594,7 @@ export function storyFor(hero: string | undefined): {
   return withMixed(hero, {
     prologue: dialogue.prologue, actClear1: dialogue.actClear1, actClear2: dialogue.actClear2,
     topScene: [],
+    hellTopScene: ninjaHellTopScene, hellVictoryHead: dialogue.hellVictoryHead,
     defeat: dialogue.defeat, victoryTeaser: dialogue.victoryTeaser,
     victory: dialogue.victory, victoryNarration: dialogue.masterFirstWordsNarration,
     hardModeEpilogue: dialogue.hardModeEpilogue,
@@ -2030,22 +2094,36 @@ export function victoryLinesFor(deckIds: readonly string[], difficulty: number, 
   const story = storyFor(hero);
   const key = deckLeaning(deckIds, hero);
   const lines = story.victory.map((l) => ({ ...l }));
-  // 地獄（難度 6）：尾王是塔底的魔源，結局多一句交代封印補回去了、師父為什麼走火入魔。插在第一句（魔氣散了）後面，
-  // 還沒找「大俠貓」那句的位置之前插，後面的切點與插句都是找出來的、不受影響。連線兩人合演的整段場景自己收尾，不插
-  if (difficulty >= 6 && !hasCoopScene(hero)) lines.splice(1, 0, { speaker: '旁白', text: dialogue.hellEndingLine });
+  /*
+   * 地獄（難度 6）：尾王是塔底的魔源，師父是倒在裂縫邊、被魔氣纏住的，不是切磋收場（2026-10-24 使用者核可的稿子）。
+   * ①第一句旁白換成地獄版開頭（`story.hellVictoryHead`）；②緊接著插一句交代封印補回去了、師父為什麼倒下；
+   * ③師父那句固定「重出江湖。」、主角回話有寫就換（見下面）；④不插打法旁白。
+   * 後面的切點（`slideBreak`）、`narrationAfter`、伏筆旁白、尾聲都是照內容找出來的，插在第 1 句不受影響。
+   * 連線兩人合演的整段場景（`hasCoopScene`）也走這一條：開頭換成共用那句、交代同位置插、主角回話照連線稿不動；
+   * 插在第一張圖的範圍內（切點在後面），不會讓任何一張圖拿到空陣列。
+   */
+  const hell = difficulty >= 6;
+  if (hell && lines[0]?.speaker === '旁白') {
+    lines[0]!.text = story.hellVictoryHead.opening;
+    lines.splice(1, 0, { speaker: '旁白', text: dialogue.hellEndingLine });
+  }
   /*
    * 師父只講大俠貼圖標題（專案規矩，tests/content/dialogue.test.ts 守著）。
    * 找「大俠貓」那一句換字，不再寫死第二句比對「塔主」（2026-09-25：醒來之後說話者改叫大俠貓）。
    */
   const masterAt = lines.findIndex((l) => l.speaker === '大俠貓');
-  if (masterAt >= 0) lines[masterAt]!.text = dialogue.masterFirstWords[key];
+  if (masterAt >= 0) lines[masterAt]!.text = hell ? dialogue.hellMasterFirstWords : dialogue.masterFirstWords[key];
+  // 地獄版的主角回話（菲菲、噹噹、封封；球球沿用原句）：師父那句的下一句，只換字、保留 `narrationAfter` 等標記
+  const hellReply = story.hellVictoryHead.reply;
+  if (hell && hellReply && masterAt >= 0 && lines[masterAt + 1] && lines[masterAt + 1]!.speaker !== '旁白') lines[masterAt + 1]!.text = hellReply;
   // 個人化那一句插在**大俠貓講完之後**
   /*
    * 「沒有明顯傾向」本來一律不插旁白。噹噹那份稿子連這一格都寫了一句
    *（他卸下護臂，才發現裡面的布墊早就濕透），所以改成「有寫才播」。
    * 球球與菲菲的表裡沒有 `plain` 這個鍵，兩位的行為跟改之前一模一樣。
    */
-  const narration = story.victoryNarration[key];
+  // 地獄版不插打法旁白：那些句子都是切磋完的描寫（爪子抓破手臂、球球閃開……），跟倒在裂縫邊的師父對不上
+  const narration = hell ? undefined : story.victoryNarration[key];
   // 標了 `narrationAfter` 的就接在那一句後面（封封：稿子寫「接 FG-V-03 後」，插句講的是他收劍那一下，2026-09-23）
   const after = lines.findIndex((l) => l.narrationAfter);
   if (narration) lines.splice(after >= 0 ? after + 1 : masterAt >= 0 ? masterAt + 1 : 2, 0, { speaker: '旁白', text: narration });
