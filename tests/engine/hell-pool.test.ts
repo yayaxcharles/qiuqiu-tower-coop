@@ -221,3 +221,36 @@ describe('地獄魔物資料', () => {
     expect(encounters.slice(0, encounters.length - hellEncounters.length).some((e) => e.hell)).toBe(false);
   });
 });
+
+describe('地獄魔物的量級：同關同池跟一般難度差不到一成', () => {
+  /** 一組遭遇的總血量：成員血量區間中點相加，乘遭遇的 hpScale */
+  const hpOf = (enc: (typeof encounters)[number]): number =>
+    enc.enemies.reduce((s, id) => s + (enemyById[id]!.hp[0] + enemyById[id]!.hp[1]) / 2, 0) * (enc.hpScale ?? 1);
+  /** 一組遭遇每回合的平均傷害：每位成員把招式表裡傷害招式（段數 × 每段，每段加遭遇的魔氣）平均；沒傷害的招式算 0 */
+  const dmgOf = (enc: (typeof encounters)[number]): number => enc.enemies.reduce((s, id) => {
+    const moves = enemyById[id]!.moves;
+    const per = moves.reduce((a, mv) => a + mv.effects.reduce((b, fx) => {
+      if (fx.kind === 'damage') return b + (fx.amount + (enc.strength ?? 0)) * (fx.times ?? 1);
+      if (fx.kind === 'damageRandom') return b + (fx.min + fx.max) / 2 + (enc.strength ?? 0);
+      if (fx.kind === 'selfDestruct') return b + fx.amount;
+      return b;
+    }, 0), 0);
+    return s + per / moves.length;
+  }, 0);
+  const avg = (list: (typeof encounters), f: (e: (typeof encounters)[number]) => number): number => list.reduce((s, e) => s + f(e), 0) / list.length;
+
+  const groups: [number, EnemyPool][] = [[1, '弱'], [1, '中'], [1, '強'], [1, '大魔物'], [2, '中'], [2, '強'], [2, '大魔物'], [3, '中'], [3, '強'], [3, '大魔物']];
+  for (const [act, pool] of groups) {
+    it(`第${act}關 ${pool}：平均總血量與每回合傷害跟一般難度差在 ±10% 內`, () => {
+      const van = encountersOfPool(pool, act, false), hel = encountersOfPool(pool, act, true);
+      expect(van.length).toBeGreaterThan(0);
+      expect(hel.length).toBeGreaterThan(0);
+      const hp = avg(hel, hpOf) / avg(van, hpOf);
+      const dmg = avg(hel, dmgOf) / avg(van, dmgOf);
+      expect(hp, `血量比 ${hp.toFixed(2)}`).toBeGreaterThanOrEqual(0.9);
+      expect(hp, `血量比 ${hp.toFixed(2)}`).toBeLessThanOrEqual(1.1);
+      expect(dmg, `傷害比 ${dmg.toFixed(2)}`).toBeGreaterThanOrEqual(0.9);
+      expect(dmg, `傷害比 ${dmg.toFixed(2)}`).toBeLessThanOrEqual(1.1);
+    });
+  }
+});
