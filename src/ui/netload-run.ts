@@ -1,6 +1,7 @@
 import type { EnemyDef, RunState, StatusName } from '../engine/types';
 import { encounterById, enemyById } from '../content/enemies';
 import { nextChoices } from '../engine/map';
+import { runMods } from '../engine/run';
 import type { HeroVidsHero } from './hero-vids';
 import { me } from '../engine/runplayer';
 import { artUrl, cardFaceUrls, decodeAll, heroArtUrl, mapHeroKey, warmed, type DecodePool } from './assets';
@@ -82,7 +83,7 @@ export function startRun(run: RunState, seat: number, pr: Preload.Progress, d: R
     ...[...new Set(run.players.map((p) => p.hero ?? 'ninja'))].map((h) => import('./hero-vids').then((m) => m.loadHeroVids((h === 'ninja' ? 'qiuqiu' : h) as HeroVidsHero))),
     d.warmVoice(),
   ], pr);
-  void d.preloadHeroArt(run.players.map((p) => p.hero), run.act);
+  void d.preloadHeroArt(run.players.map((p) => p.hero), run.act, runMods(run).hellMode);
   void Promise.race([ready, new Promise<void>((r) => setTimeout(r, B_AFTER_MS))]).then(() => {
     if (current !== run) return;
     void Promise.all(d.preloadSfx(LATE_SFX));

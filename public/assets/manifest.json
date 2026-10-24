@@ -1692,6 +1692,324 @@
       "hurt": "assets/monsters/shadow_fengfeng_hurt.webp",
       "block": "assets/monsters/shadow_fengfeng_block.webp",
       "down": "assets/monsters/shadow_fengfeng_down.webp"
+    },
+    "codex/monster_hell_banner_imp": {
+      "idle": "assets/monsters/hell_banner_imp_idle.webp",
+      "attack": "assets/monsters/hell_banner_imp_attack.webp",
+      "hurt": "assets/monsters/hell_banner_imp_hurt.webp",
+      "block": "assets/monsters/hell_banner_imp_block.webp"
+    },
+    "codex/monster_hell_bone_commander": {
+      "idle": "assets/monsters/hell_bone_commander_idle.webp",
+      "attack": "assets/monsters/hell_bone_commander_attack.webp",
+      "hurt": "assets/monsters/hell_bone_commander_hurt.webp",
+      "block": "assets/monsters/hell_bone_commander_block.webp",
+      "down": "assets/monsters/hell_bone_commander_down.webp"
+    },
+    "codex/monster_hell_candle_monk": {
+      "idle": "assets/monsters/hell_candle_monk_idle.webp",
+      "attack": "assets/monsters/hell_candle_monk_attack.webp",
+      "hurt": "assets/monsters/hell_candle_monk_hurt.webp",
+      "block": "assets/monsters/hell_candle_monk_block.webp"
+    },
+    "codex/monster_hell_card_dragon": {
+      "idle": "assets/monsters/hell_card_dragon_idle.webp",
+      "attack": "assets/monsters/hell_card_dragon_attack.webp",
+      "hurt": "assets/monsters/hell_card_dragon_hurt.webp",
+      "block": "assets/monsters/hell_card_dragon_block.webp",
+      "down": "assets/monsters/hell_card_dragon_down.webp"
+    },
+    "codex/monster_hell_chain_warden": {
+      "idle": "assets/monsters/hell_chain_warden_idle.webp",
+      "attack": "assets/monsters/hell_chain_warden_attack.webp",
+      "hurt": "assets/monsters/hell_chain_warden_hurt.webp",
+      "block": "assets/monsters/hell_chain_warden_block.webp",
+      "down": "assets/monsters/hell_chain_warden_down.webp"
+    },
+    "codex/monster_hell_clock_oni": {
+      "idle": "assets/monsters/hell_clock_oni_idle.webp",
+      "attack": "assets/monsters/hell_clock_oni_attack.webp",
+      "hurt": "assets/monsters/hell_clock_oni_hurt.webp",
+      "block": "assets/monsters/hell_clock_oni_block.webp",
+      "down": "assets/monsters/hell_clock_oni_down.webp"
+    },
+    "codex/monster_hell_conch_oni": {
+      "idle": "assets/monsters/hell_conch_oni_idle.webp",
+      "attack": "assets/monsters/hell_conch_oni_attack.webp",
+      "hurt": "assets/monsters/hell_conch_oni_hurt.webp",
+      "block": "assets/monsters/hell_conch_oni_block.webp"
+    },
+    "codex/monster_hell_dice_goblin": {
+      "idle": "assets/monsters/hell_dice_goblin_idle.webp",
+      "attack": "assets/monsters/hell_dice_goblin_attack.webp",
+      "hurt": "assets/monsters/hell_dice_goblin_hurt.webp",
+      "block": "assets/monsters/hell_dice_goblin_block.webp"
+    },
+    "codex/monster_hell_drum_tanuki": {
+      "idle": "assets/monsters/hell_drum_tanuki_idle.webp",
+      "attack": "assets/monsters/hell_drum_tanuki_attack.webp",
+      "hurt": "assets/monsters/hell_drum_tanuki_hurt.webp",
+      "block": "assets/monsters/hell_drum_tanuki_block.webp"
+    },
+    "codex/monster_hell_ember_snail": {
+      "idle": "assets/monsters/hell_ember_snail_idle.webp",
+      "attack": "assets/monsters/hell_ember_snail_attack.webp",
+      "hurt": "assets/monsters/hell_ember_snail_hurt.webp",
+      "block": "assets/monsters/hell_ember_snail_block.webp"
+    },
+    "codex/monster_hell_fire_wheel": {
+      "idle": "assets/monsters/hell_fire_wheel_idle.webp",
+      "attack": "assets/monsters/hell_fire_wheel_attack.webp",
+      "hurt": "assets/monsters/hell_fire_wheel_hurt.webp",
+      "block": "assets/monsters/hell_fire_wheel_block.webp"
+    },
+    "codex/monster_hell_fuse_imp": {
+      "idle": "assets/monsters/hell_fuse_imp_idle.webp",
+      "attack": "assets/monsters/hell_fuse_imp_attack.webp",
+      "hurt": "assets/monsters/hell_fuse_imp_hurt.webp",
+      "block": "assets/monsters/hell_fuse_imp_block.webp"
+    },
+    "codex/monster_hell_geta_runner": {
+      "idle": "assets/monsters/hell_geta_runner_idle.webp",
+      "attack": "assets/monsters/hell_geta_runner_attack.webp",
+      "hurt": "assets/monsters/hell_geta_runner_hurt.webp",
+      "block": "assets/monsters/hell_geta_runner_block.webp"
+    },
+    "codex/monster_hell_hoarder_toad": {
+      "idle": "assets/monsters/hell_hoarder_toad_idle.webp",
+      "attack": "assets/monsters/hell_hoarder_toad_attack.webp",
+      "hurt": "assets/monsters/hell_hoarder_toad_hurt.webp",
+      "block": "assets/monsters/hell_hoarder_toad_block.webp",
+      "down": "assets/monsters/hell_hoarder_toad_down.webp"
+    },
+    "codex/monster_hell_hourglass_moth": {
+      "idle": "assets/monsters/hell_hourglass_moth_idle.webp",
+      "attack": "assets/monsters/hell_hourglass_moth_attack.webp",
+      "hurt": "assets/monsters/hell_hourglass_moth_hurt.webp",
+      "block": "assets/monsters/hell_hourglass_moth_block.webp"
+    },
+    "codex/monster_hell_hourglass_shogun": {
+      "idle": "assets/monsters/hell_hourglass_shogun_idle.webp",
+      "attack": "assets/monsters/hell_hourglass_shogun_attack.webp",
+      "hurt": "assets/monsters/hell_hourglass_shogun_hurt.webp",
+      "block": "assets/monsters/hell_hourglass_shogun_block.webp",
+      "down": "assets/monsters/hell_hourglass_shogun_down.webp"
+    },
+    "codex/monster_hell_ink_brush": {
+      "idle": "assets/monsters/hell_ink_brush_idle.webp",
+      "attack": "assets/monsters/hell_ink_brush_attack.webp",
+      "hurt": "assets/monsters/hell_ink_brush_hurt.webp",
+      "block": "assets/monsters/hell_ink_brush_block.webp"
+    },
+    "codex/monster_hell_ink_octopus": {
+      "idle": "assets/monsters/hell_ink_octopus_idle.webp",
+      "attack": "assets/monsters/hell_ink_octopus_attack.webp",
+      "hurt": "assets/monsters/hell_ink_octopus_hurt.webp",
+      "block": "assets/monsters/hell_ink_octopus_block.webp"
+    },
+    "codex/monster_hell_junk_mimic": {
+      "idle": "assets/monsters/hell_junk_mimic_idle.webp",
+      "attack": "assets/monsters/hell_junk_mimic_attack.webp",
+      "hurt": "assets/monsters/hell_junk_mimic_hurt.webp",
+      "block": "assets/monsters/hell_junk_mimic_block.webp"
+    },
+    "codex/monster_hell_kagemusha_cat": {
+      "idle": "assets/monsters/hell_kagemusha_cat_idle.webp",
+      "attack": "assets/monsters/hell_kagemusha_cat_attack.webp",
+      "hurt": "assets/monsters/hell_kagemusha_cat_hurt.webp",
+      "block": "assets/monsters/hell_kagemusha_cat_block.webp"
+    },
+    "codex/monster_hell_lock_spider": {
+      "idle": "assets/monsters/hell_lock_spider_idle.webp",
+      "attack": "assets/monsters/hell_lock_spider_attack.webp",
+      "hurt": "assets/monsters/hell_lock_spider_hurt.webp",
+      "block": "assets/monsters/hell_lock_spider_block.webp"
+    },
+    "codex/monster_hell_loot_weasel": {
+      "idle": "assets/monsters/hell_loot_weasel_idle.webp",
+      "attack": "assets/monsters/hell_loot_weasel_attack.webp",
+      "hurt": "assets/monsters/hell_loot_weasel_hurt.webp",
+      "block": "assets/monsters/hell_loot_weasel_block.webp"
+    },
+    "codex/monster_hell_magpie_tengu": {
+      "idle": "assets/monsters/hell_magpie_tengu_idle.webp",
+      "attack": "assets/monsters/hell_magpie_tengu_attack.webp",
+      "hurt": "assets/monsters/hell_magpie_tengu_hurt.webp",
+      "block": "assets/monsters/hell_magpie_tengu_block.webp"
+    },
+    "codex/monster_hell_medicine_bat": {
+      "idle": "assets/monsters/hell_medicine_bat_idle.webp",
+      "attack": "assets/monsters/hell_medicine_bat_attack.webp",
+      "hurt": "assets/monsters/hell_medicine_bat_hurt.webp",
+      "block": "assets/monsters/hell_medicine_bat_block.webp"
+    },
+    "codex/monster_hell_miasma_bud": {
+      "idle": "assets/monsters/hell_miasma_bud_idle.webp",
+      "attack": "assets/monsters/hell_miasma_bud_attack.webp",
+      "hurt": "assets/monsters/hell_miasma_bud_hurt.webp",
+      "block": "assets/monsters/hell_miasma_bud_block.webp"
+    },
+    "codex/monster_hell_mirror_eye": {
+      "idle": "assets/monsters/hell_mirror_eye_idle.webp",
+      "attack": "assets/monsters/hell_mirror_eye_attack.webp",
+      "hurt": "assets/monsters/hell_mirror_eye_hurt.webp",
+      "block": "assets/monsters/hell_mirror_eye_block.webp"
+    },
+    "codex/monster_hell_nue": {
+      "idle": "assets/monsters/hell_nue_idle.webp",
+      "attack": "assets/monsters/hell_nue_attack.webp",
+      "hurt": "assets/monsters/hell_nue_hurt.webp",
+      "block": "assets/monsters/hell_nue_block.webp",
+      "down": "assets/monsters/hell_nue_down.webp"
+    },
+    "codex/monster_hell_ofuda_ghost": {
+      "idle": "assets/monsters/hell_ofuda_ghost_idle.webp",
+      "attack": "assets/monsters/hell_ofuda_ghost_attack.webp",
+      "hurt": "assets/monsters/hell_ofuda_ghost_hurt.webp",
+      "block": "assets/monsters/hell_ofuda_ghost_block.webp"
+    },
+    "codex/monster_hell_onibi_rats": {
+      "idle": "assets/monsters/hell_onibi_rats_idle.webp",
+      "attack": "assets/monsters/hell_onibi_rats_attack.webp",
+      "hurt": "assets/monsters/hell_onibi_rats_hurt.webp",
+      "block": "assets/monsters/hell_onibi_rats_block.webp"
+    },
+    "codex/monster_hell_paper_crane": {
+      "idle": "assets/monsters/hell_paper_crane_idle.webp",
+      "attack": "assets/monsters/hell_paper_crane_attack.webp",
+      "hurt": "assets/monsters/hell_paper_crane_hurt.webp",
+      "block": "assets/monsters/hell_paper_crane_block.webp"
+    },
+    "codex/monster_hell_pickpocket_monkey": {
+      "idle": "assets/monsters/hell_pickpocket_monkey_idle.webp",
+      "attack": "assets/monsters/hell_pickpocket_monkey_attack.webp",
+      "hurt": "assets/monsters/hell_pickpocket_monkey_hurt.webp",
+      "block": "assets/monsters/hell_pickpocket_monkey_block.webp"
+    },
+    "codex/monster_hell_rush_boar": {
+      "idle": "assets/monsters/hell_rush_boar_idle.webp",
+      "attack": "assets/monsters/hell_rush_boar_attack.webp",
+      "hurt": "assets/monsters/hell_rush_boar_hurt.webp",
+      "block": "assets/monsters/hell_rush_boar_block.webp",
+      "down": "assets/monsters/hell_rush_boar_down.webp"
+    },
+    "codex/monster_hell_sand_golem": {
+      "idle": "assets/monsters/hell_sand_golem_idle.webp",
+      "attack": "assets/monsters/hell_sand_golem_attack.webp",
+      "hurt": "assets/monsters/hell_sand_golem_hurt.webp",
+      "block": "assets/monsters/hell_sand_golem_block.webp",
+      "down": "assets/monsters/hell_sand_golem_down.webp"
+    },
+    "codex/monster_hell_shell_kappa": {
+      "idle": "assets/monsters/hell_shell_kappa_idle.webp",
+      "attack": "assets/monsters/hell_shell_kappa_attack.webp",
+      "hurt": "assets/monsters/hell_shell_kappa_hurt.webp",
+      "block": "assets/monsters/hell_shell_kappa_block.webp"
+    },
+    "codex/monster_hell_shuffle_fox": {
+      "idle": "assets/monsters/hell_shuffle_fox_idle.webp",
+      "attack": "assets/monsters/hell_shuffle_fox_attack.webp",
+      "hurt": "assets/monsters/hell_shuffle_fox_hurt.webp",
+      "block": "assets/monsters/hell_shuffle_fox_block.webp"
+    },
+    "codex/monster_hell_smoke_rat": {
+      "idle": "assets/monsters/hell_smoke_rat_idle.webp",
+      "attack": "assets/monsters/hell_smoke_rat_attack.webp",
+      "hurt": "assets/monsters/hell_smoke_rat_hurt.webp",
+      "block": "assets/monsters/hell_smoke_rat_block.webp"
+    },
+    "codex/monster_hell_source": {
+      "idle": "assets/monsters/hell_source_idle.webp",
+      "attack": "assets/monsters/hell_source_attack.webp",
+      "hurt": "assets/monsters/hell_source_hurt.webp",
+      "block": "assets/monsters/hell_source_block.webp"
+    },
+    "codex/monster_hell_source_p2": {
+      "idle": "assets/monsters/hell_source_p2_idle.webp",
+      "attack": "assets/monsters/hell_source_p2_attack.webp",
+      "hurt": "assets/monsters/hell_source_p2_hurt.webp",
+      "block": "assets/monsters/hell_source_p2_block.webp"
+    },
+    "codex/monster_hell_source_p3": {
+      "idle": "assets/monsters/hell_source_p3_idle.webp",
+      "attack": "assets/monsters/hell_source_p3_attack.webp",
+      "hurt": "assets/monsters/hell_source_p3_hurt.webp",
+      "block": "assets/monsters/hell_source_p3_block.webp"
+    },
+    "codex/monster_hell_source_p4": {
+      "idle": "assets/monsters/hell_source_p4_idle.webp",
+      "attack": "assets/monsters/hell_source_p4_attack.webp",
+      "hurt": "assets/monsters/hell_source_p4_hurt.webp",
+      "block": "assets/monsters/hell_source_p4_block.webp",
+      "down": "assets/monsters/hell_source_p4_down.webp"
+    },
+    "codex/monster_hell_spark_beetle": {
+      "idle": "assets/monsters/hell_spark_beetle_idle.webp",
+      "attack": "assets/monsters/hell_spark_beetle_attack.webp",
+      "hurt": "assets/monsters/hell_spark_beetle_hurt.webp",
+      "block": "assets/monsters/hell_spark_beetle_block.webp"
+    },
+    "codex/monster_hell_spy_crow": {
+      "idle": "assets/monsters/hell_spy_crow_idle.webp",
+      "attack": "assets/monsters/hell_spy_crow_attack.webp",
+      "hurt": "assets/monsters/hell_spy_crow_hurt.webp",
+      "block": "assets/monsters/hell_spy_crow_block.webp"
+    },
+    "codex/monster_hell_strategist_owl": {
+      "idle": "assets/monsters/hell_strategist_owl_idle.webp",
+      "attack": "assets/monsters/hell_strategist_owl_attack.webp",
+      "hurt": "assets/monsters/hell_strategist_owl_hurt.webp",
+      "block": "assets/monsters/hell_strategist_owl_block.webp"
+    },
+    "codex/monster_hell_three_face_ashura": {
+      "idle": "assets/monsters/hell_three_face_ashura_idle.webp",
+      "attack": "assets/monsters/hell_three_face_ashura_attack.webp",
+      "hurt": "assets/monsters/hell_three_face_ashura_hurt.webp",
+      "block": "assets/monsters/hell_three_face_ashura_block.webp",
+      "down": "assets/monsters/hell_three_face_ashura_down.webp"
+    },
+    "codex/monster_hell_trash_goblin": {
+      "idle": "assets/monsters/hell_trash_goblin_idle.webp",
+      "attack": "assets/monsters/hell_trash_goblin_attack.webp",
+      "hurt": "assets/monsters/hell_trash_goblin_hurt.webp",
+      "block": "assets/monsters/hell_trash_goblin_block.webp"
+    },
+    "codex/monster_hell_twin_moon": {
+      "idle": "assets/monsters/hell_twin_moon_idle.webp",
+      "attack": "assets/monsters/hell_twin_moon_attack.webp",
+      "hurt": "assets/monsters/hell_twin_moon_hurt.webp",
+      "block": "assets/monsters/hell_twin_moon_block.webp"
+    },
+    "codex/monster_hell_twin_sun": {
+      "idle": "assets/monsters/hell_twin_sun_idle.webp",
+      "attack": "assets/monsters/hell_twin_sun_attack.webp",
+      "hurt": "assets/monsters/hell_twin_sun_hurt.webp",
+      "block": "assets/monsters/hell_twin_sun_block.webp"
+    },
+    "codex/monster_hell_umbrella_thief": {
+      "idle": "assets/monsters/hell_umbrella_thief_idle.webp",
+      "attack": "assets/monsters/hell_umbrella_thief_attack.webp",
+      "hurt": "assets/monsters/hell_umbrella_thief_hurt.webp",
+      "block": "assets/monsters/hell_umbrella_thief_block.webp"
+    },
+    "codex/monster_hell_vault_tortoise": {
+      "idle": "assets/monsters/hell_vault_tortoise_idle.webp",
+      "attack": "assets/monsters/hell_vault_tortoise_attack.webp",
+      "hurt": "assets/monsters/hell_vault_tortoise_hurt.webp",
+      "block": "assets/monsters/hell_vault_tortoise_block.webp",
+      "down": "assets/monsters/hell_vault_tortoise_down.webp"
+    },
+    "codex/monster_hell_vengeful_doll": {
+      "idle": "assets/monsters/hell_vengeful_doll_idle.webp",
+      "attack": "assets/monsters/hell_vengeful_doll_attack.webp",
+      "hurt": "assets/monsters/hell_vengeful_doll_hurt.webp",
+      "block": "assets/monsters/hell_vengeful_doll_block.webp"
+    },
+    "codex/monster_hell_war_drum_frog": {
+      "idle": "assets/monsters/hell_war_drum_frog_idle.webp",
+      "attack": "assets/monsters/hell_war_drum_frog_attack.webp",
+      "hurt": "assets/monsters/hell_war_drum_frog_hurt.webp",
+      "block": "assets/monsters/hell_war_drum_frog_block.webp"
     }
   },
   "icons": {
@@ -2955,6 +3273,15 @@
     "bg/art26_top_3": "assets/bg/art26_top_3.webp",
     "bg/art26_mapmid": "assets/bg/art26_mapmid.webp",
     "bg/art26_mapmid_mid": "assets/bg/art26_mapmid_mid.webp",
-    "bg/art26_mapmid_top": "assets/bg/art26_mapmid_top.webp"
+    "bg/art26_mapmid_top": "assets/bg/art26_mapmid_top.webp",
+    "bg/bg_hell_1": "assets/bg/bg_hell_1.webp",
+    "bg/bg_hell_1_2": "assets/bg/bg_hell_1_2.webp",
+    "bg/bg_hell_1_3": "assets/bg/bg_hell_1_3.webp",
+    "bg/bg_hell_2": "assets/bg/bg_hell_2.webp",
+    "bg/bg_hell_2_2": "assets/bg/bg_hell_2_2.webp",
+    "bg/bg_hell_2_3": "assets/bg/bg_hell_2_3.webp",
+    "bg/bg_hell_3": "assets/bg/bg_hell_3.webp",
+    "bg/bg_hell_3_2": "assets/bg/bg_hell_3_2.webp",
+    "bg/bg_hell_3_3": "assets/bg/bg_hell_3_3.webp"
   }
 }

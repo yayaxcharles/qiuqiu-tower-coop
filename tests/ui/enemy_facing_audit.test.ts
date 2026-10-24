@@ -15,8 +15,9 @@ const bossKeys = new Set([
 describe('全怪物朝向稽核覆蓋', () => {
   it('所有怪物姿勢和塔主招式都有逐圖確認紀錄', () => {
     const sprites = manifest.sprites as Record<string, string>;
+    // 地獄立繪（hell_ 開頭）同上：還沒逐圖確認朝向，不在稽核檔裡；其餘 503 張照舊全數比對
     const files = new Set([
-      ...Object.values(manifest.monsters).flatMap(Object.values),
+      ...Object.entries(manifest.monsters).filter(([key]) => !key.startsWith('codex/monster_hell_')).flatMap(([, poses]) => Object.values(poses)),
       ...[...bossKeys].map((key) => sprites[key]!),
     ]);
     expect(new Set(reviewed.keys())).toEqual(files);
@@ -35,7 +36,7 @@ describe('全怪物朝向稽核覆蓋', () => {
     _setManifestForTest(manifest);
     for (const enemy of enemies) {
       if (enemy.art === 'daxia') continue;
-      if (enemy.id.startsWith('hell_')) continue;   // 地獄立繪還沒登記進 manifest 與稽核檔（Task 3），登記後拿掉這行
+      if (enemy.id.startsWith('hell_')) continue;   // 地獄立繪已登記進 manifest，但還沒有逐圖朝向稽核（docs/enemy-facing-audit.json 沒有地獄的條目），補稽核後拿掉這行
       for (const hero of ['ninja', 'feifei', 'dangdang', 'fengfeng']) {
         for (let phase = 0; phase <= (enemy.phases?.length ?? 0); phase++) {
           const art = monsterPhaseKey(enemyArtFor(enemy.id, hero), phase);

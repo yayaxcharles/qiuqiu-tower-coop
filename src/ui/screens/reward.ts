@@ -5,7 +5,7 @@ import { cardById } from '../../content/cards';
 import { potionById } from '../../content/potions';
 import { relicById } from '../../content/relics';
 import type { CombatRewards } from '../../engine/rewards';
-import { closeCardReward, heroesIn, relicForPartnerOnly, runRng, takeCardReward, upgradeCard } from '../../engine/run';
+import { closeCardReward, heroesIn, relicForPartnerOnly, runMods, runRng, takeCardReward, upgradeCard } from '../../engine/run';
 import { settleRelicPicks, relicOutcomeText } from '../../engine/rewards';
 import type { CardInstance } from '../../engine/types';
 import { registerScreen } from '../app';
@@ -34,7 +34,7 @@ function icon(key: string, alt: string): Node | string {
 
 registerScreen('reward', (app, root, props) => {
   // 獎勵是戰鬥的延續，沿用同一張戰場背景，玩家不會覺得換了地方
-  root.append(screenBg(tierBgKey(app.run?.floor ?? 1)));
+  root.append(screenBg(tierBgKey(app.run?.floor ?? 1, !!app.run && runMods(app.run).hellMode)));
   const run = app.run;
   if (!run) { app.show('title'); return; }
   const seat = app.seat;

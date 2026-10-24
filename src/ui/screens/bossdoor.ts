@@ -5,6 +5,7 @@ import { battleBgKey, battleBgStyle, bossDoorKey } from '../screenbg';
 import { el } from '../dom';
 import { renderHud } from '../hud';
 import { warmSlides } from '../preload';
+import { runMods } from '../../engine/run';
 import { t as i18nT } from '../../i18n';
 
 /**
@@ -42,7 +43,7 @@ registerScreen('bossdoor', (app, root, props) => {
    * 只共用鍵、不共用放大率的話，門一拉開你看到的地板比較低，0.9 秒後切進戰鬥時
    * 整張背景會放大又往下沉一截——第一關差 27%，眼睛看得很清楚。
    */
-  const behind = el('div', { class: 'screen-bg', style: battleBgStyle(battleBgKey(run.act, run.floor, true)) });
+  const behind = el('div', { class: 'screen-bg', style: battleBgStyle(battleBgKey(run.act, run.floor, true, runMods(run).hellMode)) });
 
   let opened = false;
   const open = (): void => {

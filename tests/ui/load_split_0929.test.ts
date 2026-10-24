@@ -196,7 +196,7 @@ describe('選好角色進入一局才抓那一位的圖', () => {
     // 2026-09-30：adoptRun 改叫 netload.ts 的 warmRun → netload-run.ts 的 startRun（先插隊要最低完成度，再照原本叫 preloadHeroArt，首載那支用傳的）
     expect(app).toContain('    warmRun(run, seat);');
     const netload = NETLOAD_RAW.replace(/\r\n/g, '\n');
-    expect(netload).toContain('void d.preloadHeroArt(run.players.map((p) => p.hero), run.act);');
+    expect(netload).toContain('void d.preloadHeroArt(run.players.map((p) => p.hero), run.act, runMods(run).hellMode);');
     expect(app).not.toMatch(/void preloadAct\(/);
   });
 });

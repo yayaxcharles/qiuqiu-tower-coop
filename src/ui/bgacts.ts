@@ -55,11 +55,30 @@ const SCREEN_SUFFIX = ['', '_mid', '_top'] as const;
  */
 const SCREEN_BC = new Set<string>(['screen_chest', 'screen_rest', 'screen_shop']);
 
-/** 這一關會用到的底圖鍵（manifest.bg 的鍵）。關主戰場 `boss<關數>` 也算 */
-export function bgKeysForAct(act: number): string[] {
+/**
+ * 難度 6「地獄」的戰鬥背景（`bg/bg_hell_<關>`、`_2`、`_3`，每關三張、九張）。全部不在開場載（`deferredBgKeys`），
+ * 進關由 `preloadAct(act, …, hell)` 抓。地獄沒有專屬關主戰場，關主戰也用這三張。
+ */
+export const hellBgKeys = (act: number): string[] => ['', '_2', '_3'].map((v) => `bg/bg_hell_${act}${v}`);
+
+/**
+ * 地獄戰鬥（與緊接其後的獎勵、關主門後）的背景：關數與輪法都照 `screenbg.ts` 的 `tierBgKey`——
+ * 1–15 層第一關、16–30 第二關、31 以上第三關，同一關內用樓層取餘數輪三張（第 1 層是基底、第 2、3 層換另外兩張）。
+ * 不用亂數：戰鬥每出一張牌就重畫，同一層必須永遠同一張；也不碰 `cs.rng`，連線兩台自然一致。
+ */
+export function hellBgKey(floor: number): string {
+  return hellBgKeys(floor <= 15 ? 1 : floor <= 30 ? 2 : 3)[(Math.max(1, Math.abs(floor)) - 1) % 3]!;
+}
+
+/**
+ * 這一關會用到的底圖鍵（manifest.bg 的鍵）。關主戰場 `boss<關數>` 也算。
+ * `hell`（難度 6）：戰鬥背景換成這一關那三張地獄的（一般的三張、關主戰場、新戰鬥背景都不會出現在地獄裡，不抓）；
+ * 地圖、關主門與節點畫面的底圖照舊（地圖另外只疊一層紫黑，見 `map.css` 的 `.map-hell`）。一般難度不傳＝一個鍵都不變。
+ */
+export function bgKeysForAct(act: number, hell = false): string[] {
   const i = Math.min(Math.max(act, 1), 3) - 1;
-  const keys = BG_VARIANTS.map((v) => `bg/${TIER_BY_ACT[i]}${v}`);
-  keys.push(`bg/boss${i + 1}`);
+  const keys = hell ? hellBgKeys(i + 1) : BG_VARIANTS.map((v) => `bg/${TIER_BY_ACT[i]}${v}`);
+  if (!hell) keys.push(`bg/boss${i + 1}`);
   // 關主戰前那扇門也是一關一扇（稽核 2026-09-10 中-1）：沒列進來的話三扇全算首載，
   // 第二、三關那兩扇 65 KB 是白背的——第一關的玩家一輩子看不到。
   // 「二三關減一關」的減法會自己把 act1 那扇留在首載、另外兩扇歸分關載入，不用另外列白名單。
@@ -85,7 +104,7 @@ export function bgKeysForAct(act: number): string[] {
     else keys.push(stem);
   }
   // 新戰鬥背景排最後（地圖與節點畫面先到；第一、二層也輪不到它們），見 `art26Keys`
-  keys.push(...art26Keys(TIER_BY_ACT[i]!));
+  if (!hell) keys.push(...art26Keys(TIER_BY_ACT[i]!));
   return keys;
 }
 
@@ -135,5 +154,6 @@ export function deferredBgKeys(): Set<string> {
   // 不是事件的事件類主圖（祝福主圖、問號格三張揭曉圖，2026-09-23 第三批）同理，用到的畫面自己抓
   const screenArt = NON_EVENT_ART.map((id) => `bg/event_${id}`);
   // 第一關的新戰鬥背景（2026-10-06）也延後：進入一局才由 `preloadAct(1)` 抓（見 `art26Keys`），所以要加在減法之後
-  return new Set([...[...bgKeysForAct(2), ...bgKeysForAct(3), ...slides, ...eventMainKeys(), ...screenArt].filter((k) => !first.has(k)), ...art26Keys('low')]);
+  // 地獄的九張戰鬥背景（2026-10-24）：難度 6 才用，開場一律不載
+  return new Set([...[...bgKeysForAct(2), ...bgKeysForAct(3), ...slides, ...eventMainKeys(), ...screenArt].filter((k) => !first.has(k)), ...art26Keys('low'), ...[1, 2, 3].flatMap(hellBgKeys)]);
 }

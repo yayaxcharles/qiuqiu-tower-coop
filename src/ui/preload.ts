@@ -37,27 +37,34 @@ export function relatedIds(id: string, out: Set<string>): void {
   if (def.splitInto) relatedIds(def.splitInto.enemyId, out);
 }
 
-/** 這一關可能遇到的所有魔物（一般池、菁英、關主、召喚物） */
-export function enemyIdsForAct(act: number): Set<string> {
+/**
+ * 這一關可能遇到的所有魔物（一般池、菁英、關主、召喚物）。
+ * `hell`（難度 6）：只收地獄遭遇的魔物，一般難度（預設）只收一般遭遇——兩邊的集合互不相交。
+ */
+export function enemyIdsForAct(act: number, hell = false): Set<string> {
   const pools: EnemyPool[] = act >= 2 ? ['中', '強', '大魔物'] : ['弱', '中', '強', '大魔物'];
   const ids = new Set<string>();
   for (const enc of encounters) {
     if (enc.hidden) continue;   // 立繪還沒到齊的遭遇地圖抽不到，也不用預載（稽核 2026-09-04 中 3）
-    if (enc.hell) continue;   // 地獄遭遇一般難度抽不到、不預載；地獄的立繪預載由 Task 3 接（難度 6 才載）
+    if (!!enc.hell !== hell) continue;   // 地獄遭遇只在難度 6 抽得到、一般難度不預載；難度 6 也不載一般遭遇
     const inAct = !enc.acts || enc.acts.includes(act);
-    const take = (pools.includes(enc.pool) && inAct) || (enc.pool === '塔主' && bossPoolForAct(act).includes(enc.id));
+    const take = (pools.includes(enc.pool) && inAct) || (enc.pool === '塔主' && bossPoolForAct(act, hell).includes(enc.id));
     if (!take) continue;
     for (const id of enc.enemies) relatedIds(id, ids);
   }
-  // 鏡子走廊那場（事件觸發，池標召喚）依關數接 _a<關數>
-  for (const enc of encounters) if (enc.id === 'mirror_duel' || enc.id === `mirror_duel_a${act}`) for (const id of enc.enemies) relatedIds(id, ids);
+  if (!hell) mirrorDuelIds(act, ids);
   return ids;
 }
 
+/** 鏡子走廊那場（事件觸發，池標召喚）依關數接 _a<關數>；事件難度 6 也排得到，地獄預載另外補（`preloadAct`） */
+function mirrorDuelIds(act: number, ids: Set<string>): void {
+  for (const enc of encounters) if (enc.id === 'mirror_duel' || enc.id === `mirror_duel_a${act}`) for (const id of enc.enemies) relatedIds(id, ids);
+}
+
 /** 這一關會用到的立繪鍵（manifest.monsters 的鍵） */
-export function monsterArtKeysForAct(act: number): string[] {
+export function monsterArtKeysForAct(act: number, hell = false): string[] {
   const keys = new Set<string>();
-  for (const id of enemyIdsForAct(act)) {
+  for (const id of enemyIdsForAct(act, hell)) {
     const def = enemyById[id];
     if (!def || def.art === 'daxia') continue;
     keys.add(def.art);
@@ -101,10 +108,17 @@ export function urlsFor(defs: EnemyDef[], skinHero: string | undefined = localHe
 /** 上一次 `preloadAct` 抓的是第幾關：換了關才放掉上一關留著的圖（清理 2026-09-22，見 `releaseHeldArt`） */
 let heldAct = 0;
 
-export function preloadAct(act: number, skinHero: string | undefined = localHero()): Promise<void> {
-  if (act !== heldAct) { releaseHeldArt(); heldAct = act; }
-  const defs = [...enemyIdsForAct(act)].map((id) => enemyById[id]).filter((d): d is EnemyDef => !!d);
-  const bg = bgKeysForAct(act)
+/**
+ * `hell`（難度 6）：抓地獄的魔物與戰鬥背景，不抓一般難度那批（一般難度不傳＝跟原本一模一樣）。
+ * 事件觸發的鏡子走廊在地獄也排得到，那兩隻是一般魔物，補在最後。
+ */
+export function preloadAct(act: number, skinHero: string | undefined = localHero(), hell = false): Promise<void> {
+  const heldKey = hell ? -act : act;   // 同一關換難度（一般局→地獄局）也要放掉上一批
+  if (heldKey !== heldAct) { releaseHeldArt(); heldAct = heldKey; }
+  const ids = enemyIdsForAct(act, hell);
+  if (hell) mirrorDuelIds(act, ids);
+  const defs = [...ids].map((id) => enemyById[id]).filter((d): d is EnemyDef => !!d);
+  const bg = bgKeysForAct(act, hell)
     .filter((key) => {
       const who = heroOfKey(key);
       return !who || who === (skinHero ?? 'ninja');
@@ -118,9 +132,10 @@ export function preloadAct(act: number, skinHero: string | undefined = localHero
   const held = new Set(urlsFor(defs, skinHero, false));
   // 師父（第三關關主）戰鬥用的那二十幾張：開場不載了（2026-09-29 開場分批，`assets.ts` 的 `isDeferredBossArt`），
   // 進第三關時跟這一關的魔物一起抓、排在最後（關主要打完十五層才遇到）；不留參照，開打時戰鬥畫面自己會再暖一次
-  const boss = bossPoolForAct(act).includes('tower_master') ? bossArtUrls() : [];
+  const boss = bossPoolForAct(act, hell).includes('tower_master') ? bossArtUrls() : [];
   // 2026-10-06 新戰鬥背景（`bgacts.ts` 的 `art26Keys`）排到魔物後面：第三層才輪到，不跟第一場搶慢網路的頻寬（量到慢網路第一場晚約半秒才改）
-  const late = bg.filter((u) => /\/art26_[a-z]+_\d/.test(u));
+  // 地獄的第 2、3 張戰鬥背景（`bg_hell_<關>_2`、`_3`）同理：第 2、3 層才輪到
+  const late = bg.filter((u) => /\/(?:art26_[a-z]+|bg_hell_\d)_\d/.test(u));
   return decodeAll([...new Set([...bg.filter((u) => !late.includes(u)), ...held, ...boss, ...late])], 4, (u) => held.has(u));
 }
 
@@ -128,10 +143,10 @@ export function preloadAct(act: number, skinHero: string | undefined = localHero
  * 第一關前五層的弱魔物（2026-09-29 開場分批）：停在封面時就抓，不管選誰、第一場都從這一池抽（`map.ts` 的 `poolForFloor`）。
  * 第一關其餘的魔物（中、強、大魔物、關主）等進入一局才抓（`preloadHeroArt` 叫 `preloadAct`）。留參照，同 `preloadAct`。
  */
-export function firstFightUrls(): string[] {
+export function firstFightUrls(hell = false): string[] {
   const ids = new Set<string>();
   for (const enc of encounters) {
-    if (enc.hidden || enc.hell || enc.pool !== '弱' || (enc.acts && !enc.acts.includes(1))) continue;
+    if (enc.hidden || !!enc.hell !== hell || enc.pool !== '弱' || (enc.acts && !enc.acts.includes(1))) continue;
     for (const id of enc.enemies) relatedIds(id, ids);
   }
   return urlsFor([...ids].map((id) => enemyById[id]).filter((d): d is EnemyDef => !!d), 'ninja', false);
@@ -376,10 +391,11 @@ export function _mapEventHeldForTest(): string[] { return [...mapEventPool.keep.
  * `act`（2026-09-29）：進入一局時一起抓這一關其餘的魔物與底圖（`preloadAct`）。`adoptRun` 給——新的一局、續玩、連線開局三個入口都走那裡；
  * 原本新的一局靠封面那時就抓好的第一關、續玩另外叫一次 `preloadAct`，現在收成這一處。
  * 魔物變裝照**座位 0**（同 `preloadAct` 的 `skinHero`：鏡中那隻照座位 0 變）。
+ * `hell`（難度 6）：這一關抓地獄的魔物與戰鬥背景（`preloadAct`）；呼叫端傳 `runMods(run).hellMode`。
  */
-export function preloadHeroArt(heroes: readonly (string | undefined)[], act?: number): Promise<void> {
+export function preloadHeroArt(heroes: readonly (string | undefined)[], act?: number, hell = false): Promise<void> {
   const art = decodeAll(runStartArtUrls(heroes), 6, false);
-  const acts = act === undefined ? Promise.resolve() : preloadAct(act, heroes[0] ?? 'ninja');
+  const acts = act === undefined ? Promise.resolve() : preloadAct(act, heroes[0] ?? 'ninja', hell);
   /*
    * 慢網路的音樂與大圖集（2026-09-29）：原本開機時就等「開場那一批（含第一關魔物）」抓完才放音樂、才放行大圖集
    *（`main.ts` 的 `deferBgm`、`holdHeavyLane`），開場那批變小之後，進入一局這一批就是原本那段，照舊讓它先到：

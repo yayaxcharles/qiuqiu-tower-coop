@@ -1,4 +1,4 @@
-import { ACTS, potionCapacity } from '../../engine/run';
+import { ACTS, potionCapacity, runMods } from '../../engine/run';
 import { clearRejoin } from '../../net/rejoin';
 import { cardById, cardNameFor } from '../../content/cards';
 import { relicById } from '../../content/relics';
@@ -1505,7 +1505,7 @@ registerScreen('combat', (app, root, props) => {
   const bonusUpgrades = (props as { bonusUpgrades?: number } | null)?.bonusUpgrades ?? 0;
   // 關主戰用專屬戰場（boss1/2/3 依關數）；圖還沒生好就照舊用該關色調。
   // 算法搬到 `screenbg.ts` 的 `battleBgKey` 給關主門共用（稽核 2026-09-10 中-2，順便修掉少 `bg/` 前綴那個老 bug）
-  const bgKey = battleBgKey(run.act, run.floor, encounterById[cs.encounterId]?.pool === '塔主');
+  const bgKey = battleBgKey(run.act, run.floor, encounterById[cs.encounterId]?.pool === '塔主', runMods(run).hellMode);
 
   type Targeting = { kind: 'card'; uid: number } | { kind: 'potion'; id: string } | null;
   let targeting: Targeting = null;

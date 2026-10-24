@@ -26,6 +26,15 @@
   opacity: 0;
   animation: map-torchlight 6.9s step-end infinite;
 }
+/* 難度 6「地獄」的地圖：底圖上疊一層半透明紫黑，往上爬（越靠近魔源）越濃。只疊在 `.map-bg` 的 ::after，
+   不用濾鏡（火光那層在底圖裡一直換透明度，濾鏡會逼整張 1704 高的圖每次重算）；節點、路線、文字都在它上面、顏色不動。 */
+.map-hell .map-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(rgba(52, 14, 84, .46), rgba(38, 10, 62, .34) 55%, rgba(30, 8, 50, .28));
+}
 /* 地圖中層（2026-10-06 背景線）：兩側牆中間那一片黑補一層塔內結構。圖本身已經壓暗、左右邊緣淡出成透明（進倉時做好），
    這裡只負責擺位置；不動、不擋點擊。對比度留給節點與路線，數字見 docs/審查報告/2026-10-06_美術方向/art-bg-1006_報告.md */
 .map-mid {

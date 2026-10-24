@@ -14,7 +14,19 @@ import { describe, expect, it } from 'vitest';
 const manifest = JSON.parse(readFileSync('public/assets/manifest.json', 'utf-8')) as {
   monsters: Record<string, Record<string, string>>;
 };
-const src = readFileSync('src/content/enemies.ts', 'utf-8');
+// 地獄（難度 6）的魔物在 enemies-hell.ts（2026-10-24）：大魔物與塔主一樣要有倒地圖
+const src = [readFileSync('src/content/enemies.ts', 'utf-8'), readFileSync('src/content/enemies-hell.ts', 'utf-8')].join('\n');
+
+/**
+ * 這隻的倒地圖：本身那組有就用；魔源（`hell_source`）只有最後一個形態（`_p4`）畫了倒地，
+ * 關主都是在最後一個階段倒的（`monsterPhaseKey`），所以往階段鍵找、取最後一個有倒地圖的
+ */
+function downPath(art: string): string | undefined {
+  const own = manifest.monsters[`codex/monster_${art}`]?.down;
+  if (own) return own;
+  for (let p = 9; p >= 2; p -= 1) { const d = manifest.monsters[`codex/monster_${art}_p${p}`]?.down; if (d) return d; }
+  return undefined;
+}
 
 /**
  * `readFileSync` 沒給編碼時，Node 實際回傳的是 Buffer（`Uint8Array` 的子類，
@@ -64,14 +76,14 @@ describe('倒地圖', () => {
   it('清單本身要抓得到 26 隻：正規表達式對不上會讓整組測試靜靜空跑', () => {
     // `bigOnes()` 要求 pool 與 art 在同一行、pool 在前。有人把某隻的定義換行，
     // 那隻就會默默從清單消失、三條測試照樣全綠——正是這支測試要防的那種「安靜的少一張」
-    expect(bigOnes().length).toBe(26);
+    expect(bigOnes().length).toBe(38);   // 一般 26＋地獄 12（9 隻大魔物、3 隻關主）
   });
 
   it('大魔物與塔主每一隻都有，而且檔案真的存在', () => {
     const missing: string[] = [];
     const broken: string[] = [];
     for (const art of bigOnes()) {
-      const path = manifest.monsters[`codex/monster_${art}`]?.down;
+      const path = downPath(art);
       if (!path) { missing.push(art); continue; }
       if (!existsSync(`public/${path}`)) broken.push(art);
     }
@@ -146,6 +158,6 @@ describe('倒地圖', () => {
       expect(b.w / b.h, `${art}：倒地圖比待機還瘦，可能不是趴著的`).toBeGreaterThanOrEqual(a.w / a.h);
       checked++;
     }
-    expect(checked, '一張都沒比到＝這條測試在空跑').toBe(26);
+    expect(checked, '一張都沒比到＝這條測試在空跑').toBe(37);   // 38 隻裡魔源的倒地圖在 _p4、不在本身那組
   });
 });

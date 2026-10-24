@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { WRITE_DOCS, docUpToDate, writeDoc } from './docs-dump';
 import { expect, it } from 'vitest';
 import { monsterArtKeysForAct } from '../src/ui/preload';
-import { NON_EVENT_ART, SLIDES_BY_ACT, art26Keys, bgKeysForAct, eventMainKeys } from '../src/ui/bgacts';
+import { NON_EVENT_ART, SLIDES_BY_ACT, art26Keys, bgKeysForAct, eventMainKeys, hellBgKeys } from '../src/ui/bgacts';
 import { MERCHANT_SPRITES, TITLE_ART, _setManifestForTest, heroOfKey, heroSpriteKey, isCoopOnlyArt, isDeferredBossArt, isGuestKeeperArt, isItemIcon, type Manifest } from '../src/ui/assets';
 import { HEROES } from '../src/engine/hero';
 
@@ -18,6 +18,8 @@ it('dump monster acts', () => {
     const act = minAct.get(key) ?? 9;   // 9＝目前沒有任何遭遇用到（例如只在事件裡出現的），當作分關載入
     for (const path of Object.values(poses)) out[path] = act;
   }
+  // 地獄（難度 6）的魔物立繪（含魔源換階段的 _p2～_p4）：只有難度 6 才載（`preloadAct(act, …, hell)`、`warmEncounter`），不分關、一律不算首載，寫 0
+  for (const [key, poses] of Object.entries(manifest.monsters)) if (key.startsWith('codex/monster_hell_')) for (const path of Object.values(poses)) out[path] = 0;
   // 底圖同一套：只在第二、三關用得到的（木造牆、夜空石台、那幾張換皮的節點畫面）歸分關載入。
   // 第一關也會用到的（變體沒生齊、`actVariantKey` 退回基底那幾張）留在首載。
   const bgAct = new Map<string, number>();
@@ -41,6 +43,8 @@ it('dump monster acts', () => {
   // 第一關的新戰鬥背景（2026-10-06 美術改版）：開場不載（`deferredBgKeys`），進入一局才由 `preloadAct(1)` 抓——跟秘寶忍具圖示同一類，寫 0。
   // 二三關的照上面那圈記 2、3
   for (const key of art26Keys('low')) { const path = manifest.bg[key]; if (path) out[path] = 0; }
+  // 地獄（難度 6）的九張戰鬥背景（2026-10-24）：開場不載（`deferredBgKeys`），進關由 `preloadAct(act, …, hell)` 抓，同一類寫 0
+  for (const act of [1, 2, 3]) for (const key of hellBgKeys(act)) { const path = manifest.bg[key]; if (path) out[path] = 0; }
   // 不是事件的事件類主圖（祝福主圖、問號格三張揭曉圖，2026-09-23 第三批）：用到的畫面自己在背景抓（`bgacts.ts` 的 `NON_EVENT_ART`），同一類寫 0。
   // 角色版的揭曉圖由下面「角色專屬」那一圈收
   for (const id of NON_EVENT_ART) { const path = manifest.bg[`bg/event_${id}`]; if (path) out[path] = 0; }

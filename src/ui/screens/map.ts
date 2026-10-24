@@ -9,7 +9,7 @@ import { registerScreen } from '../app';
 import { allVoted, onlyStanding, settleVotes } from '../../engine/vote';
 import { me } from '../../engine/runplayer';
 import { heroName } from '../../engine/hero';
-import { runRng } from '../../engine/run';
+import { runMods, runRng } from '../../engine/run';
 import { enemyById, encounterById } from '../../content/enemies';
 import { eventById } from '../../content/events';
 import { artUrl, monsterUrl, mapHeroKey } from '../assets';
@@ -164,7 +164,8 @@ registerScreen('map', (app, root) => {
   }
 
   const centre = centreLane(run.map.nodes);
-  const inner = el('div', { class: 'map-inner', style: `height:${INNER_H}px` });
+  // 難度 6「地獄」：底圖疊一層紫黑（`map.css` 的 `.map-hell`），只動底圖、不動節點與文字
+  const inner = el('div', { class: runMods(run).hellMode ? 'map-inner map-hell' : 'map-inner', style: `height:${INNER_H}px` });
   const scroll = el('div', { class: 'map-scroll' }, inner);
   // 按住左鍵拖著地圖走（使用者 2026-09-07：玩家反應只能拉捲軸或滾滾輪很不習慣）。
   // 移動不到門檻的那一下照舊算點節點，見 dragscroll.ts

@@ -1,5 +1,5 @@
 import { artUrl } from './assets';
-import { BG_VARIANTS, art26Keys } from './bgacts';
+import { BG_VARIANTS, art26Keys, hellBgKey } from './bgacts';
 import { el } from './dom';
 
 /**
@@ -68,7 +68,8 @@ export function clearKeepBg(root: HTMLElement): void {
  * 原本 15 層內就把三種跑完，改成一關一種，「越爬越高」才有感。
  * 同一關內仍用樓層輪三張變化圖。
  */
-export function tierBgKey(floor: number): string {
+export function tierBgKey(floor: number, hell = false): string {
+  if (hell) return hellBgKey(floor);   // 難度 6：三關各三張地獄背景（`bgacts.ts`），輪法同下
   const tier = floor <= 15 ? 'low' : floor <= 30 ? 'mid' : 'top';
   // 2026-10-06 新背景（`art26Keys`）排在舊三張後面一起輪；沒進倉的跳過（只剩舊三張就是原本的輪法）。
   // 清單還沒讀進來（一張都查不到）時退回該色調的第一張
@@ -141,7 +142,8 @@ export function hasBossDoor(act: number): boolean {
  * manifest 的鍵是 `bg/boss1`，查不到就回一張灰剪影的 data URI，於是判斷永遠退回樓層色調，
  * 三張畫好的關主戰場（合計 89 KB）從來沒被畫出來過。
  */
-export function battleBgKey(act: number, floor: number, isBoss: boolean): string {
+export function battleBgKey(act: number, floor: number, isBoss: boolean, hell = false): string {
+  if (hell) return hellBgKey(floor);   // 地獄沒有專屬關主戰場，關主戰也用該關的地獄背景
   if (isBoss) {
     const key = `bg/boss${Math.min(3, Math.max(1, act))}`;
     if (!artUrl('bg', key).startsWith('data:')) return key;

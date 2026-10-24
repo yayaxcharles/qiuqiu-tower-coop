@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-pack_hell_art.py — 難度 6「地獄」的 171 張綠幕原圖去背、轉 WebP。**不動任何舊素材、不寫 manifest**。
+pack_hell_art.py — 難度 6「地獄」的綠幕原圖去背、轉 WebP。**不動任何舊素材**；預設不寫 manifest，加 `--register` 才寫。
 
 用法：python tools/pack_hell_art.py [魔物編號 ...]   （不給＝全部；背景每次都重做，很快）
+      python tools/pack_hell_art.py --register     只把倉裡現有的 hell_*.webp、bg_hell_*.webp 登記進 manifest 就結束
+                                                   （不重跑去背、不碰圖；可重跑，只覆寫自己的鍵）
 
   魔物  tools/codex_raw/monster_hell_<id>_<姿勢>.png → public/assets/monsters/hell_<id>_<姿勢>.webp
   背景  tools/codex_raw/bg_hell_<關>[_2|_3].png → public/assets/bg/同名.webp（每關三張）
@@ -18,8 +20,11 @@ pack_hell_art.py — 難度 6「地獄」的 171 張綠幕原圖去背、轉 Web
 遊戲框大小照原圖解析度推（工單 tools/make_hell_jobs.py 就是照體型給尺寸的）：1024＝large、768＝medium、512＝small。
 接進 enemies.ts 時 size 要跟這張表一致，不然框的長寬比對不上。
 
-manifest 留到接進遊戲那一步再登記：它是開場就載的檔，171 筆約多 12 KB，要跟首載預算一起算。
+manifest 用 `--register` 登記（2026-10-24 Task 3）：它是開場就載的檔，要跟首載預算一起算。
+  魔物鍵 codex/monster_hell_<id> → {姿勢: assets/monsters/hell_<id>_<姿勢>.webp}；換階段的 hell_source_p2～p4 各自一個鍵
+  （`monsterPhaseKey` 查 `<原鍵>_p<階段>`）；背景鍵 bg/bg_hell_<關>、bg/bg_hell_<關>_2、_3。
 """
+import json
 import re
 import sys
 from pathlib import Path
@@ -37,6 +42,31 @@ POSES = ("idle", "attack", "hurt", "block", "down")
 SIZE_BY_RAW = {512: "small", 768: "medium", 1024: "large"}
 
 
+MANIFEST = OUT / "manifest.json"
+
+
+def register() -> None:
+    """把倉裡現有的地獄圖寫進 manifest：只加／覆寫 codex/monster_hell_* 與 bg/bg_hell_*，其他鍵與位元組順序不動；換行維持檔案原本的（CRLF 或 LF）"""
+    raw = MANIFEST.read_bytes().decode("utf-8")
+    crlf = "\r\n" in raw
+    manifest = json.loads(raw)
+    found: dict[str, dict[str, str]] = {}
+    for f in sorted((OUT / "monsters").glob("hell_*.webp")):
+        m = re.match(r"hell_(.+)_(idle|attack|hurt|block|down)$", f.stem)
+        if m:
+            found.setdefault(m.group(1), {})[m.group(2)] = f.relative_to(OUT.parent).as_posix()
+    for mid in sorted(found):
+        manifest["monsters"][f"codex/monster_hell_{mid}"] = {p: found[mid][p] for p in POSES if p in found[mid]}
+    bgs = sorted((OUT / "bg").glob("bg_hell_*.webp"))
+    for f in bgs:
+        manifest["bg"][f"bg/{f.stem}"] = f.relative_to(OUT.parent).as_posix()
+    text = json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
+    if crlf:
+        text = text.replace("\n", "\r\n")
+    MANIFEST.write_bytes(text.encode("utf-8"))
+    print(f"manifest 已登記：魔物 {len(found)} 組（{sum(len(v) for v in found.values())} 張）、背景 {len(bgs)} 張")
+
+
 def save(im: Image.Image, dst: Path) -> int:
     dst.parent.mkdir(parents=True, exist_ok=True)
     im.save(dst, "WEBP", quality=72, method=6)
@@ -45,6 +75,9 @@ def save(im: Image.Image, dst: Path) -> int:
 
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
+    if "--register" in sys.argv[1:]:
+        register()
+        return
     raws: dict[str, dict[str, Path]] = {}
     for f in sorted(RAW.glob("monster_hell_*.png")):
         m = re.match(r"monster_hell_(.+)_(idle|attack|hurt|block|down)$", f.stem)

@@ -45,8 +45,8 @@ async function loadWalkActor(hero: Hero): Promise<WalkActor | null> {
   return null;
 }
 
-export function actWalkTransition(stage: HTMLElement, nextActFloor: number, then: () => void): () => void {
-  const bgUrl = artUrl('bg', tierBgKey(Math.max(1, nextActFloor)));
+export function actWalkTransition(stage: HTMLElement, nextActFloor: number, then: () => void, hell = false): () => void {
+  const bgUrl = artUrl('bg', tierBgKey(Math.max(1, nextActFloor), hell));
   /*
    * 走路那張（2026-09-18）：本來這三秒拿的是站姿圖，腳步聲有、腳沒動。
    * 圖沒生好就退回站姿——`heroArtUrl` 查不到會回一張 `data:` 的佔位圖，所以要自己判一次。

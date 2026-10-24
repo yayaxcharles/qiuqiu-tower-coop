@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import manifest from '../../public/assets/manifest.json';
 import { encounterById, encounters, encountersOfPool, enemyById, enemies } from '../../src/content/enemies';
 import { hellEncounters, hellEnemies } from '../../src/content/enemies-hell';
 import type { EnemyPool } from '../../src/engine/types';
@@ -175,7 +176,13 @@ describe('地獄魔物資料', () => {
     }
   });
 
-  it.todo('everyHellEnemyHasArtKeyAndSize：48 個魔物的 art 都登記在 public/assets/manifest.json 的 monsters（Task 3 登記後打開）');
+  it('everyHellEnemyHasArtKeyAndSize：48 個魔物的 art 都登記在 manifest 的 monsters，而且有待機（體型見上一條）', () => {
+    const monsters = manifest.monsters as Record<string, Record<string, string>>;
+    for (const e of hellEnemies) {
+      expect(e.art, e.id).toBe(`codex/monster_${e.id}`);
+      expect(monsters[e.art]?.idle, `${e.id} 沒登記待機`).toBeTruthy();
+    }
+  });
 
   it('遭遇：全是 hell、acts 只有自己那一關、成員存在、召喚物存在、池不低於成員', () => {
     expect(hellEncounters.every((e) => e.hell === true)).toBe(true);

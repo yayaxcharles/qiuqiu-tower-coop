@@ -1,7 +1,7 @@
 import { actWalkTransition } from '../acttransition';
 import { play } from '../audio';
 import { relicById } from '../../content/relics';
-import { ACT_NAMES, addCard, advanceAct, relicForPartnerOnly, rollActCards, rollActCardsPerSeat, rollActRelics, takeRelic } from '../../engine/run';
+import { ACT_NAMES, addCard, advanceAct, relicForPartnerOnly, rollActCards, rollActCardsPerSeat, rollActRelics, runMods, takeRelic } from '../../engine/run';
 import { allVoted, onlyStanding } from '../../engine/vote';
 import { me } from '../../engine/runplayer';
 import { heroSpeaker } from '../dialogue';
@@ -40,7 +40,7 @@ registerScreen('actclear', (app, root, props) => {
   if (!run) { app.show('title'); return; }
   // 一進過關畫面就開始抓下一關的魔物立繪（玩家看幻燈片、挑秘寶的這幾十秒剛好用，稽核 2026-09-04 低 21）；
   // 鏡中變裝看座位 0 的角色，跟戰鬥裡實際換裝同一個判準（總稽核 2026-09-16 甲 低-4）
-  void preloadAct(run.act + 1, run.players[0]?.hero);
+  void preloadAct(run.act + 1, run.players[0]?.hero, runMods(run).hellMode);
   const picks = rollActRelics(run);
   // 連線時每一位各一份牌（連線稽核 高-9）：兩台都照座位順序抽完全部，各拿自己那一份畫。
   // 單機走原本那一支，亂數走向不變
@@ -84,7 +84,7 @@ registerScreen('actclear', (app, root, props) => {
     // 三秒的走路轉場（使用者點名要的儀式感）：背景已經是下一關的色調，
     // 走完才落地到新地圖；backToMap 在轉場回呼裡跑＝存檔照舊在節點結算時寫
     let completed = false;
-    const cancel = actWalkTransition(app.stage, run.floor + 1, () => { completed = true; app.backToMap(); });
+    const cancel = actWalkTransition(app.stage, run.floor + 1, () => { completed = true; app.backToMap(); }, runMods(run).hellMode);
     app.disposers.push(() => { if (!completed) cancel(); });
   };
   const done = (relicId: string | null): void => {

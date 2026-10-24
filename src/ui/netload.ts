@@ -1,4 +1,5 @@
 import type { RunState } from '../engine/types';
+import { runMods } from '../engine/run';
 import { t } from '../i18n';
 import { el } from './dom';
 import { NODE_ICON, follow, preloadHeroArt, relatedIds, urlsFor, type Progress } from './preload';
@@ -26,7 +27,7 @@ export function warmRun(run: RunState, seat: number): void {
   const pr: Progress = { done: 0, total: 0 };
   const w: RunWarm = { run, pr, ready: Promise.resolve(), over: false };
   // 首載那幾支用傳的、不讓那一塊直接引用（一引用，打包就把它們拆到另一個檔，首載程式反而變大）
-  w.ready = import('./netload-run').then((m) => m.startRun(run, seat, pr, { NODE_ICON, follow, preloadHeroArt, relatedIds, urlsFor, preloadSfx, actVariantKey, warmVoice }), () => { void preloadHeroArt(run.players.map((p) => p.hero), run.act); })
+  w.ready = import('./netload-run').then((m) => m.startRun(run, seat, pr, { NODE_ICON, follow, preloadHeroArt, relatedIds, urlsFor, preloadSfx, actVariantKey, warmVoice }), () => { void preloadHeroArt(run.players.map((p) => p.hero), run.act, runMods(run).hellMode); })
     .finally(() => { w.over = true; });
   cur = w;
 }
