@@ -234,8 +234,8 @@
   border-radius: 6px;
   background: linear-gradient(#fbf6ec, #ebdfc9);
   color: #2b2118;
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 15px;
+  line-height: 18px;
   box-shadow: 0 1px 2px #00000047;
 }
 .combat .chip img { width: 16px; height: 16px; }
@@ -249,7 +249,7 @@
 .combat .chip.later { opacity: .7; border-style: dotted; }
 .combat .chip.later img { filter: grayscale(.7); }
 /* 自己的狀態要比魔物的更好認：牌子大一點、圖示大一點 */
-.combat .unit.player .chip { padding: 2px 7px; font-size: 13px; }
+.combat .unit.player .chip { padding: 2px 7px; font-size: 15px; }
 .combat .unit.player .chip img { width: 19px; height: 19px; }
 /* 剛掛上、或層數剛變多的狀態牌子彈一下。好的（金）壞的（紅）用不同顏色的外圈，
    不必讀字就知道是被加了東西還是拿到了東西。跟蜷縮那條同一個做法，只在值真的變了時才演。 */
@@ -986,9 +986,9 @@
 
 
 /* ===== 擠版防護：場上四隻以上，狀態牌子與名字縮一號，才不會互相壓字 ===== */
-.combat.crowd .unit .chip { font-size: 10px; padding: 1px 5px; gap: 2px; }
-.combat.crowd .unit .chip img { width: 12px; height: 12px; }
-.combat.crowd .unit .name { font-size: 13px; }
+.combat.crowd .unit .chip { font-size: 15px; padding: 1px 3px; gap: 2px; }
+.combat.crowd .unit .chip img { width: 14px; height: 14px; }
+.combat.crowd .unit .name { font-size: 15px; }
 
 /* 「擋住 N」：藍色，跟掉血的紅字分開 */
 .combat .num.blocked { color: #8fc4ff; text-shadow: 0 2px 0 #123, 0 0 10px #1a3a6a; font-size: 32px; }
@@ -1277,7 +1277,7 @@
 
 /* 球球腳下牌子超過八個：縮小、排寬（框 266 → 360 置中），十六個牌子壓進三排，貓不會被頂到頭出畫面（2026-09-04） */
 .combat .unit.player .chips.many { width: 360px; margin-left: -20px; gap: 2px; }   /* 往右延伸：往左會被舞台邊緣切掉 */
-.combat .unit.player .chips.many .chip { font-size: 11px; padding: 1px 5px; gap: 2px; }
+.combat .unit.player .chips.many .chip { font-size: 15px; padding: 1px 4px; gap: 2px; }
 .combat .unit.player .chips.many .chip img { width: 14px; height: 14px; }
 
 /*
