@@ -238,7 +238,9 @@ export function beginCombat(run: RunState, encounterId?: string): CombatState {
     // 跨戰鬥的秘寶計數（木人樁，2026-09-23 第二批）抄一份進戰鬥，打完 `finishCombat` 寫回
     ...(me(run).counters ? { counters: me(run).counters } : {}),
     // 幾個人決定魔物的血量倍率（只放大血量，傷害不動——見 `coopscale.ts`）
-    players: run.players.length, down: down0 });
+    players: run.players.length, down: down0,
+    // 難度 6「地獄」：機制只看所在關數（紫霧等），一般難度不帶這一項
+    ...(m.hellMode ? { hell: { act: Math.min(3, Math.max(1, run.act)) as 1 | 2 | 3 } } : {}) });
   /*
    * 第二位之後的玩家（連線版 2026-09-11）。
    *

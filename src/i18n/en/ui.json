@@ -838,5 +838,10 @@
  "正在準備地圖與音效……": "Preparing the map and sounds…",
  "準備中 {done}/{total}": "Loading {done}/{total}",
  "網路較慢，聲音與圖片會陸續補上": "Slow connection: sounds and pictures will fill in as they arrive",
- "難{level}": "D{level}"
+ "難{level}": "D{level}",
+ "紫霧漫滿了！之後每一輪魔物全體爪力 +2，你每回合少抽 1 張牌": "The purple mist is full! From now on all monsters gain Claw +2 every round, and you draw 1 fewer card each turn",
+ "紫霧已滿": "Mist full",
+ "紫霧 {n}": "Mist {n}",
+ "紫霧": "Purple Mist",
+ "倒數歸零後，魔物每一輪全體爪力 +2，你每回合少抽 1 張牌。": "When the countdown hits 0, all monsters gain Claw +2 every round and you draw 1 fewer card each turn."
 }

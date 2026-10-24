@@ -1,6 +1,7 @@
 import type { Rng, RngState } from './rng';
 // 角色清單只有 `hero.ts` 那一份（2026-09-23 health H-2 第 1 塊：這裡原本手寫五份聯集）。只借型別，執行時不互相載入
 import type { Hero } from './hero';
+import type { HellState } from './hell';
 
 // ===== 牌 =====
 export type CardType = 'attack' | 'skill' | 'power';
@@ -1328,6 +1329,8 @@ export interface PendingChoice {
   ctx: EffectCtx;
 }
 export interface CombatState {
+  /** 難度 6「地獄」的戰鬥內狀態（紫霧倒數等，見 hell.ts）。一般難度永遠是 undefined */
+  hell?: HellState;
   /** 難度與遭遇給的血量倍率、出場爪力：召喚出來的也要套（審查 #9） */
   mods?: { hpMul: number; strength: number };
   rng: Rng;                 // 戰鬥不存檔，直接帶亂數物件

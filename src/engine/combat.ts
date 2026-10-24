@@ -9,6 +9,7 @@ import type { Hero } from './hero';
 import { E, H, K_, type LogArg } from './logfmt';
 import { cardStats, discardHand, moveCard } from './deck';
 import { applyEffects } from './effects';
+import { hellDrawPenalty, initHell, miasmaTick } from './hell';
 import type { Rng } from './rng';
 import { addStatus, decayTurnStatuses, getStatus, removeStatus, tickPoison } from './statuses';
 import { DEBUFFS, TURN_DECAY } from './types';
@@ -37,6 +38,8 @@ export function startCombat(input: {
   counters?: Record<string, number>;
   /** 第一位上一場就倒下了（連線）：倒著進場，開場秘寶、暖毯、第一回合都不跑（雲端審查 2026-10-17 中-5） */
   down?: boolean;
+  /** 難度 6「地獄」：這一場在第幾關（機制只看關數，見 hell.ts）。一般難度不填，`cs.hell` 就是 undefined */
+  hell?: { act: 1 | 2 | 3 };
 }): CombatState {
   const enc = encounterById[input.encounterId];
   if (!enc) throw new Error(`未知的遭遇：${input.encounterId}`);
@@ -118,6 +121,8 @@ export function startCombat(input: {
     if (wid) markRelic(cs, wid);
     log(cs, '暖毯還熱著，先有 {n} 點蜷縮', { n: input.mods.startBlock });
   }
+  // 地獄：第一回合開始之前掛上狀態（第一關的紫霧倒數）；一般難度不進這一行
+  if (input.hell) initHell(cs, input.hell.act);
   startPlayerTurn(cs);
   return cs;
 }
@@ -443,7 +448,7 @@ function startSeatTurn(cs: CombatState, p: PlayerCombat): void {
   p.playedThisTurn = [];
   p.taunt = false;   // 「我來擋」只保護一輪（連線版 2026-09-11）
   p.firstCardPlayed = false;   // 蓄力（doubleNext）改在這一支最前面清，見開頭
-  const n = 5 + p.drawNextTurn + (cs.turn === 1 ? relicSum(p.relics, 'firstTurnDraw') : 0);
+  const n = 5 + p.drawNextTurn + (cs.turn === 1 ? relicSum(p.relics, 'firstTurnDraw') : 0) - hellDrawPenalty(cs);   // 地獄第一關紫霧歸零後少抽 1（一般難度恆為 0）
   if (cs.turn === 1) for (const rid of p.relics) if ((relicById[rid]?.hooks.firstTurnDraw ?? 0) > 0) fireRelic(cs, rid, p);
   p.drawNextTurn = 0;
   drawCards(cs, n, p);
@@ -1205,7 +1210,11 @@ export function finishEnemyTurn(cs: CombatState): void {
     p.block = Math.min(p.block, keep);
     p.blockKeepThisTurn = 0;
   }
-  if (cs.phase === 'player') startPlayerTurn(cs);
+  if (cs.phase === 'player') {
+    // 地獄第一關的紫霧：一輪（玩家回合＋魔物回合）只在這裡數一次——先手香、整排定身都會走到這一行
+    miasmaTick(cs);
+    startPlayerTurn(cs);
+  }
 }
 
 export function combatResult(cs: CombatState): { hp: number; fishDelta: number; kills: number; potions: string[] } {

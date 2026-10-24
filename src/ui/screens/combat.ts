@@ -2384,8 +2384,12 @@ registerScreen('combat', (app, root, props) => {
 
     const combo = el('span', {}, t('連抓 {n}', { n: p.cardsPlayedThisTurn }));
     attachTooltip(combo, term('連抓'));
+    // 地獄第一關的紫霧倒數：放在回合數旁邊（沒有紫霧的戰鬥整個不出現）；歸零後換成「紫霧已滿」
+    const miasma = cs.hell?.miasmaLeft;
+    const miasmaChip = miasma === undefined ? null : el('b', { class: miasma === 0 ? 'miasma full' : 'miasma' }, miasma === 0 ? t('紫霧已滿') : t('紫霧 {n}', { n: miasma }));
+    if (miasmaChip) attachTextTooltip(miasmaChip, t('紫霧'), t('倒數歸零後，魔物每一輪全體爪力 +2，你每回合少抽 1 張牌。'));
     const piles = el('div', { class: 'piles' },
-      el('span', {}, t('第 {n} 回合', { n: cs.turn })),
+      el('span', {}, t('第 {n} 回合', { n: cs.turn }), ...(miasmaChip ? [miasmaChip] : [])),
       // 這一行同時是「牌堆在哪」的座標：新發的牌就是從這裡飛出來的（見 dealFrom）
       // 三個牌堆都點得開（使用者 2026-09-03：「戰鬥中我看不到我的抽牌堆跟棄牌堆」）：
       // 抽牌堆照名字排序，不洩漏真正的順序；棄牌堆、消耗堆照丟進去的順序

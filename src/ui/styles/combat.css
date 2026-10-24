@@ -1157,6 +1157,10 @@
   background: linear-gradient(#1a120ccc, #0d0806d9); border: 1px solid #ffd98a55;
 }
 
+/* 地獄第一關的紫霧倒數（跟在回合數後面）。字最小 15px；歸零後亮紅、加粗 */
+.combat .piles .miasma { margin-left: 8px; font-size: 15px; color: #c79bff; cursor: help; }
+.combat .piles .miasma.full { color: #ff7a7a; text-shadow: 0 0 6px #ff3b3b88; }
+
 /* 牌堆計數器可點開（2026-09-03） */
 .combat .piles .pile-btn { cursor: pointer; text-decoration: underline dotted #d8c08a; text-underline-offset: 3px; }
 .combat .piles .pile-btn:hover { color: #ffd98a; }
