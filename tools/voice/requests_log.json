@@ -490,7 +490,77 @@
    "chars": 11,
    "lines": 1,
    "result": "ok 5.2s"
+  },
+  {
+   "time": "2026-10-24T13:51:44",
+   "group": "hell_source",
+   "role": "魔源・紫冥（地獄尾王）",
+   "try": 300,
+   "kind": "tts",
+   "chars": 151,
+   "lines": 6,
+   "result": "ok 44.0s"
+  },
+  {
+   "time": "2026-10-24T13:52:51",
+   "group": "ninja",
+   "role": "球球",
+   "try": 301,
+   "kind": "tts",
+   "chars": 237,
+   "lines": 9,
+   "result": "ok 41.8s"
+  },
+  {
+   "time": "2026-10-24T13:53:15",
+   "group": "feifei",
+   "role": "菲菲",
+   "try": 302,
+   "kind": "tts",
+   "chars": 302,
+   "lines": 10,
+   "result": "ok 55.0s"
+  },
+  {
+   "time": "2026-10-24T13:53:31",
+   "group": "dangdang",
+   "role": "噹噹",
+   "try": 303,
+   "kind": "tts",
+   "chars": 236,
+   "lines": 8,
+   "result": "ok 37.6s"
+  },
+  {
+   "time": "2026-10-24T13:53:46",
+   "group": "fengfeng",
+   "role": "封封",
+   "try": 304,
+   "kind": "tts",
+   "chars": 222,
+   "lines": 8,
+   "result": "ok 35.7s"
+  },
+  {
+   "time": "2026-10-24T13:53:53",
+   "group": "daxia",
+   "role": "大俠貓（師父／走火入魔的塔主）",
+   "try": 305,
+   "kind": "tts",
+   "chars": 10,
+   "lines": 1,
+   "result": "ok 2.8s"
+  },
+  {
+   "time": "2026-10-24T13:56:38",
+   "group": "ninja",
+   "role": "球球",
+   "try": 306,
+   "kind": "tts",
+   "chars": 17,
+   "lines": 1,
+   "result": "ok 4.1s"
   }
  ],
- "used": 49
+ "used": 56
 }

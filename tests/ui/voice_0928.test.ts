@@ -17,13 +17,20 @@ const voiceMap = JSON.parse(readFileSync(resolve('public/voice/voice-map.json'),
 describe('查表的每一句都走得到', () => {
   let shown: Set<string>;
   beforeAll(async () => {
-    let out = '';
     // 盤點腳本一載入就把結果寫到標準輸出；這裡攔下來（這個專案的型別宣告沒有 node 的 process，從 globalThis 拿）
     const stdout = (globalThis as unknown as { process: { stdout: { write(s: string): boolean } } }).process.stdout;
-    const spy = vi.spyOn(stdout, 'write').mockImplementation((s: string) => { out += s; return true; });
-    try { await import('../../tools/voice/dump_lines'); } finally { spy.mockRestore(); }
-    const dump = JSON.parse(out) as { lines: { speaker: string; text: string }[] };
-    shown = new Set(dump.lines.map((l) => `${l.speaker}|${l.text}`));
+    const capture = async (load: () => Promise<unknown>): Promise<{ speaker: string; text: string }[]> => {
+      let out = '';
+      const spy = vi.spyOn(stdout, 'write').mockImplementation((s: string) => { out += s; return true; });
+      try { await load(); } finally { spy.mockRestore(); }
+      return (JSON.parse(out) as { lines: { speaker: string; text: string }[] }).lines;
+    };
+    // 一般盤點＋地獄（難度 6）才有的那幾句（`dump_lines_hell.ts`）
+    const lines = [
+      ...await capture(() => import('../../tools/voice/dump_lines')),
+      ...await capture(() => import('../../tools/voice/dump_lines_hell')),
+    ];
+    shown = new Set(lines.map((l) => `${l.speaker}|${l.text}`));
   });
 
   it('voice-map.json 的鍵＝（聲音角色, 畫面上最終那句中文）都在盤點裡', () => {
@@ -49,6 +56,7 @@ describe('查表的每一句都走得到', () => {
     expect(voiceGroup('塔主')).toBe('daxia');
     expect(voiceGroup('塔主', { bossId: 'tower_master' })).toBe('daxia');
     expect(voiceGroup('塔主', { bossId: 'nekomata' })).toBe('nekomata');
+    expect(voiceGroup('塔主', { bossId: 'hell_source' })).toBe('hell_source');
     expect(heroVoice('噹噹')).toBe('dangdang');
     expect(heroVoice('行腳商')).toBeNull();
     // 查表用到的聲音角色，都是這支判斷回得出來的

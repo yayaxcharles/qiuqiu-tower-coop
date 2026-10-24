@@ -1,0 +1,340 @@
+{
+ "lines": [
+  {
+   "speaker": "ninja",
+   "text": "師父！……還有呼吸喵。底下那個是什麼東西喵？",
+   "ctx": [
+    "ninja/hellTopScene#2"
+   ]
+  },
+  {
+   "speaker": "daxia",
+   "text": "重出江湖。",
+   "ctx": [
+    "ninja/hellVictory#2",
+    "feifei/hellVictory#2",
+    "dangdang/hellVictory#2",
+    "fengfeng/hellVictory#2"
+   ]
+  },
+  {
+   "speaker": "hell_source",
+   "text": "……封印，斷了。你身上，有他的味道。",
+   "ctx": [
+    "ninja/bossIntro#0",
+    "feifei/bossIntro#0",
+    "dangdang/bossIntro#0",
+    "fengfeng/bossIntro#0"
+   ]
+  },
+  {
+   "speaker": "ninja",
+   "text": "你把師父怎麼了喵？",
+   "ctx": [
+    "ninja/bossIntro#1"
+   ]
+  },
+  {
+   "speaker": "hell_source",
+   "text": "他來過。想用一條斷繩，把我綁回去。",
+   "ctx": [
+    "ninja/bossIntro#2",
+    "feifei/bossIntro#2",
+    "dangdang/bossIntro#2",
+    "fengfeng/bossIntro#2"
+   ]
+  },
+  {
+   "speaker": "ninja",
+   "text": "那條繩子，我來接喵！",
+   "ctx": [
+    "ninja/bossIntro#3"
+   ]
+  },
+  {
+   "speaker": "hell_source",
+   "text": "繭，破了。",
+   "ctx": [
+    "ninja/bossForm2#0",
+    "feifei/bossForm2#0",
+    "dangdang/bossForm2#0",
+    "fengfeng/bossForm2#0"
+   ]
+  },
+  {
+   "speaker": "ninja",
+   "text": "裡面伸出好多隻手，小心手牌喵！",
+   "ctx": [
+    "ninja/bossForm2#1"
+   ]
+  },
+  {
+   "speaker": "hell_source",
+   "text": "你看得見，我哪一張臉？",
+   "ctx": [
+    "ninja/bossForm3#0",
+    "feifei/bossForm3#0",
+    "dangdang/bossForm3#0",
+    "fengfeng/bossForm3#0"
+   ]
+  },
+  {
+   "speaker": "ninja",
+   "text": "牠把我的打法看穿了，得換個方式打喵！",
+   "ctx": [
+    "ninja/bossForm3#1"
+   ]
+  },
+  {
+   "speaker": "hell_source",
+   "text": "看夠了。換我看你。",
+   "ctx": [
+    "ninja/bossForm4#0",
+    "feifei/bossForm4#0",
+    "dangdang/bossForm4#0",
+    "fengfeng/bossForm4#0"
+   ]
+  },
+  {
+   "speaker": "ninja",
+   "text": "牠在學我的招，那就打牠學不來的喵！",
+   "ctx": [
+    "ninja/bossForm4#1"
+   ]
+  },
+  {
+   "speaker": "hell_source",
+   "text": "……繩子，斷了太久了。我只是想出去。",
+   "ctx": [
+    "ninja/bossDefeat#0",
+    "feifei/bossDefeat#0",
+    "dangdang/bossDefeat#0",
+    "fengfeng/bossDefeat#0"
+   ]
+  },
+  {
+   "speaker": "ninja",
+   "text": "對不起，不能放你出去喵。",
+   "ctx": [
+    "ninja/bossDefeat#2"
+   ]
+  },
+  {
+   "speaker": "feifei",
+   "text": "師兄！師父他……",
+   "ctx": [
+    "feifei/hellTopScene#1"
+   ]
+  },
+  {
+   "speaker": "ninja",
+   "text": "師父只是昏過去了喵。師妹快退，底下有東西要上來了喵！",
+   "ctx": [
+    "feifei/hellTopScene#2"
+   ]
+  },
+  {
+   "speaker": "feifei",
+   "text": "我不退。……每次叫我退的都是你，受傷的也都是你。",
+   "ctx": [
+    "feifei/hellTopScene#3"
+   ]
+  },
+  {
+   "speaker": "feifei",
+   "text": "師兄，師父交給你。這次……換我先上。",
+   "ctx": [
+    "feifei/hellTopScene#5"
+   ]
+  },
+  {
+   "speaker": "feifei",
+   "text": "師父，您一個人跑來這裡……連我都不說。師兄也是，連個消息都沒有。",
+   "ctx": [
+    "feifei/hellVictory#3"
+   ]
+  },
+  {
+   "speaker": "feifei",
+   "text": "你、你把師父怎麼了？",
+   "ctx": [
+    "feifei/bossIntro#1"
+   ]
+  },
+  {
+   "speaker": "feifei",
+   "text": "那條繩子……我來接！我、我會小心的。",
+   "ctx": [
+    "feifei/bossIntro#3"
+   ]
+  },
+  {
+   "speaker": "feifei",
+   "text": "好多隻手！手牌……手牌要抓緊！",
+   "ctx": [
+    "feifei/bossForm2#1"
+   ]
+  },
+  {
+   "speaker": "feifei",
+   "text": "牠看穿我的打法了……換、換個方式試試。",
+   "ctx": [
+    "feifei/bossForm3#1"
+   ]
+  },
+  {
+   "speaker": "feifei",
+   "text": "牠在學我的招……那就用牠學不來的！",
+   "ctx": [
+    "feifei/bossForm4#1"
+   ]
+  },
+  {
+   "speaker": "feifei",
+   "text": "對、對不起，我不能放你出去。",
+   "ctx": [
+    "feifei/bossDefeat#2"
+   ]
+  },
+  {
+   "speaker": "ninja",
+   "text": "噹噹？你怎麼也上來了喵？",
+   "ctx": [
+    "dangdang/hellTopScene#1"
+   ]
+  },
+  {
+   "speaker": "dangdang",
+   "text": "我來了。門補好了，換村貓守。",
+   "ctx": [
+    "dangdang/hellTopScene#2"
+   ]
+  },
+  {
+   "speaker": "feifei",
+   "text": "噹、噹噹……師父叫不醒，底下好像有東西在動。",
+   "ctx": [
+    "dangdang/hellTopScene#3"
+   ]
+  },
+  {
+   "speaker": "dangdang",
+   "text": "你們顧好師父。底下上來的，我先接。",
+   "ctx": [
+    "dangdang/hellTopScene#5"
+   ]
+  },
+  {
+   "speaker": "dangdang",
+   "text": "您醒了。……下次要封什麼東西，先叫上我。",
+   "ctx": [
+    "dangdang/hellVictory#3"
+   ]
+  },
+  {
+   "speaker": "dangdang",
+   "text": "大俠貓人呢？你把他怎麼了？",
+   "ctx": [
+    "dangdang/bossIntro#1"
+   ]
+  },
+  {
+   "speaker": "dangdang",
+   "text": "斷了的繩子，我來接。修東西我最在行。",
+   "ctx": [
+    "dangdang/bossIntro#3"
+   ]
+  },
+  {
+   "speaker": "dangdang",
+   "text": "手一下伸出這麼多，手上的牌顧好。",
+   "ctx": [
+    "dangdang/bossForm2#1"
+   ]
+  },
+  {
+   "speaker": "dangdang",
+   "text": "被牠看穿了，這套打法先放一邊，換一套。",
+   "ctx": [
+    "dangdang/bossForm3#1"
+   ]
+  },
+  {
+   "speaker": "dangdang",
+   "text": "牠在抄我的招，那就出牠抄不來的。",
+   "ctx": [
+    "dangdang/bossForm4#1"
+   ]
+  },
+  {
+   "speaker": "dangdang",
+   "text": "抱歉，這扇門不能開。",
+   "ctx": [
+    "dangdang/bossDefeat#2"
+   ]
+  },
+  {
+   "speaker": "ninja",
+   "text": "封封，師父叫不醒喵！",
+   "ctx": [
+    "fengfeng/hellTopScene#1"
+   ]
+  },
+  {
+   "speaker": "fengfeng",
+   "text": "繩子斷了一半，另一半在底下。你們顧著師父，別靠近裂縫。",
+   "ctx": [
+    "fengfeng/hellTopScene#2"
+   ]
+  },
+  {
+   "speaker": "fengfeng",
+   "text": "您醒了。先坐下，我把劍收好。",
+   "ctx": [
+    "fengfeng/hellVictory#3"
+   ]
+  },
+  {
+   "speaker": "fengfeng",
+   "text": "大俠貓在哪？你動過他嗎？",
+   "ctx": [
+    "fengfeng/bossIntro#1"
+   ]
+  },
+  {
+   "speaker": "fengfeng",
+   "text": "繩斷了就接上。我來。",
+   "ctx": [
+    "fengfeng/bossIntro#3"
+   ]
+  },
+  {
+   "speaker": "fengfeng",
+   "text": "手太多。牌握緊，別讓它拿走。",
+   "ctx": [
+    "fengfeng/bossForm2#1"
+   ]
+  },
+  {
+   "speaker": "fengfeng",
+   "text": "被看穿了。換一路。",
+   "ctx": [
+    "fengfeng/bossForm3#1"
+   ]
+  },
+  {
+   "speaker": "fengfeng",
+   "text": "它順著我的招式走。換一手，它就沒見過。",
+   "ctx": [
+    "fengfeng/bossForm4#1"
+   ]
+  },
+  {
+   "speaker": "fengfeng",
+   "text": "抱歉，不能讓你出去。",
+   "ctx": [
+    "fengfeng/bossDefeat#2"
+   ]
+  }
+ ]
+}

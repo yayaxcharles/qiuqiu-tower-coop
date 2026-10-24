@@ -114,7 +114,10 @@ def finalize_one(line, c):
             "file": f"voice/{line['group']}/{line['id']}.mp3", "bytes": mp3.stat().st_size}
 
 
-lines = [l for l in S["lines"] if l["tier"] not in SKIP_TIERS]
+# --merge <批次尾碼>（例 /hell）：只收尾這幾批的句子，結果併進既有的查表檔／報告，不重做其他句、不產試聽檔
+#（原本整批工作夾 vids\_audio\voice_work 已清掉時，全量重跑會把查表檔洗成只剩新句）
+MERGE = sys.argv[sys.argv.index("--merge") + 1] if "--merge" in sys.argv else None
+lines = [l for l in S["lines"] if l["tier"] not in SKIP_TIERS and (not MERGE or l["batch"].endswith(MERGE))]
 jobs, pending = [], []
 for line in lines:
     cands = candidates(line)
@@ -155,10 +158,30 @@ for l in done:
                          "score": rp["score"], "hyp": rp["hyp_clip"]})
     else:
         vmap[l["key"]] = {"file": rp["file"], "dur": rp["dur"]}
+if MERGE:
+    old_map = json.loads((VOUT / "voice-map.json").read_text(encoding="utf-8"))
+    old_ex = json.loads((HERE / "voice_excluded.json").read_text(encoding="utf-8"))
+    old_rep = json.loads((HERE / "_final_report.json").read_text(encoding="utf-8"))
+    mine = {l["id"] for l in lines}
+    for l in lines:
+        old_map.pop(l["key"], None)   # 這次不合格的句子不能留著舊條目
+    old_map.update(vmap)
+    vmap = old_map
+    excluded = [e for e in old_ex["excluded"] if e["id"] not in mine] + excluded
+    pending = [i for i in old_ex["no_candidate"] if i not in mine] + pending
+    old_rep.update(report)
+    report_out = old_rep
+else:
+    report_out = report
 (VOUT / "voice-map.json").write_text(json.dumps(vmap, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 (HERE / "voice_excluded.json").write_text(json.dumps({"excluded": excluded, "no_candidate": pending},
                                                      ensure_ascii=False, indent=1), encoding="utf-8")
-(HERE / "_final_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+(HERE / "_final_report.json").write_text(json.dumps(report_out, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+if MERGE:
+    print(f"合併進查表檔：查表檔共 {len(vmap)} 句；本次不合格 {sum(v['bad'] for v in report.values())} 句")
+    for k, v in report.items():
+        print(f"  {k} 切片分數 {v['score']} 成品分數 {v.get('score_final')} bad={v['bad']} {v['dur']}s {v['lufs']:.1f} LUFS「{v.get('hyp_final')}」")
+    sys.exit(0)
 
 # ---- 試聽檔 ----
 ACT_BOSSES = [["nekomata", "iron_claw", "orange_king"], ["cowcat_boss", "tanuki_lord", "persian_lady", "frog_daimyo"],
