@@ -205,6 +205,14 @@ describe('意圖牌與名字牌（中-6、中-7）', () => {
     const a = { baseSize: base, width: () => (natural * s.size) / base, setSize: (px: number) => { s.size = px; } };
     return { a, s, w0 };
   }
+  it('字級下限 15（使用者 2026-10-25）：基準字級 15 的牌子一格都不縮，只能走省略號', () => {
+    const l = label(249, 15);
+    expect(fitIntentWidth(l.a)).toBe(true);
+    expect(l.s.size).toBe(15);
+    const n = label(211, 15);
+    expect(fitNameWidth(n.a, 190)).toBe(true);
+    expect(n.s.size).toBe(15);
+  });
   it('縮字：一次 0.5、縮到放得下或碰到下限', () => {
     const width = (s: number): number => (249 * s) / 14;
     const s = shrinkToFit(14, 14 * 0.78, INTENT_MAX_W, width);
@@ -212,16 +220,16 @@ describe('意圖牌與名字牌（中-6、中-7）', () => {
     expect(shrinkToFit(14, 11, 100, width)).toBe(11);
     expect(shrinkToFit(14, 11, 300, width)).toBe(14);
   });
-  it('意圖牌 249：縮到放得下（不用省略號）；手機 333 縮到下限仍放不下 → 回傳 true 要截省略號', () => {
-    const l1 = label(249, 14);
+  it('意圖牌 249：基準字級高於 15 的才縮得動（縮到放得下，不用省略號）；手機 333 縮到下限仍放不下 → 回傳 true 要截省略號', () => {
+    const l1 = label(249, 19);
     expect(fitIntentWidth(l1.a)).toBe(false);
     expect(l1.a.width()).toBeLessThanOrEqual(INTENT_MAX_W + 0.5);
     const l2 = label(333, 19);
     expect(fitIntentWidth(l2.a)).toBe(true);
   });
   it('放得下的意圖牌一個像素不動', () => { const l = label(150, 14); expect(fitIntentWidth(l.a)).toBe(false); expect(l.s.size).toBe(14); });
-  it('名字牌 211 比框 190 寬：縮到放得下；本來放得下的不動', () => {
-    const l = label(211, 15);
+  it('名字牌 211 比框 190 寬：基準字級 17 縮到放得下；本來放得下的不動', () => {
+    const l = label(211, 17);
     expect(fitNameWidth(l.a, 190)).toBe(true);
     expect(l.a.width()).toBeLessThanOrEqual(190.5);
     const ok = label(150, 15);
@@ -237,14 +245,16 @@ describe('意圖牌與名字牌（中-6、中-7）', () => {
 });
 
 describe('牌面（高-3、中-5）', () => {
-  it('牌名兩行：字級為原本 0.85 倍；兩行還放不下再縮到最低 10', () => {
+  it('牌名兩行：字級為原本 0.85 倍；兩行還放不下再縮，最低 15', () => {
     let size = 0;
     let wrapped = false;
-    const s = runNameWrap({ base: 14, wrap: () => { wrapped = true; }, setSize: (px) => { size = px; }, tooWide: () => false, tooTall: () => false });
+    const s = runNameWrap({ base: 20, wrap: () => { wrapped = true; }, setSize: (px) => { size = px; }, tooWide: () => false, tooTall: () => false });
     expect(wrapped).toBe(true);
-    expect(s).toBe(12);
-    const s2 = runNameWrap({ base: 14, wrap: () => undefined, setSize: (px) => { size = px; }, tooWide: () => size > 10.5, tooTall: () => false });
-    expect(s2).toBe(10.5);
+    expect(s).toBe(17);
+    const s2 = runNameWrap({ base: 20, wrap: () => undefined, setSize: (px) => { size = px; }, tooWide: () => size > 15.5, tooTall: () => false });
+    expect(s2).toBe(15.5);
+    const s3 = runNameWrap({ base: 17, wrap: () => undefined, setSize: (px) => { size = px; }, tooWide: () => true, tooTall: () => true });
+    expect(s3).toBe(15);   // 0.85 倍算出 14.5，墊到 15
   });
   it('規則文字：先收行距；放得下就不動牌圖；不夠才一次 2px 縮牌圖，最多縮到七成', () => {
     let tight = false;
@@ -333,7 +343,7 @@ describe('首載瘦身：英日才用的版面程式不進首載，只留掛鉤'
     expect(read('src/ui/scene.ts')).toContain('layoutHooks.scene?.(scene, box)');
     expect(read('src/ui/scene.ts')).toContain('layoutHooks.showcase?.(scene, box)');
     expect(read('src/ui/cardview.ts')).toContain("layoutHooks.card?.(node, 'name')");
-    expect(read('src/ui/cardview.ts')).toContain("layoutHooks.card?.(node, 'text')");
+    expect(read('src/ui/cardview.ts')).toContain("layoutHooks.card(node, 'text')");
     expect(read('src/ui/screens/blessing.ts')).toContain('layoutHooks.bless?.(scene)');
     expect(read('src/ui/screens/combat.ts').match(/layoutHooks\.labels\?\.\(/g)?.length).toBe(3);
   });

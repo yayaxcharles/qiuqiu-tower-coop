@@ -154,16 +154,16 @@
 
 .combat .hpbar {
   position: relative;
-  height: 18px;
-  margin: 2px auto 0;
+  height: 20px;
+  margin: 0 auto;   /* 高度 18→20，上邊距 2→0：總高不變，名字與立繪的位置不動 */
   width: 92%;
   background: #3a2a22;
   border: 2px solid #2b2118;
   border-radius: 9px;
   box-sizing: border-box;
   overflow: hidden;
-  font-size: 12px;
-  line-height: 14px;
+  font-size: 15px;
+  line-height: 16px;
   color: #fff;
 }
 .combat .hpbar-ghost {
@@ -315,7 +315,7 @@
   padding: 2px 11px 3px;
   border: 2.5px solid #2b2118;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: bold;
   white-space: nowrap;
   color: #fff;
@@ -401,7 +401,7 @@
    跟「空格」與「鎖住」長得不一樣——那兩種是沒東西，這種是有東西但現在用不上 */
 .combat .potion.not-ready { filter: grayscale(.85) brightness(.7); }
 .combat .potion.not-ready img { opacity: .8; }
-.combat .potion b { font-size: 11px; line-height: 1.1; }
+.combat .potion b { font-size: 15px; line-height: 1.1; }
 .combat .potion.usable { cursor: pointer; box-shadow: 0 0 0 2px #ffd35c; }
 .combat .piles {
   display: flex;
@@ -504,7 +504,7 @@
   position: absolute;
   right: 20px;
   z-index: 3;
-  font-size: 12.5px;
+  font-size: 15px;
   padding: 5px 12px;
 }
 .combat .end-undo { top: 612px; }
@@ -515,7 +515,7 @@
   top: 64px;
   width: 250px;
   z-index: 3;
-  font-size: 12.5px;
+  font-size: 15px;
   line-height: 1.5;
   color: #fff;
   text-shadow: 0 1px 2px #000;
@@ -921,11 +921,11 @@
 }
 .tut-bar .tut-step {
   flex: none; padding: 1px 8px; border-radius: 999px;
-  background: #c9a227; color: #241c0d; font-size: 12px; font-weight: 700;
+  background: #c9a227; color: #241c0d; font-size: 15px; font-weight: 700;
 }
 .tut-bar .tut-close {
   flex: none; border: 0; background: none; color: #b9ab8a;
-  font-size: 14px; cursor: pointer; padding: 2px 4px;
+  font-size: 15px; cursor: pointer; padding: 2px 4px;
 }
 .tut-bar .tut-close:hover { color: #fff; }
 
@@ -1140,19 +1140,19 @@
 #stage[data-screen="combat"] .toast.tail-right::before { left: auto; right: 22px; }
 #stage[data-screen="combat"] .toast.tail-right::after { left: auto; right: 25px; }
 /* 左上角的戰鬥紀錄稍微顯眼一點：字大半號、不透明、底下墊一層淡淡的暗色（亮牆上也讀得到） */
-.combat .log { font-size: 13.5px; opacity: 1; padding: 6px 10px 6px 8px; border-radius: 8px; background: linear-gradient(90deg, #00000073, #00000000); width: 300px; }
+.combat .log { font-size: 15px; opacity: 1; padding: 6px 10px 6px 8px; border-radius: 8px; background: linear-gradient(90deg, #00000073, #00000000); width: 300px; }
 
 /* 戰鬥紀錄搬到左下角、計數那四行的下面（使用者 2026-09-02：「抽牌棄牌那四行的右邊有個小框專門放對話」——
    右邊只剩一百多像素塞不下一句話，改放下面：計數改成兩欄省高度，紀錄框寬 226、最多四行，最新的貼底 */
-.combat .side { top: 486px; }
+.combat .side { top: 474px; }
 .combat .energy { font-size: 15px; }
 .combat .energy img { width: 30px; height: 30px; }
-.combat .piles { display: grid; grid-template-columns: 1fr 1fr; column-gap: 6px; row-gap: 0; font-size: 13px; margin-top: 6px; }
+.combat .piles { display: grid; grid-template-columns: 1fr 1fr; column-gap: 6px; row-gap: 0; font-size: 15px; margin-top: 6px; }
 .combat .piles span:first-child { grid-column: 1 / -1; }
 .combat .log {
-  top: auto; bottom: 6px; left: 16px; width: 216px; max-height: 86px; box-sizing: border-box;   /* 226 會壓到第一張手牌的左緣 */
+  top: auto; bottom: 6px; left: 16px; width: 216px; max-height: 72px; box-sizing: border-box;   /* 226 會壓到第一張手牌的左緣 */
   display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden;
-  font-size: 12.5px; line-height: 1.32; opacity: 1;
+  font-size: 15px; line-height: 1.25; opacity: 1;
   padding: 5px 8px; border-radius: 8px;
   background: linear-gradient(#1a120ccc, #0d0806d9); border: 1px solid #ffd98a55;
 }

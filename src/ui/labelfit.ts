@@ -20,6 +20,8 @@ export const INTENT_MIN_RATIO = 0.78;
 export const NAME_MIN_RATIO = 0.8;
 /** 每次縮多少像素 */
 export const FIT_STEP = 0.5;
+/** 戰鬥畫面字級下限（使用者 2026-10-25）：比例算出來的下限再低也不縮到這下面 */
+export const MIN_FONT = 15;
 
 /**
  * 從 `size` 起一次縮 `FIT_STEP`，縮到 `width(size) <= max` 或碰到下限 `min` 為止，回傳最後的字級。
@@ -44,7 +46,7 @@ export interface LabelAdapter {
 /** 意圖牌：超過 `INTENT_MAX_W` 就縮字；縮到下限還不夠回傳 true（呼叫端改截省略號） */
 export function fitIntentWidth(a: LabelAdapter): boolean {
   if (a.width() <= INTENT_MAX_W) return false;
-  const s = shrinkToFit(a.baseSize, a.baseSize * INTENT_MIN_RATIO, INTENT_MAX_W, (v) => { a.setSize(v); return a.width(); });
+  const s = shrinkToFit(a.baseSize, Math.min(a.baseSize, Math.max(a.baseSize * INTENT_MIN_RATIO, MIN_FONT)), INTENT_MAX_W, (v) => { a.setSize(v); return a.width(); });
   a.setSize(s);
   return a.width() > INTENT_MAX_W + 0.5;
 }
@@ -52,6 +54,6 @@ export function fitIntentWidth(a: LabelAdapter): boolean {
 /** 名字牌：比框（`boxWidth`）寬就縮字，回傳有沒有縮（縮之前呼叫端要先釘死高度與行高） */
 export function fitNameWidth(a: LabelAdapter, boxWidth: number): boolean {
   if (a.width() <= boxWidth + 0.5) return false;
-  a.setSize(shrinkToFit(a.baseSize, a.baseSize * NAME_MIN_RATIO, boxWidth, (v) => { a.setSize(v); return a.width(); }));
+  a.setSize(shrinkToFit(a.baseSize, Math.min(a.baseSize, Math.max(a.baseSize * NAME_MIN_RATIO, MIN_FONT)), boxWidth, (v) => { a.setSize(v); return a.width(); }));
   return true;
 }

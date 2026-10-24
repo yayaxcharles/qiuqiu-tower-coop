@@ -144,7 +144,7 @@
   background: linear-gradient(#2c1d12f2, #140c07f7);
   border: 1.5px solid #ffd98a99;
   color: #ffe6a8;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   white-space: nowrap;
   text-shadow: 0 1px 2px #000;
@@ -165,7 +165,7 @@
 
 /* 東西太多（秘寶 8 格＋忍具 5～6 格）就縮一級，音樂音效鈕才不會被擠出去（使用者 2026-09-06 秘寶清單那批） */
 .hud.crowded .hud-relic img, .hud.crowded .hud-potion img { width: 26px; height: 26px; }
-.hud.crowded .hud-potion { width: 26px; height: 26px; font-size: 12px; }
+.hud.crowded .hud-potion { width: 26px; height: 26px; font-size: 15px; }
 .hud.crowded .hud-relics, .hud.crowded .hud-potions { gap: 4px; }
 /* 擠的時候血條不能被壓成一小顆（它是整列唯一會縮的東西）：固定 160，改由間距、按鈕內距、音量拉桿讓位 */
 .hud.crowded { gap: 6px; }
@@ -183,12 +183,12 @@
 .hud.t-short .hud-comp .lbl, .hud.t-short .hud-deck .lbl, .hud.t-short .hud-diff .full { display: none; }
 .hud.t-short .hud-deck .ico, .hud.t-short .hud-diff .short { display: inline; }
 /* 只留圖示時：關閉的三顆開關都是 🔇，後面補一個字的短標分得出誰是誰；分享鈕的暫時狀態（✅⏳⚠）只在這時顯示，一般狀態維持原字 */
-.hud.t-icons .hud-sound .kd { display: inline; font-size: .72em; margin-left: 1px; }
+.hud.t-icons .hud-sound .kd { display: inline; font-size: 15px; margin-left: 1px; }
 .hud.t-icons .hud-seed .ico.tmp { display: inline; }
 .hud.t-icons .hud-sound { margin-left: 2px; padding-left: 8px; padding-right: 8px; }
 .hud.t-icons .hud-vol { margin-left: 2px; }
 .hud-relic { transition: transform 120ms ease-out; cursor: pointer; }   /* 點了開本局秘寶清單 */
-.hud .hud-relic-more { padding: 3px 9px; font-size: 14px; line-height: 1.3; }
+.hud .hud-relic-more { padding: 3px 9px; font-size: 15px; line-height: 1.3; }
 .hud-relic:hover { transform: translateY(-2px) scale(1.08); }
 .hud-potion {
   width: 32px;
@@ -223,7 +223,7 @@
   flex: 0 0 auto;
   margin-left: 10px;
   padding: 2px 10px;
-  font-size: 13px;
+  font-size: 15px;
 }
 /* 音樂音量拉桿：窄窄一條塞在兩顆開關中間，配木頭色 */
 .hud-vol {
@@ -235,7 +235,7 @@
 }
 .hud-seed {
   margin-left: auto;
-  font-size: 12px;
+  font-size: 15px;
   opacity: .6;
 }
 .btn.small {
@@ -481,7 +481,7 @@
 }
 .card-art {
   width: 150px;
-  height: 104px;   /* 120→104：把高度讓給規則文字（2026-09-06 字體放大） */
+  height: 96px;   /* 120→104→96：把高度讓給規則文字（2026-09-06 字體放大；2026-10-25 字級下限 15） */
   object-fit: contain;
   margin-top: 8px;
 }
@@ -510,9 +510,9 @@
      再長的由 cardview.ts 的 fitCardText 自動縮一級，不會溢出 */
   font-size: 15px;
   font-weight: 700;
-  padding: 1px 6px;
+  padding: 0 4px;
   text-align: center;
-  line-height: 1.3;
+  line-height: 1.2;
   flex: 1;
   /* 撐不下時留在自己的格子裡（否則 flex 會把牌型標籤擠出牌外），溢出由 fitCardText 縮字處理 */
   min-height: 0;
@@ -522,14 +522,16 @@
   /* 類型從一行灰字變成底部的小標籤，跟規則文字分得開 */
   align-self: stretch;
   text-align: center;   /* 標籤本身是整條寬的，不設這個字會靠在左下角 */
-  margin: 0 8px 3px;   /* 下邊距 4→3：把一像素讓給四行規則文字（稽核 2026-09-06 中-5） */
-  padding: 1px 0 2px;
+  margin: 0 8px 2px;
+  padding: 0;
+  line-height: 16px;
   border-radius: 5px;
   background: #3a2a1c14;
   color: var(--ink);
-  font-size: 11px;
+  font-size: 15px;
   opacity: .75;
-  letter-spacing: 2px;
+  letter-spacing: 0;
+  white-space: nowrap;   /* 英日的「· Co-op」15px 下會折行把標籤撐高 */
 }
 
 /*
@@ -550,24 +552,24 @@
   height: 25.5px;
   border-width: 1.7px;
   line-height: 22px;
-  font-size: 13.6px;
+  font-size: 15px;
 }
 .card.small .card-art {
   width: 127.5px;
-  height: 84px;   /* 102→84：讓位給文字；四行在正黑體只剩一像素餘裕，其他字體行高更高會踩到自動縮字（稽核 2026-09-06 中-5） */
+  height: 60px;   /* 102→84→60：讓位給文字，字級下限 15、最長五行（2026-10-25） */
   margin-top: 6.8px;
 }
 .card.small .card-name {
-  font-size: 14px;   /* 12.75→14：同上，要比 13px 的規則文字大 */
+  font-size: 15px;   /* 要不比規則文字小 */
   margin-top: 1.7px;
+  line-height: 1.2;
 }
 .card.small .card-text {
-  font-size: 13px;   /* 10.6→13：戰鬥手牌就是這個規格，原本在 1080p 螢幕上只有 12 像素 */
-  padding: 1px 5px;
+  font-size: 15px;   /* 13→15：戰鬥手牌字級下限 15（使用者 2026-10-25） */
+  padding: 0 3px;
 }
 .card.small .card-type {
-  font-size: 9.35px;
-  padding-bottom: 3.4px;
+  font-size: 15px;
 }
 /* 三種牌用紙紋分辨。底色留著當退路：紙紋沒生好時 var() 會是空的，至少還有原本的淡色。
    平鋪 128 而不是原尺寸 256：牌只有 170 寬，磚太大等於看不到紋理。 */
