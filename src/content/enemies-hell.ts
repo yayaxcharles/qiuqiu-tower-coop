@@ -499,7 +499,7 @@ export const hellEncounters: EncounterDef[] = [
   enc('vault_tortoise', '大魔物', 2, ['vault_tortoise']),
   enc('card_dragon', '大魔物', 2, ['card_dragon']),
   enc('chain_warden', '大魔物', 2, ['chain_warden']),
-  enc('hoarder_toad', '塔主', 2, ['hoarder_toad']),
+  enc('hoarder_toad', '塔主', 2, ['hoarder_toad'], { hpScale: 2.6, strength: 9 }),
 
   // ===== 第三關（組合佔一半以上，配合才成立）=====
   enc('spy_crow', '中', 3, ['spy_crow'], { hpScale: 1.54, strength: 4 }),
@@ -521,5 +521,5 @@ export const hellEncounters: EncounterDef[] = [
   enc('three_face_ashura', '大魔物', 3, ['three_face_ashura'], { hpScale: 1.1, strength: 6 }),
   enc('nue', '大魔物', 3, ['nue'], { hpScale: 1.1, strength: 6 }),
   enc('bone_commander', '大魔物', 3, ['bone_commander'], { hpScale: 1.1, strength: 6 }),
-  enc('source', '塔主', 3, ['source']),
+  enc('source', '塔主', 3, ['source'], { hpScale: 3.0, strength: 12 }),
 ];

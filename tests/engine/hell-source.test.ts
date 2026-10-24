@@ -14,7 +14,8 @@ import { nodesOnFloor } from '../../src/engine/map';
 import { inst } from '../helpers';
 
 const SOURCE = 'hell_source';
-const BARS = [120, 150, 170, 220];
+// 遭遇 hpScale 3.0（2026-10-24 調平衡）乘在四條血上：120/150/170/220 → 360/450/510/660
+const BARS = [360, 450, 510, 660];
 
 function start(encounterId = SOURCE, hell: false | { act: 1 | 2 | 3 } = { act: 3 }, seed = 'src'): CombatState {
   return startCombat({
@@ -64,7 +65,7 @@ describe('魔源：四形態血條', () => {
   it('總血量落在師父（120＋240＋300）的量級、明顯高過第二關關主', () => {
     const def = enemyById[SOURCE]!;
     const total = def.hp[0] + def.phases!.reduce((s, p) => s + p.hpBar!, 0);
-    expect(total).toBe(BARS.reduce((a, b) => a + b, 0));
+    expect(total).toBe(660);   // 定義本身的 120+150+170+220；實戰再乘遭遇 hpScale（BARS）
     expect(total).toBeGreaterThanOrEqual(600);
     expect(total).toBeLessThanOrEqual(720);
     expect(total).toBeGreaterThan(enemyById['hell_hoarder_toad']!.hp[1] * 2);
