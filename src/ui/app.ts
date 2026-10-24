@@ -12,7 +12,7 @@ import { withCoopText } from './coop-text-loader';
 import { QMARK_BANNER, ambushEvent, loadQmarkText, playQmarkReveal, qmarkHeroText, qmarkText } from './qmark';
 import { potionById } from '../content/potions';
 import { relicById } from '../content/relics';
-import { resolvePendingAfterFight, type RunGain } from '../engine/run';
+import { resolvePendingAfterFight, runMods, type RunGain } from '../engine/run';
 import { encounterById, encounterSkin, enemyById, enemyNameFor } from '../content/enemies';
 import { hasBossDoor } from './screenbg';
 import type { CoopSession } from '../net/session';
@@ -781,7 +781,8 @@ export class App {
         });
       };
       // 塔頂門外段落只在第三關最終頭目前播放一次；前兩關的關主不應提前消耗這段劇情。
-      const top = run.act >= ACTS ? storyFor(localHero()).topScene : [];
+      // 地獄（難度 6）的尾王是魔源、不是大俠貓：門外那段演的是師父在門後，跟魔源開場「你把師父怎麼了」矛盾，整段不播（單人、連線同一條路）
+      const top = run.act >= ACTS && !runMods(run).hellMode ? storyFor(localHero()).topScene : [];
       const topSlides = topSceneSlides(localHero());
       if (top.length) this.playOnce(`topScene:${run.act}`, top, playBoss, STORY_LITERAL, topSlides);
       else playBoss();

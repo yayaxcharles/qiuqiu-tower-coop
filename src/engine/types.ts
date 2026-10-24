@@ -1314,6 +1314,8 @@ export interface EnemyCombat extends Unit {
   stealPending?: { seat: number; n: number }[];
   /** 分裂過了：一場只裂一次（見 EnemyDef.splitInto） */
   split?: boolean;
+  /** 地獄：這隻是誰召來的（召喚者的 enemyId）。目前只有魔源（`hell_source`）會標，牠倒下時召出來的跟著散去（`dissipateSummons`） */
+  summonedBy?: string;
 }
 export interface EffectCtx {
   /**

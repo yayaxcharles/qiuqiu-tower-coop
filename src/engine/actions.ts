@@ -7,7 +7,7 @@ import { applyEffects } from './effects';
 import { addStatus, computeAttack, computeBlock, getStatus, removeStatus } from './statuses';
 import { DEBUFFS } from './types';
 import { learnedMove, learnsPlayerCards, SHADOW_DANGDANG } from './mimic';
-import { enrageOnAllyDeath, onHellFormChange, returnAllStolen, returnStolen, sealType, seeThroughAmount, stealCards } from './hell';
+import { dissipateSummons, enrageOnAllyDeath, onHellFormChange, returnAllStolen, returnStolen, sealType, seeThroughAmount, stealCards } from './hell';
 import type { CardInstance, CombatState, EnemyCombat, EnemyEffect, EnemyMove, EnemyPhase, PlayerCombat, Unit, StatusName } from './types';
 
 /** 沉睡中的魔物頭上顯示的意圖。每次都是同一份物件，畫面比對「這一拍出的是哪一招」才穩 */
@@ -605,6 +605,8 @@ function killEnemy(cs: CombatState, e: EnemyCombat, by?: PlayerCombat): void {
     if (h.killFish) killer.fishDelta += h.killFish;
   }
   // 地獄第三關：還站著的同伴有「同伴倒下暴怒」的各加爪力。會爬回來的（同生共死）、逃走的不算真的倒下
+  // 地獄尾王魔源倒下：牠召來的藥蝠一併散去（不算倒下，所以放在暴怒之前；戰鬥才判得贏）
+  if (!reviving && e.enemyId === 'hell_source') dissipateSummons(cs, e);
   if (!reviving && !e.escaped) enrageOnAllyDeath(cs, e);
   markCombatWon(cs);
 }
@@ -1053,6 +1055,7 @@ export function runEnemyEffects(cs: CombatState, e: EnemyCombat, effects: EnemyE
             fresh.move = { intent: 'idle', label: '剛冒出來', effects: [{ kind: 'nothing' }] };
             fresh.moveIndex = -1;
           }
+          if (e.enemyId === 'hell_source') fresh.summonedBy = e.enemyId;   // 地獄尾王：牠倒下時召出來的跟著散去
           cs.enemies.push(fresh);
         }
         break;

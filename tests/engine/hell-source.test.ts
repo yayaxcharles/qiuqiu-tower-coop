@@ -280,3 +280,71 @@ describe('通關與連線倍率', () => {
     expect(run.status).toBe('won');
   });
 });
+
+describe('魔源倒下，牠召來的藥蝠跟著散去（最終審查 2026-10-24）', () => {
+  const BAT = 'hell_medicine_bat';
+  const alive = (cs: CombatState, id: string): EnemyCombat[] => cs.enemies.filter((x) => x.enemyId === id && !x.dead);
+
+  /** 打到第三形態、等千面召出藥蝠，再打穿第三條血進第四形態。回魔源（場上有藥蝠活著） */
+  function toFormFourWithBats(cs: CombatState): EnemyCombat {
+    const e = toForm(cs, 3);
+    e.invulnIn = 0;
+    for (let i = 0; i < 6 && alive(cs, BAT).length === 0; i++) endTurn(cs);
+    expect(alive(cs, BAT).length, '千面召出了藥蝠').toBeGreaterThan(0);
+    breakBar(cs, e);
+    e.invulnIn = 0;
+    expect(e.phase).toBe(3);
+    expect(alive(cs, BAT).length, '換形態時藥蝠還在').toBeGreaterThan(0);
+    return e;
+  }
+
+  it('sourceDeathDissipatesSummons：第四形態倒下時，藥蝠一併散去、戰鬥判贏、不觸發暴怒', () => {
+    const cs = start();
+    const e = toFormFourWithBats(cs);
+    const batDef = enemyById[BAT]!;
+    const before = batDef.enrageOnAllyDeath;
+    batDef.enrageOnAllyDeath = 3;   // 假設藥蝠帶「同伴倒下暴怒」：魔源死了牠也不該吃到（散去不算倒下）
+    try {
+      const bats = cs.enemies.filter((x) => x.enemyId === BAT && !x.dead);
+      const strengthBefore = bats.map((b) => getStatus(b, '爪力'));
+      breakBar(cs, e);
+      expect(e.dead).toBe(true);
+      expect(cs.phase).toBe('won');
+      expect(cs.enemies.filter((x) => !x.dead)).toHaveLength(0);
+      for (const [i, b] of bats.entries()) {
+        expect(b.dead && b.escaped && b.faded, '散去＝自己消失（不算打倒）').toBe(true);
+        expect(getStatus(b, '爪力'), '沒有暴怒').toBe(strengthBefore[i]);
+      }
+      expect(JSON.stringify(cs.log)).toContain('散去');
+    } finally {
+      if (before === undefined) delete batDef.enrageOnAllyDeath; else batDef.enrageOnAllyDeath = before;
+    }
+  });
+
+  it('散去的藥蝠把偷來的牌還回去', () => {
+    const cs = start();
+    const e = toFormFourWithBats(cs);
+    const bat = alive(cs, BAT)[0]!;
+    const card = cs.player.hand.pop()!;
+    bat.stolenCards = [{ seat: 0, card }];
+    breakBar(cs, e);
+    expect(cs.phase).toBe('won');
+    expect(bat.stolenCards).toBeUndefined();
+    expect([...cs.player.hand, ...cs.player.discardPile].some((c) => c.uid === card.uid)).toBe(true);
+  });
+
+  it('一般的召喚型關主（貓又婆婆）倒下，尾巴照舊留著、戰鬥還沒贏', () => {
+    const cs = startCombat({
+      hp: 9999, maxHp: 9999, deck: STARTER_DECK.map((id, i) => inst(id, i + 1)), relics: [], potions: [], encounterId: 'nekomata',
+      rng: new Rng(seedFromString('neko')),
+    });
+    const boss = cs.enemies.find((x) => x.enemyId === 'nekomata')!;
+    for (let i = 0; i < 3 && alive(cs, 'nekomata_tail').length === 0; i++) endTurn(cs);
+    expect(alive(cs, 'nekomata_tail').length).toBeGreaterThan(0);
+    boss.block = 0;
+    damageEnemy(cs, boss, 99999, { direct: true, by: cs.player });
+    expect(boss.dead).toBe(true);
+    expect(alive(cs, 'nekomata_tail').length, '尾巴不跟著散').toBeGreaterThan(0);
+    expect(cs.phase).not.toBe('won');
+  });
+});

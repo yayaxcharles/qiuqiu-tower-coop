@@ -164,6 +164,23 @@ export function returnStolen(cs: CombatState, e: EnemyCombat): void {
   }
 }
 
+/**
+ * 召喚者（目前只有地獄尾王魔源）倒下：牠召出來、還站著的魔物一併散去。
+ * 走跟「消散」同一條路（`dead`＋`escaped`＋`faded`）：不算打倒、不掉戰利品、不觸發暴怒，偷來的牌還回去；
+ * 最後的 `killEnemy` 接著 `markCombatWon` 就判贏。一般難度（`cs.hell` 沒有）與一般的召喚型關主完全不碰。
+ */
+export function dissipateSummons(cs: CombatState, summoner: EnemyCombat): void {
+  if (!cs.hell) return;
+  let any = false;
+  for (const o of cs.enemies) {
+    if (o.summonedBy !== summoner.enemyId || o.dead) continue;
+    o.dead = true; o.escaped = true; o.faded = true;
+    returnStolen(cs, o);
+    any = true;
+  }
+  if (any) log(cs, '{e}倒下了，牠召來的魔物也跟著散去了', { e: E(summoner) });
+}
+
 /** 戰鬥收尾：每一隻身上的牌全部還回去（勝、敗、逃、事件，任何收法都走這裡；可以重複呼叫） */
 export function returnAllStolen(cs: CombatState): void {
   for (const e of cs.enemies) returnStolen(cs, e);

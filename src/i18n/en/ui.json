@@ -870,5 +870,10 @@
  "嘲諷": "Taunt",
  "同伴倒下暴怒": "Rage on Ally Death",
  "紫霧又聚攏了：{n} 回合後魔物爪力暴增": "The purple mist gathers again: in {n} turns the monsters surge in Claw",
- "紫霧散開了：魔物不再每輪加爪力，你的抽牌也回到正常": "The purple mist disperses: monsters stop gaining Claw each round, and your draw returns to normal"
+ "紫霧散開了：魔物不再每輪加爪力，你的抽牌也回到正常": "The purple mist disperses: monsters stop gaining Claw each round, and your draw returns to normal",
+ "封：攻擊": "Sealed: Attack",
+ "封：技能": "Sealed: Skill",
+ "封條": "Seal",
+ "這一回合被封條封住的牌打不出來（能力牌不受影響）。": "Cards of the sealed type can't be played this turn (Power cards are unaffected).",
+ "{e}倒下了，牠召來的魔物也跟著散去了": "{e} falls, and everything it summoned fades away with it"
 }
