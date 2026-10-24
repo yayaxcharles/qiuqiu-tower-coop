@@ -1,9 +1,9 @@
-import { encounterById } from '../content/enemies';
+import { encounterById, isHellLoaded } from '../content/enemies';
 import { eventById } from '../content/events';
 import { potionById } from '../content/potions';
 import { HEROES, type Hero } from './hero';
 import { relicById } from '../content/relics';
-import { MAX_DIFFICULTY, clampDifficulty } from '../content/difficulty';
+import { MAX_DIFFICULTY, clampDifficulty, difficultyMods } from '../content/difficulty';
 import { cardById } from '../content/cards';
 import { blessingById } from '../content/blessings';
 import { isKeeperId } from '../content/keepers';
@@ -263,7 +263,9 @@ export function checkRun(input: Partial<RunState>): RunState | null {
   if (!run.stats || typeof run.stats !== 'object') return null;
   // 遭遇、事件、秘寶、忍具的 id 對不上（內容改名、拆併之後帶舊檔）也當不相容。原本只驗牌：
   // 遭遇 id 對不上要到開戰才丟「未知的遭遇」，例外從點擊事件冒出來，地圖點不動、沒任何訊息（全面體檢 2026-09-05 #4）
-  if (!run.map.nodes.every((n) => (!n.encounterId || encounterById[n.encounterId]) && (!n.eventId || eventById[n.eventId]))) return null;
+  // 地獄局的遭遇在另包（`ensureHell`），還沒載好時先不驗遭遇（否則讀得回的存檔、局面碼都被當壞檔）；載好之後由 `App.continueRun` 補驗（`encountersKnown`）
+  const hellPending = !isHellLoaded() && difficultyMods(typeof run.difficulty === 'number' ? run.difficulty : 1).hellMode;
+  if (!run.map.nodes.every((n) => (!n.encounterId || hellPending || encounterById[n.encounterId]) && (!n.eventId || eventById[n.eventId]))) return null;
   // 舊存檔沒有 flags：補一個空的就好，不必升版本
   if (!run.flags || typeof run.flags !== 'object') run.flags = {};
   // 舊存檔沒有 trail（足跡紀錄之前存的）：從現在站的格子開始記，之前走過的路照暗
@@ -294,6 +296,11 @@ export function checkRun(input: Partial<RunState>): RunState | null {
   const rs = run.rng as unknown as Record<string, unknown>;
   if (!['a', 'b', 'c', 'd'].every((k) => finiteNum(rs[k]))) return null;
   return run as RunState;
+}
+
+/** 地獄包載好之後補驗：地圖上的遭遇 id 都認得（`checkRun` 在地獄包沒載好時先略過這一項） */
+export function encountersKnown(run: RunState): boolean {
+  return run.map.nodes.every((n) => !n.encounterId || !!encounterById[n.encounterId]);
 }
 
 export function loadRun(): RunState | null {

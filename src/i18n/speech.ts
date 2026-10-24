@@ -19,8 +19,11 @@ import { cardName, enemyName, potionName, relicName } from './names';
 
 /** 魔物中文名（含照角色換的鏡中名）→ [id, 角色] */
 let byZh: Map<string, [string, string | undefined]> | null = null;
+let byZhCount = 0;
 function enemyByZh(): Map<string, [string, string | undefined]> {
-  if (!byZh) {
+  // 地獄包載入後（`content/enemies.ts` 的 `ensureHell`）魔物變多，表要重建
+  if (!byZh || byZhCount !== enemies.length) {
+    byZhCount = enemies.length;
     byZh = new Map();
     for (const e of enemies) {
       byZh.set(e.name, [e.id, undefined]);

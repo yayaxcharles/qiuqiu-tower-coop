@@ -1,5 +1,4 @@
 import type { EnemyMove,EncounterDef, EnemyDef, EnemyPool } from '../engine/types';
-import { hellEncounters, hellEnemies } from './enemies-hell';
 
 // 貓又婆婆照表出招用的兩招（chooseMove 每回合回傳同一份物件，方便畫面比對）
 // 尾巴最多四條（畫面塞得下五個單位）；已經四條時再放＝把血量接到現有尾巴上（使用者 2026-09-02）
@@ -1246,8 +1245,6 @@ export const enemies: EnemyDef[] = [
       { intent: 'debuff', label: '泣面・淚眼', effects: [{ kind: 'giveCard', cardId: 'dazed_card', n: 2, to: 'discard' }] },
       { intent: 'block', label: '泣面・掩面', effects: [{ kind: 'block', amount: 20 }] },
     ] },
-  // ===== 難度 6「地獄」的魔物（content/enemies-hell.ts）：接在最後，一般難度的順序不變 =====
-  ...hellEnemies,
 ];
 
 /**
@@ -1506,17 +1503,41 @@ export const encounters: EncounterDef[] = [
   { id: 'hound_crows', pool: '強', enemies: ['twin_hound', 'miasma_crows'], hpScale: 0.8, strength: 2, acts: [3] },
   { id: 'guardian_statue', pool: '大魔物', enemies: ['guardian_statue'], strength: 6, acts: [3] },
   { id: 'mask_dancer', pool: '大魔物', enemies: ['mask_dancer'], strength: 6, acts: [3] },
-  // ===== 難度 6「地獄」的遭遇（hell: true）：接在最後，encountersOfPool 在一般難度會整批濾掉 =====
-  ...hellEncounters,
 ];
 
 export const encounterById: Record<string, EncounterDef> = Object.fromEntries(encounters.map((e) => [e.id, e]));
+
+/*
+ * 難度 6「地獄」的魔物與遭遇（47 隻、`content/enemies-hell.ts`）另包，不進首載：一般難度永遠用不到。
+ * 載好之後 `registerHell` 接在 `enemies`／`encounters` 最後（順序跟原本靜態展開一樣）並補進兩張索引表；冪等，載兩次不重複。
+ * **地獄局用到任何地獄資料之前一定要先 `await ensureHell()`**（開新局、續玩、連線開局與接回；見 `ui/app.ts`、`ui/screens/lobby.ts`）。
+ * 沒載好就抽地獄遭遇會丟錯，不會安靜地拿到空池。
+ */
+let hellLoaded = false;
+let hellLoading: Promise<void> | null = null;
+export function isHellLoaded(): boolean { return hellLoaded; }
+export function registerHell(hellEnemies: EnemyDef[], hellEncounters: EncounterDef[]): void {
+  if (hellLoaded) return;
+  hellLoaded = true;
+  for (const e of hellEnemies) { enemies.push(e); enemyById[e.id] = e; }
+  for (const e of hellEncounters) { encounters.push(e); encounterById[e.id] = e; }
+}
+/** 載地獄包（動態載入）；失敗時下一次呼叫會重試，這一次的 Promise 以錯誤結束，由呼叫端決定怎麼處理 */
+export function ensureHell(): Promise<void> {
+  if (hellLoaded) return Promise.resolve();
+  hellLoading ??= import('./enemies-hell').then(
+    (m) => registerHell(m.hellEnemies, m.hellEncounters),
+    (err: unknown) => { hellLoading = null; throw err; },
+  );
+  return hellLoading;
+}
 
 /**
  * 某池某關的遭遇。`hell` 為假（一般難度）濾掉地獄遭遇、為真（難度 6）只留地獄遭遇；兩邊都只是 filter，
  * 留下來的遭遇相對順序跟原陣列一樣，所以一般難度的抽法（佇列、rng.pick 的索引）跟加入地獄之前逐位元相同。
  */
 export function encountersOfPool(pool: EnemyPool, act?: number, hell = false): EncounterDef[] {
+  if (hell && !hellLoaded) throw new Error('地獄資料還沒載入（要先 await ensureHell()）');
   return encounters.filter((e) => e.pool === pool && !e.hidden && !!e.hell === hell && (act === undefined || !e.acts || e.acts.includes(act)));
 }
 

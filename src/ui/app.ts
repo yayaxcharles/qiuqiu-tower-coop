@@ -13,13 +13,14 @@ import { QMARK_BANNER, ambushEvent, loadQmarkText, playQmarkReveal, qmarkHeroTex
 import { potionById } from '../content/potions';
 import { relicById } from '../content/relics';
 import { resolvePendingAfterFight, runMods, type RunGain } from '../engine/run';
-import { encounterById, encounterSkin, enemyById, enemyNameFor } from '../content/enemies';
+import { encounterById, encounterSkin, enemyById, enemyNameFor, ensureHell, isHellLoaded } from '../content/enemies';
+import { difficultyMods } from '../content/difficulty';
 import { hasBossDoor } from './screenbg';
 import type { CoopSession } from '../net/session';
 import { clearRejoin } from '../net/rejoin';
 import { nodeById } from '../engine/map';
 import { ACTS, beginCombat, chooseNode, currentNode, finishCombat, makeMerchants, makeShops, newRun as engineNewRun } from '../engine/run';
-import { clearSave, loadDefeats, loadRun, recordBest, recordDefeat, saveRun } from '../engine/save';
+import { clearSave, encountersKnown, loadDefeats, loadRun, recordBest, recordDefeat, saveRun } from '../engine/save';
 import type { VictoryCtx } from '../content/victory-echoes';
 import type { CombatState, MapNode, RunState } from '../engine/types';
 import { type BgmName, setBgm } from './bgm';
@@ -316,8 +317,28 @@ export class App {
     void import('./netload-run').then((m) => { m.dropFirstPoses(); if (run) void m.preloadNextFights(run); }, () => undefined);
   }
 
+  /** 這一級是地獄、而地獄包（`content/enemies.ts` 的 `ensureHell`）還沒載好 */
+  hellPending(difficulty: number): boolean { return difficultyMods(difficulty).hellMode && !isHellLoaded(); }
+
+  private hellLoading = false;
+  /**
+   * 難度 6 的魔物與遭遇資料另包：開新局、續玩、連線開局與接回都要先等它載好才往下（`go`），產生地圖與抽遭遇才拿得到地獄資料。
+   * 載不到（斷網）：跳提示、呼叫 `fail`（呼叫端回上一個畫面），**不開局**，下一次再按會重試。載的期間再按一次會被擋掉。
+   */
+  whenHellReady(difficulty: number, go: () => void, fail: () => void): void {
+    if (!this.hellPending(difficulty)) { go(); return; }
+    if (this.hellLoading) return;
+    this.hellLoading = true;
+    notice(i18nT('地獄資料載入中…'));
+    ensureHell().then(
+      () => { this.hellLoading = false; go(); },
+      () => { this.hellLoading = false; notice(i18nT('地獄資料載入失敗，請檢查網路後再試一次。')); fail(); },
+    );
+  }
+
   /** `hero`＝選角畫面挑的那一位（2026-09-12）。沒填就是球球，舊的呼叫端不用改 */
   newRun(seed?: string, difficulty = 1, hero: Hero = 'ninja'): void {
+    if (this.hellPending(difficulty)) { this.whenHellReady(difficulty, () => this.newRun(seed, difficulty, hero), () => this.show('title')); return; }
     // 「新的一局」一定是單機，**先把上一場連線的殘留清掉**（見 `leaveCoop`）
     this.leaveCoop();
     this.sandbox = false;
@@ -407,6 +428,15 @@ export class App {
     this.sandbox = false;
     const run = from ?? loadRun();
     if (!run) return false;
+    // 地獄局：地獄包載好才接著打（存檔、局面碼的遭遇在 `checkRun` 先略過，載好之後在這裡補驗）；載不到回標題，存檔留著下次再試
+    if (this.hellPending(run.difficulty ?? 1)) {
+      this.whenHellReady(run.difficulty ?? 1, () => {
+        if (encountersKnown(run)) { this.continueRun(run); return; }
+        notice(i18nT('✗ 這個局面載不起來。'));
+        this.show('title');
+      }, () => this.show('title'));
+      return true;
+    }
     this.adoptRun(run, 0);   // 讀檔續玩也要換回那一局的角色；單機存檔一律坐 0 號（上面 `leaveCoop` 已經歸零）
     this.cs = null;
     // 讀檔續玩在二三關的那一關（稽核 2026-09-04 中 4）：`adoptRun` 已經照 `run.act` 抓了（2026-09-29 收進那裡），這裡不再叫第二次

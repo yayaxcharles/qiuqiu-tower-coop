@@ -144,7 +144,7 @@ describe('連線大廳：難度照開房的人選的開（使用者 2026-09-14�
     const body = lobby.slice(i, lobby.indexOf('\n}\n', i));
     expect(body.match(/selectedDifficulty\(\)/g)?.length, '讀設定的地方只能有主機那一行').toBe(1);
     expect(body.indexOf('selectedDifficulty()'), '那一行要在主機那一支裡').toBeGreaterThan(body.indexOf('if (isHost) {'));
-    expect(body, '客戶端照宣布的難度開').toMatch(/onStartRun\(\(seed, diff, _enc, heroes\) => begin\(seed, diff, heroes\)\)/);
+    expect(body, '客戶端照宣布的難度開').toMatch(/onStartRun\(\(seed, diff, _enc, heroes\) => app\.whenHellReady\(diff, \(\) => begin\(seed, diff, heroes\), giveUp\)\)/);
   });
 });
 

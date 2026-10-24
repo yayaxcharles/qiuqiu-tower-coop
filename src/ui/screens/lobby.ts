@@ -195,17 +195,23 @@ export function rejoinCoop(app: App, rec: RejoinRecord): void {
     app.show('title');
     troubleBanner(app, why);   // troubleBanner 顯示時才翻譯
   };
-  resumeRelay(rec.code, rec.role, rec.recv).ready.then((tx) => {
-    const session = makeSession(app, tx, rec.role === 'host', { gen: rec.gen, checkpoint: rec.checkpoint });
-    session.rejoin();
-  // e.message 是 `net/ws.ts` 的 `resumeRelay` 丟出來的原因（固定清單），交給 troubleBanner 顯示時翻
-  }).catch((e: unknown) => back(e instanceof Error ? e.message : '接不回剛剛的連線局'));
+  // 存檔點是難度 6 的話，地獄包先載好才接線（存檔點進 `resyncTo` 驗證、之後開戰都要用到地獄資料）；載不到就放棄接回
+  const diff = Number(/"difficulty":(\d+)/.exec(rec.checkpoint ?? '')?.[1] ?? 1);
+  app.whenHellReady(diff, () => {
+    resumeRelay(rec.code, rec.role, rec.recv).ready.then((tx) => {
+      const session = makeSession(app, tx, rec.role === 'host', { gen: rec.gen, checkpoint: rec.checkpoint });
+      session.rejoin();
+    // e.message 是 `net/ws.ts` 的 `resumeRelay` 丟出來的原因（固定清單），交給 troubleBanner 顯示時翻
+    }).catch((e: unknown) => back(e instanceof Error ? e.message : '接不回剛剛的連線局'));
+  }, () => back('接不回剛剛的連線局'));
 }
 
 function startCoop(app: App, tx: Transport, isHost: boolean): void {
   const seat = isHost ? 0 : 1;
   clearRejoin();   // 新的一局：上一局留在分頁裡的（例如打完之後還數著的「收到幾則」）清掉
   const session = makeSession(app, tx, isHost);
+  // 地獄包載不到：不開局，收線回標題（對方會看到斷線；提示已由 `whenHellReady` 顯示）
+  const giveUp = (): void => { session.leave(); app.leaveCoop(); app.show('title'); };
   const begin = (seed: string, diff: number, heroes?: string[]): void => {
     // 兩邊各自跑同一支、餵同一顆種子——傳的是種子不是狀態（鎖步的整個重點）。
     // 角色也一樣：開房的人挑好兩位，跟種子一起宣布，兩邊算出來的起手牌才會一樣
@@ -240,11 +246,11 @@ function startCoop(app: App, tx: Transport, isHost: boolean): void {
      * 跟標題畫面共用同一個設定，大廳裡改了標題畫面也跟著變；協定本來就帶難度，客戶端照宣布的開。
      */
     const diff = selectedDifficulty();
-    session.start(seed, diff, '', heroes);
-    begin(seed, diff, heroes);
+    // 難度 6：地獄包（`content/enemies.ts`）先載好才宣布開局，這樣主機不會在客戶端還沒開局前就先動作；載不到就收線回標題
+    app.whenHellReady(diff, () => { session.start(seed, diff, '', heroes); begin(seed, diff, heroes); }, giveUp);
   } else {
-    // 客戶端等主機宣布，收到才開——不能自己挑種子，那樣兩邊一定不一樣
-    session.onStartRun((seed, diff, _enc, heroes) => begin(seed, diff, heroes));
+    // 客戶端等主機宣布，收到才開——不能自己挑種子，那樣兩邊一定不一樣。難度 6 要等地獄包載好才開局（兩邊都在開戰前載好）
+    session.onStartRun((seed, diff, _enc, heroes) => app.whenHellReady(diff, () => begin(seed, diff, heroes), giveUp));
   }
 }
 
