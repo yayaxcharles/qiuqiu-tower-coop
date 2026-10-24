@@ -7,7 +7,7 @@ import { applyEffects } from './effects';
 import { addStatus, computeAttack, computeBlock, getStatus, removeStatus } from './statuses';
 import { DEBUFFS } from './types';
 import { learnedMove, learnsPlayerCards, SHADOW_DANGDANG } from './mimic';
-import { returnAllStolen, returnStolen, sealType, stealCards } from './hell';
+import { enrageOnAllyDeath, returnAllStolen, returnStolen, sealType, seeThroughAmount, stealCards } from './hell';
 import type { CardInstance, CombatState, EnemyCombat, EnemyEffect, EnemyMove, EnemyPhase, PlayerCombat, Unit, StatusName } from './types';
 
 /** 沉睡中的魔物頭上顯示的意圖。每次都是同一份物件，畫面比對「這一拍出的是哪一招」才穩 */
@@ -594,6 +594,8 @@ function killEnemy(cs: CombatState, e: EnemyCombat, by?: PlayerCombat): void {
     if (h.killStrength) addStatus(killer, '爪力', h.killStrength);
     if (h.killFish) killer.fishDelta += h.killFish;
   }
+  // 地獄第三關：還站著的同伴有「同伴倒下暴怒」的各加爪力。會爬回來的（同生共死）、逃走的不算真的倒下
+  if (!reviving && !e.escaped) enrageOnAllyDeath(cs, e);
   markCombatWon(cs);
 }
 
@@ -615,7 +617,9 @@ export function attackable(cs: CombatState, e: EnemyCombat): boolean {
 export function damageEnemy(cs: CombatState, e: EnemyCombat, base: number,
   opts: { ignoreBlock?: boolean; noStrength?: boolean; direct?: boolean; throughBlock?: boolean;
     /** 這一下是誰打的。擊倒獎勵與拿回被偷的錢要發給他；沒填就算第一位（單機只有一位） */
-    by?: PlayerCombat } = {}): { dealt: number; killed: boolean } {
+    by?: PlayerCombat;
+    /** 這一下是玩家打出的攻擊牌（地獄第三關的看穿只減這一種；`effects.ts` 的 `damageWithCardBonus` 才會標） */
+    seen?: boolean } = {}): { dealt: number; killed: boolean } {
   if (e.dead) return { dealt: 0, killed: false };
   // 蹲下調息中（血條式變身的過場）：無敵，什麼傷害都不吃
   if (e.invulnIn > 0) {
@@ -632,7 +636,7 @@ export function damageEnemy(cs: CombatState, e: EnemyCombat, base: number,
   let lose: number;
   let dmg = 0;   // 真的打進去的量；反彈要看它，0 傷不該被刺（直傷分支維持 0，直傷本來就不觸發反彈）
   if (opts.direct) {
-    lose = base;
+    lose = opts.seen ? seeThroughAmount(cs, 'attack', base) : base;
     // 反彈：直傷但先扣魔物的防禦（同上，兩邊規則一樣）
     if (opts.throughBlock) {
       const absorbed = Math.min(e.block, base); e.block -= absorbed; lose = base - absorbed;
@@ -644,6 +648,8 @@ export function damageEnemy(cs: CombatState, e: EnemyCombat, base: number,
     // 座位 1 打出去的每一下都吃座位 0 的爪力——自己堆的完全不算，同伴的倒是白送。
     // 沒帶 `by` 的只有中毒結算與反彈那種直傷，走不到這一行
     dmg = computeAttack(base, opts.by ?? cs.player, e, { noStrength: opts.noStrength });
+    // 地獄第三關的看穿：算完爪力與懶洋洋之後才減半（捨去、最少 1），接著才輪到飛行減半與防禦
+    if (opts.seen) dmg = seeThroughAmount(cs, 'attack', dmg);
     // 飛行：打得到的只有一半，**先減半再扣防禦**（燈蛾、月蛾后）。中毒那種直傷不吃這條
     if (getStatus(e, '飛行') > 0 && dmg > 0) { dmg = Math.floor(dmg / 2); log(cs, '{e}在天上，這一下只擦到一半', { e: E(e) }); }
     if (opts.ignoreBlock) lose = dmg;

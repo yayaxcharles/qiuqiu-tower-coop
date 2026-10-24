@@ -7,6 +7,7 @@ import { BOSS_ART, BOSS_HURT_ART, BOSS_MOVE_ART, encounterById, enemyById, enemy
 import { potionById } from '../../content/potions';
 import { aliveEnemies, dazeTarget, isDazed, willRevive } from '../../engine/actions';
 import { relicCounterKey } from '../../engine/counters';
+import { tauntingEnemy } from '../../engine/hell';
 import { rampageTurnFor, allReady, beginEnemyTurn, canPlay, endTurn, finishEnemyTurn, IDLE_FORCE_MS, playCard, potionBlockedReason, resolveChoice, stepEnemyTurn, usePotion, waitingFor } from '../../engine/combat';
 import { previewHpLoss } from '../../engine/preview';
 import { cardStats } from '../../engine/deck';
@@ -2049,6 +2050,8 @@ registerScreen('combat', (app, root, props) => {
     const before = lastIntent.get(e.uid);
     const flip = before !== undefined && before !== text;
     lastIntent.set(e.uid, text);
+    // 地獄第三關的看穿：這個玩家回合哪一類牌被看穿，每張意圖牌都講（算看穿不算換招，所以放在翻牌判斷之後）
+    if (cs.hell?.seeThrough) text += cs.hell.seeThrough === 'attack' ? t('（看穿：攻擊）') : t('（看穿：技能）');
     const node = el('div', { class: `intent i-${m.intent}${flip ? ' changed' : ''}` });
     /*
      * **「穿透」要標出來**（2026-09-14 使用者以為虛無貓有 bug：「她的攻擊都會無視我的蜷縮」）。
@@ -2132,7 +2135,10 @@ registerScreen('combat', (app, root, props) => {
     // 迷魂香（2026-09-23 第二批）：上面那些數字是牠這一下的力道，但這一輪會打在牠旁邊的同伴身上
     const dazeAt = dazeTarget(cs, e);
     const daze = isDazed(e) ? t('迷魂了：這一輪的攻擊改打{target}，不打你。', { target: dazeAt ? enemyName(dazeAt.enemyId, cs.player.hero) : t('空氣（旁邊沒有同伴）') }) : '';
-    return daze + (e.charged && m.intent === 'attack' ? t('{body}（已蓄力，傷害已經算進去了）。', { body }) : t('{body}。', { body }));
+    const seen = cs.hell?.seeThrough;
+    const seeNote = seen === 'attack' ? t('被看穿了：你上一回合攻擊牌打得最多，這回合你的攻擊牌傷害減半。換個打法就能繞過。')
+      : seen === 'skill' ? t('被看穿了：你上一回合技能牌打得最多，這回合你的技能牌給的蜷縮減半、對魔物上的減益層數也減半。換個打法就能繞過。') : '';
+    return seeNote + daze + (e.charged && m.intent === 'attack' ? t('{body}（已蓄力，傷害已經算進去了）。', { body }) : t('{body}。', { body }));
   }
 
   /**
@@ -2214,6 +2220,9 @@ registerScreen('combat', (app, root, props) => {
       if (e.stolen > 0) row.prepend(chip(t('叼著小魚乾'), null, String(e.stolen), 'bad'));
       // 地獄第二關偷來的牌：掛牌名（原主的牌名，連線時各看各的角色版本），打倒牠才拿得回來
       if (e.stolenCards?.length) row.prepend(chip(t('偷走的牌'), null, e.stolenCards.map((x) => nameFor(cs.players[x.seat]?.hero, x.card.cardId) + (x.card.upgraded ? '＋' : '')).join('、'), 'bad'));
+      // 地獄第三關：嘲諷（單體攻擊都改打牠）與同伴倒下暴怒，都是畫面上看不出來的規則，照慣例掛牌
+      if (def?.taunt) row.prepend(chip(t('嘲諷'), null, '', 'bad'));
+      if (def?.enrageOnAllyDeath) row.prepend(chip(t('同伴倒下暴怒'), null, `+${def.enrageOnAllyDeath}`, 'bad'));
       if (e.charged) row.prepend(chip(t('蓄力'), null, '', 'bad'));
       if (e.invulnIn > 0) row.prepend(chip(t('無敵'), null, '', 'bad'));
       if (def?.reviveGroup && !def.neverRevive) row.prepend(chip(t('同生共死'), null, '', 'bad'));   // 蛙大名自己倒了就倒了，不掛這塊牌
@@ -2631,8 +2640,9 @@ registerScreen('combat', (app, root, props) => {
             // 拖著的牌會蓋住底下的魔物，不高亮的話多怪時看不出這一下會打誰。
             // 直接動 class 不重畫：重畫會把正在拖的那張牌換成新節點，拖曳當場斷掉
             for (const u of root.querySelectorAll('.unit.enemy.drag-over')) u.classList.remove('drag-over');
-            if (uid !== null) root.querySelector(`.unit.enemy[data-uid="${uid}"]`)?.classList.add('drag-over');
-            damagePreview(uid === null ? null : c.uid, uid ?? undefined);   // 拖到哪一隻，就先標出會扣多少
+            const shown = tauntSnap(c.uid, uid);   // 嘲諷：高亮落在實際會挨打的那隻（打出去時仍傳原目標，引擎記戰報）
+            if (shown !== null) root.querySelector(`.unit.enemy[data-uid="${shown}"]`)?.classList.add('drag-over');
+            damagePreview(uid === null ? null : c.uid, uid ?? undefined);   // 預覽是在複本上真的打一次，嘲諷的改寫自然算進去   // 拖到哪一隻，就先標出會扣多少
           },
           // 點擊那兩條路都先過 canAct()，拖曳這條原本沒有——撒手鐧那類牌打完到自動結束回合之間
           // 有 650 毫秒的空窗，在那時候抓起另一張牌拖到魔物回合再放開，就會繞過那道關
@@ -2755,6 +2765,17 @@ registerScreen('combat', (app, root, props) => {
     return true;
   }
 
+  /**
+   * 嘲諷：選的是單體攻擊牌、場上有魔物嘲諷時，打誰都落在嘲諷的身上（引擎照同一條規則改寫，見 `redirectToTaunter`）。
+   * 回「實際會挨打」的那隻；不是這種牌、沒人嘲諷、或本來就點到嘲諷的，原樣回。畫面的箭頭、預覽、拖曳高亮都問這一支。
+   */
+  const tauntFor = (cardUid: number): EnemyCombat | undefined => {
+    const c = my().hand.find((x) => x.uid === cardUid);
+    const d = c ? cardStats(c).def : undefined;
+    return d && d.type === 'attack' && d.target === 'enemy' ? tauntingEnemy(cs) : undefined;
+  };
+  const tauntSnap = (cardUid: number | null, uid: number | null): number | null =>
+    uid === null || cardUid === null ? uid : (tauntFor(cardUid)?.uid ?? uid);
   /** 選目標時鋪的接盤子：點空白處＝取消（整頁重畫與 `patchTargeting` 共用） */
   const targetCatcher = (): HTMLElement =>
     el('div', { class: 'target-catcher', onclick: () => { setTargeting(null); if (!patchTargeting()) render(); } });
@@ -3048,7 +3069,11 @@ registerScreen('combat', (app, root, props) => {
         aimRaf = 0;
         if (!aimAt || !box.isConnected || !svg.isConnected) return;
         const { x, y } = aimAt;
-        const foe = document.elementFromPoint(x, y)?.closest<HTMLElement>('.unit.enemy.targetable');
+        const hit = document.elementFromPoint(x, y)?.closest<HTMLElement>('.unit.enemy.targetable');
+        // 嘲諷：箭頭吸到嘲諷的身上，玩家看得到這一下實際會打誰
+        const snapped = hit && targeting?.kind === 'card' ? tauntSnap(targeting.uid, Number(hit.dataset['uid'])) : null;
+        const foe = snapped !== null && snapped !== Number(hit?.dataset['uid'])
+          ? box.querySelector<HTMLElement>(`.unit.enemy[data-uid="${snapped}"]`) ?? hit : hit;
         draw(foe ? centreOf(foe, 0.45) : toStage(x, y), !!foe);
         // 吸附到哪一隻就先標出這一下會扣多少（`damagePreview`）；沒吸附就收掉
         damagePreview(foe && targeting?.kind === 'card' ? targeting.uid : null, foe ? Number(foe.dataset['uid']) : undefined);

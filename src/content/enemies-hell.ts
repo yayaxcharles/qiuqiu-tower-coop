@@ -290,7 +290,7 @@ export const hellEnemies: EnemyDef[] = [
   { id: 'hell_mirror_eye', name: '鏡眼', hp: [46, 52], pool: '中', pattern: 'cycle', size: 'small', art: 'codex/monster_hell_mirror_eye',
     line: '（鏡面中央的大眼睛轉了過來）', lines: ['（流蘇輕輕晃動）'],
     moves: [
-      mv('debuff', '凝視', onPlayer('炸毛', 2)),   // Task 6: 看穿
+      mv('debuff', '凝視', onPlayer('炸毛', 2)),
       mv('attack', '反光', dmg(16)),
       mv('block', '照妖', blk(8), onPlayer('懶洋洋', 1)),
     ] },
@@ -310,6 +310,7 @@ export const hellEnemies: EnemyDef[] = [
     ] },
   // ----- 強 -----
   { id: 'hell_shell_kappa', name: '甲羅河童', hp: [78, 86], pool: '強', pattern: 'cycle', size: 'medium', art: 'codex/monster_hell_shell_kappa',
+    taunt: true,
     line: '你要先過我這一關。', lines: ['（龜殼盾牌舉在胸前）'],
     moves: [
       mv('block', '舉盾護隊', { kind: 'blockAllies', amount: 10 }),
@@ -317,6 +318,7 @@ export const hellEnemies: EnemyDef[] = [
       mv('attack', '短槍連刺', dmg(12, 2)),
     ] },
   { id: 'hell_twin_moon', name: '雙子・月', hp: [62, 68], pool: '強', pattern: 'cycle', size: 'medium', art: 'codex/monster_hell_twin_moon',
+    enrageOnAllyDeath: 3,
     line: '姐姐，我先上了。', lines: ['（彎彎的月牙刀垂在身後）'],
     moves: [
       mv('attack', '月牙斬', dmg(15)),
@@ -324,6 +326,7 @@ export const hellEnemies: EnemyDef[] = [
       mv('attack', '疾斬', dmg(8, 2)),
     ] },
   { id: 'hell_twin_sun', name: '雙子・日', hp: [62, 68], pool: '強', pattern: 'cycle', size: 'medium', art: 'codex/monster_hell_twin_sun',
+    enrageOnAllyDeath: 3,
     line: '妹妹，別搶我的。', lines: ['（高舉金色的刀）'],
     moves: [
       mv('attack', '烈日斬', dmg(19)),
@@ -334,13 +337,14 @@ export const hellEnemies: EnemyDef[] = [
     line: '嗯，依我看，該這麼打。', lines: ['（搧著羽扇，眼睛瞇成一條線）'],
     moves: [
       mv('buff', '下軍令', allyClaw(2)),
-      mv('debuff', '撥算盤', { kind: 'stripPlayer', names: ['隱身', '潛水'] }, dmg(10)),   // Task 6: 看穿
+      mv('debuff', '撥算盤', { kind: 'stripPlayer', names: ['隱身', '潛水'] }, dmg(10)),
       mv('attack', '羽扇擊', dmg(17)),
     ] },
   { id: 'hell_kagemusha_cat', name: '影武者貓', hp: [80, 88], pool: '強', pattern: 'cycle', size: 'medium', art: 'codex/monster_hell_kagemusha_cat',
+    taunt: true,
     line: '……我替他擋著。', lines: ['（木盾立在身前，像一面牆）'],
     moves: [
-      mv('block', '舉盾守陣', blk(14), { kind: 'blockAllies', amount: 6 }),   // Task 6: taunt（嘲諷，替同伴擋刀）
+      mv('block', '舉盾守陣', blk(14), { kind: 'blockAllies', amount: 6 }),
       mv('attack', '盾推', dmg(14)),
       mv('block', '盾牆', { kind: 'blockAllies', amount: 12 }),
     ] },
@@ -352,11 +356,12 @@ export const hellEnemies: EnemyDef[] = [
       mv('attack', '鼓聲震', dmg(9, 2)),
     ] },
   { id: 'hell_vengeful_doll', name: '怨念人偶', hp: [58, 64], pool: '強', pattern: 'cycle', size: 'small', art: 'codex/monster_hell_vengeful_doll',
+    enrageOnAllyDeath: 4,
     line: '……為什麼，不等我。', lines: ['（長髮飄起，身邊的紫火輕輕搖晃）'],
     moves: [
       mv('debuff', '低吟', onPlayer('炸毛', 2)),
       mv('attack', '怨火', dmg(13)),
-      mv('attack', '怨火纏身', dmg(6, 2), selfClaw(1)),   // Task 6: enrageOnAllyDeath（同伴倒下就暴怒）
+      mv('attack', '怨火纏身', dmg(6, 2), selfClaw(1)),
     ] },
   // ----- 大魔物 -----
   { id: 'hell_three_face_ashura', name: '三面修羅', hp: [190, 190], pool: '大魔物', pattern: 'cycle', size: 'large', art: 'codex/monster_hell_three_face_ashura',

@@ -3,6 +3,7 @@ import { aliveEnemies, attackable, damageEnemy, damagePlayer, drawCards, findEne
 import { HAND_LIMIT } from './deck';
 import { addStatus, getStatus, removeStatus } from './statuses';
 import { heroPronoun } from './hero';
+import { seeThroughAmount } from './hell';
 import { E, H, K_ } from './logfmt';
 import { DEBUFFS, QI_BURST_MIN, TURN_DECAY } from './types';
 import type { CardInstance, CombatState, Effect, EffectCtx, EnemyCombat, PendingChoice, PlayerCombat } from './types';
@@ -115,8 +116,20 @@ function damageWithCardBonus(cs: CombatState, target: EnemyCombat, base: number,
     raw += ctx.nextAttackBonus;
     ctx.nextAttackBonusUsed = true;
   }
-  return damageEnemy(cs, target, raw * (ctx.doubleDamage ? 2 : 1), { ...opts, by: p });
+  // 地獄第三關的看穿：只有「打出的攻擊牌」這一條路標 `seen`（秘寶、能力牌、毒、反彈打的不標），減半在 `damageEnemy` 裡算
+  const seen = ctx.source === 'card' && ctx.cardType === 'attack';
+  return damageEnemy(cs, target, raw * (ctx.doubleDamage ? 2 : 1), { ...opts, by: p, ...(seen ? { seen } : {}) });
 }
+
+/**
+ * 地獄第三關的看穿（技能那一半）：打出的**技能牌**給的蜷縮、對魔物上的減益層數，被看穿時減半（捨去、最少 1）。
+ * 秘寶、能力牌、忍具、魔物來源的不減；沒有看穿時原樣回傳（不動狀態、不擲骰）。
+ * 減半的是牌面給的量，拒馬、貓步那些後加的加成照舊（它們不是這張牌的效果）。
+ */
+function seenSkill(cs: CombatState, ctx: EffectCtx, n: number): number {
+  return ctx.source === 'card' && ctx.cardType === 'skill' ? seeThroughAmount(cs, 'skill', n) : n;
+}
+
 
 /** 回傳 true＝已暫停等待選牌 */
 /**
@@ -296,13 +309,13 @@ export function applyOne(cs: CombatState, fx: Effect, ctx: EffectCtx, queue: Eff
     case 'block': {
       // 同一張牌裡如果還有會落在自己身上的 `blockAlly`（一個人時），兩份要併成一次算
       // ——分兩次的話貓步與拒馬會被套兩遍（2026-09-13 稽核 中-6）
-      ctx.selfBlockPool = (ctx.selfBlockPool ?? 0) + fx.amount;
+      ctx.selfBlockPool = (ctx.selfBlockPool ?? 0) + seenSkill(cs, ctx, fx.amount);
       flushSelfBlock(cs, p, ctx, queue);
       return false;
     }
     case 'blockSpendQi': {
       const spent = spendQi(cs, p, ctx, fx.maxQi, false);
-      const amount = qiAmount(fx, spent);
+      const amount = seenSkill(cs, ctx, qiAmount(fx, spent));
       const recipient = fx.recipient === 'ally' ? ally(cs, p) : p;
       if (recipient === p) {
         ctx.selfBlockPool = (ctx.selfBlockPool ?? 0) + amount;
@@ -316,16 +329,17 @@ export function applyOne(cs: CombatState, fx: Effect, ctx: EffectCtx, queue: Eff
     case 'blockIfPoisoned': {
       // 目標**原本**就中毒才給（打牌那一刻的快照，這張牌自己上的毒不算）
       if (!(ctx.targetPoisonBefore ?? 0)) return false;
-      ctx.selfBlockPool = (ctx.selfBlockPool ?? 0) + fx.amount;
+      ctx.selfBlockPool = (ctx.selfBlockPool ?? 0) + seenSkill(cs, ctx, fx.amount);
       flushSelfBlock(cs, p, ctx, queue);
       return false;
     }
     case 'blockAll': {
       // **每一位都要照自己的貓步算**，所以一個一個走 `gainBlock`，不是算一次再發下去
-      for (const q of cs.players) if (!q.down && q !== p) gainBlock(cs, q, fx.amount);
+      const each = seenSkill(cs, ctx, fx.amount);
+      for (const q of cs.players) if (!q.down && q !== p) gainBlock(cs, q, each);
       // 自己那份併進池子一起發：`flushSelfBlock` 看到後面有 blockAll 會把前面的 block 先留著，
       // 這裡不進池子的話那份就永遠發不出去（審查 2026-09-15 引擎 低-9；今天沒有牌這樣排，先把洞補上）
-      ctx.selfBlockPool = (ctx.selfBlockPool ?? 0) + fx.amount;
+      ctx.selfBlockPool = (ctx.selfBlockPool ?? 0) + each;
       flushSelfBlock(cs, p, ctx, queue);
       if (cs.players.length > 1) log(cs, '蜷縮分了對方一半');
       return false;
@@ -349,9 +363,10 @@ export function applyOne(cs: CombatState, fx: Effect, ctx: EffectCtx, queue: Eff
        * 玩家不會發現，只會覺得這張牌莫名好用。
        * 所以單人時先把量記在 `ctx.selfBlockPool`，由這張牌最後一次 `block`／`blockAlly` 一起發（`flushSelfBlock`）。
        */
-      if (mate === p) { ctx.selfBlockPool = (ctx.selfBlockPool ?? 0) + fx.amount; flushSelfBlock(cs, p, ctx, queue); return false; }
-      gainBlock(cs, mate, fx.amount);
-      log(cs, '幫對方擋了 {n} 點', { n: fx.amount });
+      const give = seenSkill(cs, ctx, fx.amount);
+      if (mate === p) { ctx.selfBlockPool = (ctx.selfBlockPool ?? 0) + give; flushSelfBlock(cs, p, ctx, queue); return false; }
+      gainBlock(cs, mate, give);
+      log(cs, '幫對方擋了 {n} 點', { n: give });
       return false;
     }
     case 'drawAlly': {
@@ -507,7 +522,7 @@ export function applyOne(cs: CombatState, fx: Effect, ctx: EffectCtx, queue: Eff
         for (const t of targetsOf(cs, ctx, fx.target === 'all')) {
           // 定身對魔物只有七成機會成功（使用者 2026-09-02：「定身太強」）；沒中就寫在紀錄、畫面飄「掙脫」
           if (fx.name === '定身' && !cs.rng.chance(0.7)) { log(cs, '{e}掙脫了定身', { e: E(t) }); continue; }
-          addStatus(t, fx.name, amount);
+          addStatus(t, fx.name, seenSkill(cs, ctx, amount));
           markPoisoner(t, fx.name, p);   // 毒死牠的時候要知道是誰下的（連線版，見 EnemyCombat.poisonedBy）
         }
       }

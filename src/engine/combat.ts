@@ -9,7 +9,7 @@ import type { Hero } from './hero';
 import { E, H, K_, type LogArg } from './logfmt';
 import { cardStats, discardHand, moveCard } from './deck';
 import { applyEffects } from './effects';
-import { endSeal, hellDrawPenalty, initHell, isSealed, miasmaTick, resolveStealPending, returnStolen, startSeal } from './hell';
+import { computeSeeThrough, endSeal, endSeeThrough, hellDrawPenalty, initHell, isSealed, miasmaTick, recordPlay, redirectToTaunter, resolveStealPending, returnStolen, startSeal } from './hell';
 import type { Rng } from './rng';
 import { addStatus, decayTurnStatuses, getStatus, removeStatus, tickPoison } from './statuses';
 import { DEBUFFS, TURN_DECAY } from './types';
@@ -179,6 +179,7 @@ export function startPlayerTurn(cs: CombatState): void {
   cs.turn += 1;
   cs.hits.length = 0;   // 分段演出只看這一拍新增的幾筆，上一回合的不用留著（稽核 2026-09-05 夜 低-1）
   startSeal(cs);        // 地獄第二關：魔物上一輪貼的封條這個回合生效（一般難度 cs.hell 沒有，直接回）
+  computeSeeThrough(cs);   // 地獄第三關：看上一回合打最多的牌類，這回合那類被看穿（其他關與一般難度直接回）
   // 每位玩家各開一次自己的回合（連線版第一步 2026-09-11）。單機就是跑一次，順序與結果完全沒變。
   // 中途被中毒打倒就整個停下來——後面的人不用再抽牌了
   for (const p of cs.players) { if (p.down) continue; startSeatTurn(cs, p); if (cs.phase !== 'player') return; }
@@ -545,6 +546,8 @@ export function playCard(cs: CombatState, uid: number, targetUid?: number, seat 
   const p = cs.players[seat] as PlayerCombat;
   const card = p.hand.find((c) => c.uid === uid) as CardInstance;
   const st = cardStats(card);
+  // 地獄第三關的嘲諷：單體攻擊牌打別隻，改打嘲諷的（全體、隨機挑目標的牌 target 不是 'enemy'，不走這裡）
+  if (st.def.type === 'attack' && st.def.target === 'enemy') targetUid = redirectToTaunter(cs, targetUid);
   /**
    * 折價的那兩件（毛線球每回合第一張、破卷軸整場第一張）在這裡記（稽核 2026-09-10 中-3）。
    *
@@ -605,6 +608,7 @@ export function playCard(cs: CombatState, uid: number, targetUid?: number, seat 
     log(cs, '{relic}：第 {n} 張攻擊牌，傷害加倍', { relic: { relic: rid }, n });
   }
   p.cardsPlayedThisTurn += 1;
+  recordPlay(cs, st.def.type);   // 地獄第三關：記這回合打了哪一類（下回合算看穿；其他關直接回）
   (p.playedThisTurn ??= []).push({ uid: card.uid, cardId: card.cardId, upgraded: card.upgraded });
   cs.cardsPlayed += 1;
   p.firstCardPlayed = true;
@@ -876,6 +880,7 @@ export function beginEnemyTurn(cs: CombatState): boolean {
   if (cs.phase !== 'player' || cs.pending) return false;
   for (const p of cs.players) { p.ready = false; delete p.forcedReady; }   // 舉的手到這裡就兌現了
   endSeal(cs);   // 地獄第二關：封條只管這一個玩家回合
+  endSeeThrough(cs);   // 地獄第三關：看穿也只管這一個玩家回合
   // 每位玩家各收一次自己的回合（連線版第一步 2026-09-11）。單機跑一次，順序與結果完全沒變
   for (const p of cs.players) { if (p.down) continue; endSeatTurn(cs, p); if (cs.phase !== 'player') return false; }
   return beginEnemyTurnRest(cs);

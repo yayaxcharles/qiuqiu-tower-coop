@@ -860,5 +860,13 @@
  "順走你手牌裡的 {n} 張牌，藏在牠身上：打倒牠才拿得回來": "Snatches {n} {n|card|cards} from your hand and hides {n|it|them} on itself: defeat it to get {n|it|them} back",
  "封住你下一回合的攻擊牌：整回合打不出來（能力牌不受影響）": "Seals your Attack cards next turn: none can be played (Power cards are unaffected)",
  "封住你下一回合的技能牌：整回合打不出來（能力牌不受影響）": "Seals your Skill cards next turn: none can be played (Power cards are unaffected)",
- "偷走的牌": "Stolen Cards"
+ "偷走的牌": "Stolen Cards",
+ "{e}出聲嘲諷，這一下改打牠": "{e} taunts: this hit lands on it instead",
+ "{e}看著同伴倒下，暴怒了！爪力 +{n}": "{e} rages at its fallen ally! Claw +{n}",
+ "（看穿：攻擊）": "(Read: Attack)",
+ "（看穿：技能）": "(Read: Skill)",
+ "被看穿了：你上一回合攻擊牌打得最多，這回合你的攻擊牌傷害減半。換個打法就能繞過。": "Read: you played the most Attack cards last turn, so your Attack cards deal half damage this turn. Switch up your play to get around it.",
+ "被看穿了：你上一回合技能牌打得最多，這回合你的技能牌給的蜷縮減半、對魔物上的減益層數也減半。換個打法就能繞過。": "Read: you played the most Skill cards last turn, so Curl from your Skill cards is halved, and so are debuff stacks you put on monsters. Switch up your play to get around it.",
+ "嘲諷": "Taunt",
+ "同伴倒下暴怒": "Rage on Ally Death"
 }
