@@ -156,6 +156,12 @@ export function tierBgZoom(key: string): number {
 }
 
 /**
+ * 地獄第二、三關的戰鬥背景調亮（2026-10-24 使用者裁定 C）：深色魔物（斥候烏鴉、旗手小鬼、鏡眼、煙遁鼠、垃圾小妖）站上去對比太低。
+ * 用 CSS 亮度、不動圖檔；第一關與一般難度不在表裡。畫面下半（魔物站的區域）平均亮度：第二關 52→64、第三關 58→69（第一關約 62）。
+ */
+const HELL_BG_LIFT: Readonly<Record<string, number>> = { 'bg/bg_hell_2': 1.22, 'bg/bg_hell_3': 1.18 };
+
+/**
  * 戰場那張圖該怎麼鋪——**圖跟放大率一起給**，讓所有畫戰場的地方長得一模一樣。
  *
  * 戰鬥畫面用 `.battle-bg`（貼齊下緣＋各張不同的放大率，牆腳才對得到角色的腳底），
@@ -171,7 +177,8 @@ export function tierBgZoom(key: string): number {
 export function battleBgStyle(key: string): string {
   const url = artUrl('bg', key);
   if (url.startsWith('data:')) return '';
-  return `background-image:url(${url});background-size:auto ${tierBgZoom(key)}%;background-position:center bottom`;
+  const lift = HELL_BG_LIFT[/^bg\/bg_hell_\d/.exec(key)?.[0] ?? ''];   // 地獄第二、三關三張變體共用一個係數
+  return `background-image:url(${url});background-size:auto ${tierBgZoom(key)}%;background-position:center bottom${lift ? `;filter:brightness(${lift})` : ''}`;
 }
 
 /**
