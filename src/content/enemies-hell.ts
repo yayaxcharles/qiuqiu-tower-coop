@@ -406,7 +406,7 @@ export const hellEnemies: EnemyDef[] = [
     phases: [
       // 二、破繭・千手（亂）：偷牌、封攻擊或技能、塞壞牌；換形態時偷的牌一次還回來（`returnStolen`）
       {
-        hpBar: 150, line: '破繭', pattern: 'cycle', hellMech: ['chaos'], strengthPerTurn: 2,
+        hpBar: 150, line: '破繭', pattern: 'cycle', hellMech: ['chaos'], strengthPerTurn: 2, dispel: 0.5,
         onEnter: [blk(14)],
         moves: [
           mv('attack', '千手攫牌', steal(3), dmg(8), seal('skill')),
@@ -418,7 +418,7 @@ export const hellEnemies: EnemyDef[] = [
       },
       // 三、千面（狡猾）：每回合換一張面具（照表輪換，不擲骰），每三回合第三張面具召一隻第三關的小怪（同種最多 2 隻）
       {
-        hpBar: 170, line: '千面', pattern: 'cycle', hellMech: ['cunning'], summonGap: 2, strengthPerTurn: 2,
+        hpBar: 170, line: '千面', pattern: 'cycle', hellMech: ['cunning'], summonGap: 2, strengthPerTurn: 2, dispel: 0.5,
         onEnter: [],
         moves: [
           mv('attack', '怒面', dmg(28)),
@@ -429,7 +429,7 @@ export const hellEnemies: EnemyDef[] = [
       // 四、真身・九尾黑貓神（全部＋模仿）：三種機制同時開；每一動照抄你上一回合打出的牌（`mimic.ts`），
       // 抄來的招另外輪流附偷牌、封攻擊、塞牌、封技能（`learnRider`）。抄不到牌時才退回下面這三招
       {
-        hpBar: 220, line: '真身', pattern: 'cycle', hellMech: ['miasma', 'chaos', 'cunning'], learnsPlayerCards: true, strengthPerTurn: 3,
+        hpBar: 220, line: '真身', pattern: 'cycle', hellMech: ['miasma', 'chaos', 'cunning'], learnsPlayerCards: true, strengthPerTurn: 3, dispel: 0.5, doom: { turns: 6, move: mv('attack', '九尾滅世', dmg(35)) },
         learnRider: [[steal(2), seal('attack')], [seal('skill'), dazed(2, 'draw')], [steal(2), seal('skill')], [seal('attack'), dazed(3, 'draw')]],
         onEnter: [selfClaw(3)],
         moves: [

@@ -10,7 +10,8 @@ import { HAND_LIMIT } from './deck';
 import { log } from './actions';
 import { E, H } from './logfmt';
 import { addStatus } from './statuses';
-import type { CardType, CombatState, EnemyCombat, HellMech, PlayerCombat } from './types';
+import { DEBUFFS } from './types';
+import type { CardType, CombatState, EnemyCombat, EnemyPhase, HellMech, PlayerCombat, StatusName } from './types';
 
 export interface HellState {
   act: 1 | 2 | 3;
@@ -19,6 +20,7 @@ export interface HellState {
   sealed?: 'attack' | 'skill';         // 這個玩家回合被封住的那一類牌（兩位一起封）
   lastPlays?: { attack: number; skill: number };  // Task 6
   seeThrough?: 'attack' | 'skill' | null;          // Task 6
+  doom?: number;                   // 魔源真身的滅世倒數：0＝這一輪頭上亮著滅世（放完下一輪重新起算）
 }
 
 /** 紫霧起始倒數（玩家回合數）：一般戰、大魔物、關主。量測再調 */
@@ -76,11 +78,16 @@ export function mechActive(cs: CombatState, m: HellMech): boolean {
   return cs.enemies.some((e) => !e.dead && !e.escaped && formMechs(e)?.includes(m) === true);
 }
 
+const phaseOf = (e: EnemyCombat): EnemyPhase | undefined => enemyById[e.enemyId]?.phases?.[e.phase - 1];
+
 /** 關主換形態（`damageEnemy` 換血條、`checkPhase` 換門檻階段，已經 `phase += 1` 之後叫）：紫霧跟著新形態開或關 */
 export function onHellFormChange(cs: CombatState, e: EnemyCombat): void {
   const h = cs.hell;
   const mech = formMechs(e);
   if (!h || !mech) return;
+  const ph = phaseOf(e);
+  if (ph?.doom) h.doom = ph.doom.turns;
+  if (ph?.dispel) dispelBuffs(cs, ph.dispel);
   if (mech.includes('miasma')) {
     h.miasmaLeft = SOURCE_MIASMA_TURNS;   // 真身重新起算，跟第一形態同一個回合數
     log(cs, '紫霧又聚攏了：{n} 回合後魔物爪力暴增', { n: SOURCE_MIASMA_TURNS });
@@ -97,15 +104,47 @@ export function onHellFormChange(cs: CombatState, e: EnemyCombat): void {
  */
 export function miasmaTick(cs: CombatState): void {
   const h = cs.hell;
-  if (!h || h.miasmaLeft === undefined) return;
+  if (!h) return;
+  doomTick(cs, h);
+  if (h.miasmaLeft === undefined) return;
   const claw = miasmaClaw(cs);
   if (h.miasmaLeft > 0) {
     h.miasmaLeft -= 1;
     if (h.miasmaLeft > 0) return;
-    if (claw === MIASMA_CLAW) log(cs, '紫霧漫滿了！魔物全體爪力 +2，之後每一輪都再加；你每回合少抽 1 張牌');
-    else log(cs, '紫霧漫滿了！魔物全體爪力 +{n}，之後每一輪都再加；你每回合少抽 1 張牌', { n: claw });
+    log(cs, '紫霧漫滿了！魔物全體爪力 +{n}，之後每一輪都再加；你每回合少抽 1 張牌', { n: claw });
   }
   for (const e of cs.enemies) if (!e.dead) addStatus(e, '爪力', claw);
+}
+
+/**
+ * 封印反噬：每位玩家身上的增益（`DEBUFFS` 以外的狀態：爪力、貓步、隱身、反彈、潛水、鐵布衫；護甲不算，
+ * 縮殼、飛行、鱗甲、不壞身只會掛在魔物身上）層數打散 `ratio`（0.5＝留一半、無條件捨去）；真的打散了東西才寫戰報
+ */
+function dispelBuffs(cs: CombatState, ratio: number): void {
+  let hit = false;
+  for (const p of cs.players) for (const s of Object.keys(p.statuses) as StatusName[]) {
+    if (DEBUFFS.includes(s)) continue;
+    const n = p.statuses[s]!;   // 身上有的狀態層數一定大於 0（`addStatus` 歸零就刪）
+    addStatus(p, s, -Math.ceil(n * ratio));
+    hit = true;
+  }
+  if (hit) log(cs, '封印反噬：增益被打散了');
+}
+
+/**
+ * 魔源真身的滅世倒數（每輪結束跟紫霧同一拍）：減到 0 的那一輪，把牠頭上的下一動換成滅世（意圖、電腦都讀 `e.move`，數字照實顯示）；
+ * 放完的下一輪重新起算，所以兩次滅世相隔 `turns` 輪。
+ */
+function doomTick(cs: CombatState, h: HellState): void {
+  if (h.doom === undefined) return;
+  for (const e of cs.enemies) {
+    const d = e.dead ? undefined : phaseOf(e)?.doom;
+    if (!d) continue;
+    if (h.doom > 0 ? --h.doom : (h.doom = d.turns - 1)) return;
+    e.move = d.move;
+    log(cs, '{e}蓄滿了力', { e: E(e) });
+    return;
+  }
 }
 
 /** 抽牌要少幾張：紫霧歸零回 1（固定、不累加），否則 0 */
@@ -127,8 +166,7 @@ function takeFromHand(cs: CombatState, e: EnemyCombat, p: PlayerCombat): boolean
   const card = p.hand.splice(cs.rng.int(0, p.hand.length - 1), 1)[0]!;
   p.retained = p.retained.filter((u) => u !== card.uid);
   (e.stolenCards ??= []).push({ seat: p.seat, card });
-  if (multi(cs)) log(cs, '{e}順走了{who}的「{card}」', { e: E(e), who: H(p), card: { card: card.cardId, hero: p.hero, up: card.upgraded } });
-  else log(cs, '{e}順走了你的「{card}」', { e: E(e), card: { card: card.cardId, hero: p.hero, up: card.upgraded } });
+  log(cs, multi(cs) ? '{e}順走了{who}的「{card}」' : '{e}順走了你的「{card}」', { e: E(e), who: H(p), card: { card: card.cardId, hero: p.hero, up: card.upgraded } });
   return true;
 }
 
@@ -174,8 +212,7 @@ export function returnStolen(cs: CombatState, e: EnemyCombat): void {
     const toHand = p.hand.length < HAND_LIMIT;
     if (toHand) p.hand.push(card); else p.discardPile.push(card);
     const arg = { card: card.cardId, hero: p.hero, up: card.upgraded };
-    if (multi(cs)) log(cs, toHand ? '「{card}」回到{who}手上了' : '「{card}」回到{who}的棄牌堆了（手牌已滿）', { card: arg, who: H(p) });
-    else log(cs, toHand ? '「{card}」回到你手上了' : '「{card}」回到你的棄牌堆了（手牌已滿）', { card: arg });
+    log(cs, multi(cs) ? (toHand ? '「{card}」回到{who}手上了' : '「{card}」回到{who}的棄牌堆了（手牌已滿）') : (toHand ? '「{card}」回到你手上了' : '「{card}」回到你的棄牌堆了（手牌已滿）'), { card: arg, who: H(p) });
   }
 }
 
@@ -205,8 +242,7 @@ export function returnAllStolen(cs: CombatState): void {
 export function sealType(cs: CombatState, e: EnemyCombat, type: 'attack' | 'skill'): void {
   if (!cs.hell) return;
   cs.hell.sealNext = type;
-  if (type === 'attack') log(cs, '{e}貼上封條：下一回合打不出攻擊牌', { e: E(e) });
-  else log(cs, '{e}貼上封條：下一回合打不出技能牌', { e: E(e) });
+  log(cs, type === 'attack' ? '{e}貼上封條：下一回合打不出攻擊牌' : '{e}貼上封條：下一回合打不出技能牌', { e: E(e) });
 }
 
 /** 玩家回合開始（`startPlayerTurn`，整場一次）：魔物上一輪貼的封條生效 */

@@ -629,6 +629,10 @@ export interface EnemyPhase {
   learnRider?: EnemyEffect[][];
   /** 召喚的最短間隔（牠自己的回合數）；不填＝全域的 `SUMMON_GAP`。魔源千面每三回合召一次用 */
   summonGap?: number;
+  /** 地獄關主：進這個形態時，每位玩家身上的增益狀態層數打散這個比例（0.5＝減半、無條件捨去；1＝全清）。魔源二、三、四形態用 */
+  dispel?: number;
+  /** 地獄關主：進這個形態就開一個倒數（`turns` 輪），歸零那一輪魔物的下一動換成這一招（`move`，照常吃爪力），放完重新起算。魔源真身的「九尾滅世」 */
+  doom?: { turns: number; move: EnemyMove };
 }
 export interface EnemyDef {
   id: string;

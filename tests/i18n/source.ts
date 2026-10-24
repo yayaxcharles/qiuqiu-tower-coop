@@ -190,7 +190,7 @@ export function contentSource(): ContentSource {
       const n = enemyNameFor(e.id, h);
       if (n !== e.name) enemy[`skin:${h}:${e.id}`] = n;
     }
-    const allMoves = [...e.moves, ...(e.phases ?? []).flatMap((ph) => [...ph.moves, ...(ph.onEnterMove ? [ph.onEnterMove] : [])])];
+    const allMoves = [...e.moves, ...(e.phases ?? []).flatMap((ph) => [...ph.moves, ...(ph.onEnterMove ? [ph.onEnterMove] : []), ...(ph.doom ? [ph.doom.move] : [])])];
     for (const m of allMoves) move[m.label] = m.label;
   }
   return { term, gloss, card, relic, potion, enemy, move };

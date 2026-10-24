@@ -841,7 +841,6 @@
  "難{level}": "D{level}",
  "紫霧漫滿了！魔物全體爪力 +{n}，之後每一輪都再加；你每回合少抽 1 張牌": "The purple mist is full! All monsters gain Claw +{n}, and again every round after; you draw 1 fewer card each turn",
  "倒數歸零後，魔物每一輪全體爪力 +{n}，你每回合少抽 1 張牌。": "When the countdown hits 0, all monsters gain Claw +{n} every round and you draw 1 fewer card each turn.",
- "紫霧漫滿了！魔物全體爪力 +2，之後每一輪都再加；你每回合少抽 1 張牌": "The purple mist is full! All monsters gain Claw +2, and again every round after; you draw 1 fewer card each turn",
  "紫霧已滿": "Mist full",
  "紫霧 {n}": "Mist {n}",
  "紫霧": "Purple Mist",
@@ -877,5 +876,11 @@
  "封：技能": "Sealed: Skill",
  "封條": "Seal",
  "這一回合被封條封住的牌打不出來（能力牌不受影響）。": "Cards of the sealed type can't be played this turn (Power cards are unaffected).",
- "{e}倒下了，牠召來的魔物也跟著散去了": "{e} falls, and everything it summoned fades away with it"
+ "{e}倒下了，牠召來的魔物也跟著散去了": "{e} falls, and everything it summoned fades away with it",
+ "封印反噬：增益被打散了": "Seal backlash: buffs are scattered",
+ "{e}蓄滿了力": "{e} has gathered its strength",
+ "滅世！": "Doom!",
+ "滅世 {n}": "Doom {n}",
+ "九尾滅世": "Nine-Tail Apocalypse",
+ "倒數歸零那一輪，魔源的下一動是九尾滅世：{dmg} 點，照常吃爪力。放完會重新倒數。": "On the round the countdown hits 0, the Source's next move is Nine-Tail Apocalypse: {dmg} damage, boosted by Claw as usual. The countdown restarts afterwards."
 }
