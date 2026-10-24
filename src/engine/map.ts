@@ -139,6 +139,8 @@ export interface MapOpts {
    * 傳 `null` 就一律不排職業獨占的事件，兩邊都只會遇到共用的那 38 個。
    */
   hero?: string | null;
+  /** 難度 6「地獄」：一般戰、大魔物、關主都改從地獄池抽（`encountersOfPool` 的第三個參數）。沒給＝一般池，抽法跟以前逐位元相同 */
+  hell?: boolean;
 }
 
 export function generateMap(rng: Rng, opts: MapOpts = {}): GameMap {
@@ -173,6 +175,7 @@ export function generateMap(rng: Rng, opts: MapOpts = {}): GameMap {
   //   直向不重複同一種非戰鬥節點、同分岔的兄弟不重複、大魔物一定避得開、每個分岔至少有一條非戰鬥的路。
   // 一層修完才生下一層，所以修下一層時上一層已經定案，不會像以前那樣事後補修又互相打架。
   const eliteMul = opts.eliteMul ?? 1;
+  const hell = opts.hell === true;
   const eliteCap = eliteMul > 1 ? 2 : 1;   // 難度 2 起每一層可以兩個大魔物（三關都適用）
   const byId = new Map(nodes.map((n) => [n.id, n]));
   const parentsOf = new Map<string, MapNode[]>();
@@ -365,7 +368,7 @@ export function generateMap(rng: Rng, opts: MapOpts = {}): GameMap {
   };
   for (const n of nodes) {
     if (n.type === '戰鬥') {
-      let pool = encountersOfPool(poolForFloor(n.floor, act), act);
+      let pool = encountersOfPool(poolForFloor(n.floor, act), act, hell);
       // 第一關前三層只抽單隻怪：牌組還是初始十張，兩隻一起上打不動
       // （實測 200 張圖，前三層 45% 的戰鬥是多隻）。4F 起照常。
       if (act <= 1 && n.floor <= 3) {
@@ -376,16 +379,16 @@ export function generateMap(rng: Rng, opts: MapOpts = {}): GameMap {
     }
     else if (n.type === '大魔物') {
       // 三關各有自己的菁英池（2026-09-03 起第一關也有三隻）；萬一某關的池是空的就退回塔中的
-      const pool = encountersOfPool('大魔物', act);
+      const pool = encountersOfPool('大魔物', act, hell);
       // 菁英也走佇列：同一關兩個菁英節點不要抽到同一隻（2026-09-04）
-      const ids = (pool.length ? pool : encountersOfPool('大魔物', 2)).map((e) => e.id);
+      const ids = (pool.length ? pool : encountersOfPool('大魔物', 2, hell)).map((e) => e.id);
       n.encounterId = nextEncounter(`大魔物:${ids.length}`, ids, n.floor);
     }
     // 塔主：呼叫端會指定這一關的候選（第一、二關不含大俠貓，他是第三關固定的最終頭目）；
     // 沒指定就整池隨機（測試與舊呼叫端用）。
     else if (n.type === '塔主') {
-      const pool = encountersOfPool('塔主').filter((e) => !opts.bossIds || opts.bossIds.includes(e.id));
-      n.encounterId = rng.pick(pool.length ? pool : encountersOfPool('塔主')).id;
+      const pool = encountersOfPool('塔主', undefined, hell).filter((e) => !opts.bossIds || opts.bossIds.includes(e.id));
+      n.encounterId = rng.pick(pool.length ? pool : encountersOfPool('塔主', undefined, hell)).id;
     }
     else if (n.type === '事件') {
       // 5F 一關一版（2026-09-23 內容擴充第一批）：只換排哪一篇，不多抽亂數，地圖的其餘部分跟以前一模一樣
@@ -438,10 +441,10 @@ export function nextChoices(map: GameMap, currentNodeId: string | null): MapNode
   return nodeById(map, currentNodeId).next.map((id) => nodeById(map, id));
 }
 
-export function validateMap(map: GameMap, act = 1): string[] {
+export function validateMap(map: GameMap, act = 1, hell = false): string[] {
   const p: string[] = [];
   const top = nodesOnFloor(map, FLOORS);
-  const bossIds = new Set(encountersOfPool('塔主').map((e) => e.id));
+  const bossIds = new Set(encountersOfPool('塔主', undefined, hell).map((e) => e.id));
   if (top.length !== 1 || top[0]?.type !== '塔主' || !bossIds.has(top[0]?.encounterId ?? '')) p.push('15F 必須是唯一的塔主');
   if (nodesOnFloor(map, 8).map((n) => n.type).join() !== '紙箱') p.push('8F 必須是唯一的紙箱');
   if (nodesOnFloor(map, 14).map((n) => n.type).join() !== '貓窩') p.push('14F 必須是唯一的貓窩');

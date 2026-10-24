@@ -114,9 +114,13 @@ describe('第二波魔物的機制', () => {
      */
     expect(enemies.filter((e) => e.fadeAfter !== undefined).map((e) => e.name)).toEqual([]);
     // 唯一還會離場的是偷完小魚乾的橘貓山賊——那有理由（牠帶著你的錢，見 `ESCAPE_GAP`）
-    const fleers = enemies.filter((e) => e.moves.some((m) => m.effects.some((f) => f.kind === 'escape')));
+    const fleers = enemies.filter((e) => !e.id.startsWith('hell_') && e.moves.some((m) => m.effects.some((f) => f.kind === 'escape')));
     expect(fleers.map((e) => e.name)).toEqual(['橘貓山賊']);
     expect(fleers[0]!.moves.some((m) => m.effects.some((f) => f.kind === 'stealFish')), '而且牠真的會偷').toBe(true);
+    // 地獄第一關「快」：會逃跑的一樣得是偷了東西才走的（奪寶鼬、木屐小跑）
+    const hellFleers = enemies.filter((e) => e.id.startsWith('hell_') && e.moves.some((m) => m.effects.some((f) => f.kind === 'escape')));
+    expect(hellFleers.map((e) => e.id).sort()).toEqual(['hell_geta_runner', 'hell_loot_weasel']);
+    for (const e of hellFleers) expect(e.moves.some((m) => m.effects.some((f) => f.kind === 'stealFish')), e.id).toBe(true);
   });
 
   it('分裂：半血裂成兩隻，每隻的血量等於本體剩下的血，本體不算打倒', () => {

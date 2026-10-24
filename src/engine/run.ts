@@ -28,7 +28,9 @@ export const ACT_NAMES = ['塔下', '塔中', '塔頂'] as const;
  * 固定守在第三關；前兩關從其餘塔主隨機。第二關還沒有專屬關主（立繪要另外生），
  * 骨架先跟第一關共用同一池。
  */
-export function bossPoolForAct(act: number): string[] {
+export function bossPoolForAct(act: number, hell = false): string[] {
+  // 難度 6「地獄」：每關一個專屬關主（第三關是魔源，四階段由後面的工作補上）
+  if (hell) return [act >= 3 ? 'hell_source' : act === 2 ? 'hell_hoarder_toad' : 'hell_hourglass_shogun'];
   // 塔下五選一（貓又／鐵爪／橘皮大王／蛙大名／犰狳王）、
   // 塔中五選一（奶牛貓／狸大人／波斯大小姐／沉睡的龍貓／詛咒老住持）、塔頂固定師父。
   // 新關主的立繪還在生圖中：資料先接好，圖裝進資產包才會推上線（沒圖就是灰剪影，不會報錯）。
@@ -66,7 +68,7 @@ export function newRun(seed: string, difficulty = 1, hero: Hero = 'ninja', playe
       deck: [], relics: [], potions: [], removeCost: 75,
     }],
     floor: 0,
-    map: generateMap(rng, { act: 1, bossIds: bossPoolForAct(1), eliteMul: mods.eliteMul, flags: {}, difficulty: level, hero: players > 1 ? null : hero }), currentNode: null, trail: [],
+    map: generateMap(rng, { act: 1, bossIds: bossPoolForAct(1, mods.hellMode), eliteMul: mods.eliteMul, flags: {}, difficulty: level, hero: players > 1 ? null : hero, hell: mods.hellMode }), currentNode: null, trail: [],
     nextUid: 1, stats: { kills: 0, turns: 0, cardsPlayed: 0 }, status: 'playing',
     flags: {},
   };
@@ -641,7 +643,8 @@ export function advanceAct(run: RunState): void {
     run.flags[`sequel:${swap ?? e.id}`] = true;
   }
   // 連線局（兩位以上）傳 null＝不排職業獨占的事件，理由見 `MapOpts.hero`
-  run.map = generateMap(runRng(run), { act: run.act, bossIds: bossPoolForAct(run.act), eliteMul: runMods(run).eliteMul, flags: run.flags, difficulty: run.difficulty ?? 1, hero: run.players.length > 1 ? null : heroOf(me(run)) });
+  const hell = runMods(run).hellMode;
+  run.map = generateMap(runRng(run), { act: run.act, bossIds: bossPoolForAct(run.act, hell), eliteMul: runMods(run).eliteMul, flags: run.flags, difficulty: run.difficulty ?? 1, hero: run.players.length > 1 ? null : heroOf(me(run)), hell });
   assignKeepers(run);   // 罐頭鋪誰顧店（2026-09-23 第三批 新J）
   placeRareEvent(run);   // 稀有事件（2026-09-23 第三批），同 `newRun`
   run.currentNode = null;
@@ -1823,8 +1826,9 @@ export function placeRareEvent(run: RunState): string | null {
 
 /** 大魔物池隨機一組（睡著的大魔物，新M）：這一格的分支亂數，兩個座位各跑一次效果也抽到同一組（不然兩台打不同的架） */
 function eventElite(run: RunState): string {
-  const pool = encountersOfPool('大魔物', run.act);
-  const list = pool.length ? pool : encountersOfPool('大魔物', 2);   // 萬一這一關的池是空的，照 `map.ts` 退回塔中那池
+  const hell = runMods(run).hellMode;   // 難度 6：睡著的大魔物也從地獄大魔物池抽（問號格的戰鬥）
+  const pool = encountersOfPool('大魔物', run.act, hell);
+  const list = pool.length ? pool : encountersOfPool('大魔物', 2, hell);   // 萬一這一關的池是空的，照 `map.ts` 退回塔中那池
   return branch(run, 'elite', run.act, run.currentNode ?? '-').pick(list).id;
 }
 

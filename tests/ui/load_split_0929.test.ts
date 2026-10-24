@@ -82,7 +82,7 @@ describe('停在封面時只抓不管選誰都會看到的', () => {
     for (const e of Object.values(enemyById)) monsters[e.art] = { idle: A(`m/${e.art}`) };
     _setManifestForTest({ ...EMPTY, monsters });
     const urls = new Set(firstFightUrls());
-    const weak = encounters.filter((e) => !e.hidden && e.pool === '弱' && (!e.acts || e.acts.includes(1)));
+    const weak = encounters.filter((e) => !e.hidden && !e.hell && e.pool === '弱' && (!e.acts || e.acts.includes(1)));
     expect(weak.length).toBeGreaterThan(3);
     for (const e of weak) for (const id of e.enemies) expect(urls.has(U(`m/${enemyById[id]!.art}`)), id).toBe(true);
     const weakArts = new Set(weak.flatMap((e) => e.enemies.map((id) => enemyById[id]!.art)));

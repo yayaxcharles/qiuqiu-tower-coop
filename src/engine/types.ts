@@ -717,6 +717,8 @@ export interface EncounterDef {
     hpScale?: number; strength?: number }[];
   /** 立繪還沒到齊：地圖抽不到（encountersOfPool 會濾掉）。第三波怪物用；立繪由 tools/make_wave3_monster_jobs.py 的工作檔生（背景腳本在 scratchpad art_wave3.sh），接完圖後把這個旗標拿掉 */
   hidden?: boolean;
+  /** 難度 6「地獄」專屬遭遇（content/enemies-hell.ts）：一般難度的 encountersOfPool 一律濾掉，地獄時只留它們 */
+  hell?: true;
   /**
    * 這場遭遇只在哪幾關出現（不填＝每一關都行）。
    * 三關制的專屬池：第一關的怪標 [1]、塔中標 [2]、塔頂標 [3]。

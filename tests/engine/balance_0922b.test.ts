@@ -91,7 +91,7 @@ describe('鐵爪機關貓：四招攻擊全部穿透，絞刃、全開一記 12�
 });
 
 describe('第三關放軟：中池魔氣 8→4；強池魔氣各少 4、血打八折', () => {
-  const a3 = encounters.filter((e) => e.acts?.includes(3) && (e.pool === '中' || e.pool === '強'));
+  const a3 = encounters.filter((e) => !e.hell && e.acts?.includes(3) && (e.pool === '中' || e.pool === '強'));   // 地獄遭遇另有自己的數字，不在這條裡
   it('每一組的數字', () => {
     expect(a3.length).toBe(31);
     for (const e of a3) {

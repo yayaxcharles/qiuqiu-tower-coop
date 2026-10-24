@@ -1,3 +1,4 @@
+import { difficultyMods } from '../content/difficulty';
 import { encountersOfPool } from '../content/enemies';
 import { eventById } from '../content/events';
 import { relicById } from '../content/relics';
@@ -84,7 +85,8 @@ function pickWeighted(rng: Rng, table: readonly [QmarkVariant, number][]): Qmark
 
 /** 伏擊打哪一組：這一格所在樓層的一般戰鬥池，分支亂數挑一組（不會是大魔物、不抽修飾詞） */
 function ambushEncounter(run: RunState, n: MapNode): string | undefined {
-  const pool = encountersOfPool(poolForFloor(n.floor, run.act), run.act);
+  // 難度 6「地獄」：問號格的伏擊也從地獄池抽（一般難度 `hell` 為假，池與抽法跟以前一樣）
+  const pool = encountersOfPool(poolForFloor(n.floor, run.act), run.act, difficultyMods(run.difficulty ?? 1).hellMode);
   if (!pool.length) return undefined;
   return new Rng(seedFromString(`${run.seed}|ambush|${run.act}|${n.id}`)).pick(pool).id;
 }

@@ -1,4 +1,5 @@
 import type { EnemyMove,EncounterDef, EnemyDef, EnemyPool } from '../engine/types';
+import { hellEncounters, hellEnemies } from './enemies-hell';
 
 // 貓又婆婆照表出招用的兩招（chooseMove 每回合回傳同一份物件，方便畫面比對）
 // 尾巴最多四條（畫面塞得下五個單位）；已經四條時再放＝把血量接到現有尾巴上（使用者 2026-09-02）
@@ -1245,6 +1246,8 @@ export const enemies: EnemyDef[] = [
       { intent: 'debuff', label: '泣面・淚眼', effects: [{ kind: 'giveCard', cardId: 'dazed_card', n: 2, to: 'discard' }] },
       { intent: 'block', label: '泣面・掩面', effects: [{ kind: 'block', amount: 20 }] },
     ] },
+  // ===== 難度 6「地獄」的魔物（content/enemies-hell.ts）：接在最後，一般難度的順序不變 =====
+  ...hellEnemies,
 ];
 
 /**
@@ -1503,12 +1506,18 @@ export const encounters: EncounterDef[] = [
   { id: 'hound_crows', pool: '強', enemies: ['twin_hound', 'miasma_crows'], hpScale: 0.8, strength: 2, acts: [3] },
   { id: 'guardian_statue', pool: '大魔物', enemies: ['guardian_statue'], strength: 6, acts: [3] },
   { id: 'mask_dancer', pool: '大魔物', enemies: ['mask_dancer'], strength: 6, acts: [3] },
+  // ===== 難度 6「地獄」的遭遇（hell: true）：接在最後，encountersOfPool 在一般難度會整批濾掉 =====
+  ...hellEncounters,
 ];
 
 export const encounterById: Record<string, EncounterDef> = Object.fromEntries(encounters.map((e) => [e.id, e]));
 
-export function encountersOfPool(pool: EnemyPool, act?: number): EncounterDef[] {
-  return encounters.filter((e) => e.pool === pool && !e.hidden && (act === undefined || !e.acts || e.acts.includes(act)));
+/**
+ * 某池某關的遭遇。`hell` 為假（一般難度）濾掉地獄遭遇、為真（難度 6）只留地獄遭遇；兩邊都只是 filter，
+ * 留下來的遭遇相對順序跟原陣列一樣，所以一般難度的抽法（佇列、rng.pick 的索引）跟加入地獄之前逐位元相同。
+ */
+export function encountersOfPool(pool: EnemyPool, act?: number, hell = false): EncounterDef[] {
+  return encounters.filter((e) => e.pool === pool && !e.hidden && !!e.hell === hell && (act === undefined || !e.acts || e.acts.includes(act)));
 }
 
 /**

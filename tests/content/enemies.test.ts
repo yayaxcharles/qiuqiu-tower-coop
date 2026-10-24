@@ -3,7 +3,8 @@ import { encounterById, encounters, encountersOfPool, enemies, enemyById } from 
 
 describe('魔物資料', () => {
   it('數量：一般 68、大魔物 16、塔主 11、召喚 16', () => {
-    const n = (p: string) => enemies.filter((e) => e.pool === p).length;
+    // 地獄魔物（hell_ 開頭，難度 6 專用）另外在 tests/engine/hell-pool.test.ts 數，這裡只算一般難度的
+    const n = (p: string) => enemies.filter((e) => e.pool === p && !e.id.startsWith('hell_')).length;
     // 一般 58→68、大魔物 14→16、召喚 12→14＝2026-09-04 第三波（docs/怪物擴充_第三波_設計稿.md）：塔中 7（含雙子兩隻）、塔頂 3、菁英 2、召喚 傀儡與小鴉群
     // 2026-09-01 三關制內容包：塔中 7＋塔頂 5 進一般池、影球球進大魔物、
     // 關主 3→7（橘皮大王＋第二關三選一）、召喚加執事貓與女僕貓

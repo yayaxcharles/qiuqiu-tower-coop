@@ -43,6 +43,7 @@ export function enemyIdsForAct(act: number): Set<string> {
   const ids = new Set<string>();
   for (const enc of encounters) {
     if (enc.hidden) continue;   // 立繪還沒到齊的遭遇地圖抽不到，也不用預載（稽核 2026-09-04 中 3）
+    if (enc.hell) continue;   // 地獄遭遇一般難度抽不到、不預載；地獄的立繪預載由 Task 3 接（難度 6 才載）
     const inAct = !enc.acts || enc.acts.includes(act);
     const take = (pools.includes(enc.pool) && inAct) || (enc.pool === '塔主' && bossPoolForAct(act).includes(enc.id));
     if (!take) continue;
@@ -130,7 +131,7 @@ export function preloadAct(act: number, skinHero: string | undefined = localHero
 export function firstFightUrls(): string[] {
   const ids = new Set<string>();
   for (const enc of encounters) {
-    if (enc.hidden || enc.pool !== '弱' || (enc.acts && !enc.acts.includes(1))) continue;
+    if (enc.hidden || enc.hell || enc.pool !== '弱' || (enc.acts && !enc.acts.includes(1))) continue;
     for (const id of enc.enemies) relatedIds(id, ids);
   }
   return urlsFor([...ids].map((id) => enemyById[id]).filter((d): d is EnemyDef => !!d), 'ninja', false);

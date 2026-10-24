@@ -35,6 +35,7 @@ describe('全怪物朝向稽核覆蓋', () => {
     _setManifestForTest(manifest);
     for (const enemy of enemies) {
       if (enemy.art === 'daxia') continue;
+      if (enemy.id.startsWith('hell_')) continue;   // 地獄立繪還沒登記進 manifest 與稽核檔（Task 3），登記後拿掉這行
       for (const hero of ['ninja', 'feifei', 'dangdang', 'fengfeng']) {
         for (let phase = 0; phase <= (enemy.phases?.length ?? 0); phase++) {
           const art = monsterPhaseKey(enemyArtFor(enemy.id, hero), phase);
