@@ -17,6 +17,7 @@ import { KEEPERS } from '../../src/content/keepers';
 import { ACT_NAMES, BOSS_PREFIXES } from '../../src/engine/run';
 import * as dialogueMod from '../../src/content/dialogue';
 import * as fengfengMod from '../../src/content/fengfeng-dialogue';
+import * as hellQuipsMod from '../../src/content/hell-quips';
 import * as coopPairMod from '../../src/content/coop-pair-text';
 import * as echoesMod from '../../src/content/victory-echoes';
 import { fillEcho } from '../../src/content/victory-echoes';
@@ -210,7 +211,7 @@ function collectZh(v: unknown, out: Set<string>, seen = new WeakSet<object>()): 
  */
 export function lineSource(): string[] {
   const raw = new Set<string>();
-  for (const mod of [dialogueMod, fengfengMod, coopPairMod, echoesMod]) collectZh(mod, raw);
+  for (const mod of [dialogueMod, fengfengMod, coopPairMod, echoesMod, hellQuipsMod]) collectZh(mod, raw);
   for (const e of enemies) collectZh([e.line, e.lines ?? []], raw);
   collectZh([encounters.map((enc) => enc.reinforce?.map((r) => r.line)), BOSS_PREFIXES.map((p) => p.line)], raw);   // 援兵登場句、關主前綴那一句（不收整個 encounters，會連「弱／中／強」這種分類標籤都抓進來）
   for (const enc of encounters) for (const id of enc.enemies) for (const h of HEROES) {

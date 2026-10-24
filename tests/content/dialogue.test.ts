@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { enemies } from '../../src/content/enemies';
 import { dialogue, qiuqiuLineOk, victoryLinesFor } from '../../src/content/dialogue';
+import { HELL_FIRST_MEET } from '../../src/content/hell-quips';
 
 const DAXIA_TITLES = ['難逢敵手', '走火入魔', '退隱江湖', '閉關', '承讓', '重出江湖', '深藏不露', '在下不才', '來也'];
 
@@ -26,8 +27,11 @@ describe('對白', () => {
     for (const s of Object.values(dialogue.firstMeet)) expect(qiuqiuLineOk(s), s).toBe(true);
   });
   it('每種魔物都有初見吐槽', () => {
-    // 地獄魔物（hell_ 開頭）的初見吐槽四位角色各一句，之後另外補（沒有時 `toast('')` 直接略過、不會出空泡泡）
-    for (const e of enemies) if (!e.id.startsWith('hell_')) expect(dialogue.firstMeet[e.id], e.id).toBeTruthy();
+    // 地獄魔物（hell_ 開頭）的初見吐槽住在 `content/hell-quips.ts`（另包、不進首載），四位角色各一句
+    for (const e of enemies) {
+      if (e.id.startsWith('hell_')) for (const h of ['ninja', 'feifei', 'dangdang', 'fengfeng']) expect(HELL_FIRST_MEET[h]?.[e.id], `${h}／${e.id}`).toBeTruthy();
+      else expect(dialogue.firstMeet[e.id], e.id).toBeTruthy();
+    }
   });
   it('師父（tower_master）只講大俠貼圖標題', () => {
     // 這條風格規矩只管師父本人：其他關主（貓又婆婆等）的塔主台詞是一般對白

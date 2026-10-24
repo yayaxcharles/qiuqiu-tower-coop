@@ -1,5 +1,6 @@
 import type { RunState } from '../engine/types';
 import { runMods } from '../engine/run';
+import { loadHellQuips } from '../content/dialogue';
 import { t } from '../i18n';
 import { el } from './dom';
 import { NODE_ICON, follow, preloadHeroArt, relatedIds, urlsFor, type Progress } from './preload';
@@ -24,6 +25,8 @@ export const MAP_GATE_MS = 8000;
  * 萬一載不到，照原本直接叫 `preloadHeroArt`（只少了插隊，不會少抓）。
  */
 export function warmRun(run: RunState, seat: number): void {
+  // 地獄的初見吐槽 192 句另包（`content/hell-quips.ts`）：知道是地獄局就跟著圖一起開始載；沒載好前 `firstMeetLine` 回空字串、泡泡略過
+  if (runMods(run).hellMode) void loadHellQuips();
   const pr: Progress = { done: 0, total: 0 };
   const w: RunWarm = { run, pr, ready: Promise.resolve(), over: false };
   // 首載那幾支用傳的、不讓那一塊直接引用（一引用，打包就把它們拆到另一個檔，首載程式反而變大）

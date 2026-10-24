@@ -1563,9 +1563,29 @@ export const MIXED_FIRST_MEET: Readonly<Record<string, Readonly<Record<string, s
   },
 };
 
+/**
+ * 地獄（難度 6）魔物的初見吐槽（192 句）放在 `hell-quips.ts`，不進首載：一般難度的玩家永遠看不到。
+ * 地獄的圖開始預載時（`ui/preload.ts` 的 `preloadAct(…, hell=true)`）順手叫一次 `loadHellQuips()`；
+ * 載好之前 `firstMeetLine` 對 `hell_*` 回空字串，畫面端（`toast`）看到空字串就略過，
+ * 慢網路頂多少一句泡泡。純顯示用文字、不碰亂數與戰鬥狀態，連線兩邊各載各的不影響同步。
+ */
+let hellQuips: Record<string, Record<string, string>> | null = null;
+let hellQuipsLoading: Promise<void> | null = null;
+export function loadHellQuips(): Promise<void> {
+  if (hellQuips) return Promise.resolve();
+  hellQuipsLoading ??= import('./hell-quips').then(
+    (m) => { hellQuips = m.HELL_FIRST_MEET; },
+    () => { hellQuipsLoading = null; },   // 載不到：下次預載再試，這段期間照樣回空字串
+  );
+  return hellQuipsLoading;
+}
+/** 只給測試用：回到沒載過的狀態 */
+export function _resetHellQuipsForTest(): void { hellQuips = null; hellQuipsLoading = null; }
+
 /** 鏡中那隻照的是同伴時，牠的初見吐槽（`app.ts` 跳泡泡前過一手）；其餘魔物一律回 `undefined` */
 export function firstMeetLine(hero: string | undefined, enemyId: string): string {
   const h = hero ?? 'ninja';
+  if (enemyId.startsWith('hell_')) return (hellQuips?.[h] ?? hellQuips?.['ninja'])?.[enemyId] ?? '';
   if (enemyId === 'mirror_qiuqiu' && coopStory.mirror && coopStory.mirror !== h) {
     const mixed = MIXED_FIRST_MEET[h]?.[coopStory.mirror];
     if (mixed !== undefined) return mixed;

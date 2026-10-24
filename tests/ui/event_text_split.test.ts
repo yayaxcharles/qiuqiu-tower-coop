@@ -83,6 +83,20 @@ describe('事件文字與事件畫面不在首載', () => {
     expect(readFileSync('src/ui/screens/debug.ts', 'utf-8')).toContain("from './event';");
   });
 
+  it('地獄的初見吐槽（`content/hell-quips.ts`）不在首載：只准 `dialogue.ts` 用動態載入拿', () => {
+    expect(graph.has('src/content/hell-quips.ts'), '有首載的模組靜態匯入了地獄吐槽').toBe(false);
+    const dialogue = readFileSync('src/content/dialogue.ts', 'utf-8').replace(/\r\n/g, '\n');
+    expect(dialogue).toContain("import('./hell-quips')");
+    expect(dialogue).not.toMatch(/from '\.\/hell-quips'/);
+    // 量級：這一份就是 192 句（約 15 KB），搬回別的檔就等於回到首載
+    expect(readFileSync('src/content/hell-quips.ts', 'utf-8').length).toBeGreaterThan(8_000);   // 約 9.7 千字（15 KB）
+  });
+
+  it('進入地獄局（`App.adoptRun` → `warmRun`，新局、續玩、連線開局共用）就叫 `loadHellQuips()`', () => {
+    const net = readFileSync('src/ui/netload.ts', 'utf-8').replace(/\r\n/g, '\n');
+    expect(net).toMatch(/export function warmRun\(run: RunState, seat: number\): void \{\n[^\n]*\n\s*if \(runMods\(run\)\.hellMode\) void loadHellQuips\(\);/);
+  });
+
   it('事件畫面登記成延後載入', () => {
     // 2026-09-23 推前審查 低-1 起經由 event-loader（失敗換網址參數重抓），那支用動態載入拿事件畫面
     expect(MAIN).toContain("registerLazyScreen('event', loadEventScreen, ");
