@@ -312,23 +312,35 @@ export function seeThroughAmount(cs: CombatState, type: 'attack' | 'skill', n: n
 }
 function halveSeen(n: number): number { return n <= 0 ? n : Math.max(1, Math.floor(n * 0.5)); }
 
-function halveEffectDamage(fx: Effect): Effect {
+function halveEffectDamage(fx: Effect, plays: number): Effect {
   switch (fx.kind) {
-    case 'damage': case 'damageRamp': case 'damageScatter': return { ...fx, amount: halveSeen(fx.amount) };
+    case 'damage': case 'damageScatter': return { ...fx, amount: halveSeen(fx.amount) };
+    case 'damageRamp': return { ...fx, amount: halveSeen(fx.amount + fx.step * plays) };   // 引擎對「基礎＋成長」的總和減半；呼叫端描述牌面時 plays 要傳 0（成長已併進 amount）
     case 'damageRandom': return { ...fx, min: halveSeen(fx.min), max: halveSeen(fx.max) };
     default: return fx;
   }
 }
+/** 算式型攻擊：總傷害要到 `damageEnemy` 才減半，牌面寫不出減半後的數字，只能句尾補一句 */
+const SEEN_FORMULA: ReadonlySet<Effect['kind']> = new Set(
+  ['damageSpendQi', 'damageSpendBlock', 'damageFromAllyStrength', 'damageEqualBlock', 'damageByStatus', 'execByStatus', 'damageByOwnStatus']);
+/** 被看穿（攻擊）時，這張牌的牌面要不要補「（被看穿：總傷害減半）」 */
+export function seenNeedsNote(def: CardDef, upgraded: boolean): boolean {
+  if (def.type !== 'attack') return false;
+  return (upgraded ? (def.upgrade.effects ?? def.effects) : def.effects).some((fx) => SEEN_FORMULA.has(fx.kind));
+}
+
 /**
  * 被看穿（攻擊）時牌面該印的樣子：攻擊牌上寫死的傷害數字照 `seeThroughAmount` 的取整減半（牌面不含爪力，所以只減牌上的數字）。
+ * 分身術印「基礎＋成長」的總和減半（`plays`＝這場已打過幾次），所以描述牌面時 plays 要傳 0。
  * 只動畫面用的複本，不碰牌表；爪力、倍傷等執行時才知道的量仍由引擎算（傷害預覽走引擎）。
  */
-export function seenAttackDef(def: CardDef): CardDef {
+export function seenAttackDef(def: CardDef, plays = 0): CardDef {
   if (def.type !== 'attack') return def;
+  const halve = (fx: Effect): Effect => halveEffectDamage(fx, plays);
   return {
     ...def,
-    effects: def.effects.map(halveEffectDamage),
-    upgrade: def.upgrade.effects ? { ...def.upgrade, effects: def.upgrade.effects.map(halveEffectDamage) } : def.upgrade,
+    effects: def.effects.map(halve),
+    upgrade: def.upgrade.effects ? { ...def.upgrade, effects: def.upgrade.effects.map(halve) } : def.upgrade,
   };
 }
 

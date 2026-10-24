@@ -189,8 +189,8 @@ function makeSession(app: App, tx: Transport, isHost: boolean, resume?: { gen: n
 export function rejoinCoop(app: App, rec: RejoinRecord): void {
   // 舞台先空著（不要清它：裡面有換畫面要用的畫面層），接回之後直接換到地圖；等的期間用上緣那條提示
   document.body.append(el('div', { class: 'net-link', 'data-who': 'rejoin' }, t('正在接回剛剛的連線局……')));
-  const back = (why: string): void => {
-    clearRejoin();
+  const back = (why: string, keepRecord = false): void => {
+    if (!keepRecord) clearRejoin();   // 地獄包載入失敗：記錄留著，提示請玩家重新整理，重整後還能再接回一次
     app.leaveCoop();
     app.show('title');
     troubleBanner(app, why);   // troubleBanner 顯示時才翻譯
@@ -203,7 +203,7 @@ export function rejoinCoop(app: App, rec: RejoinRecord): void {
       session.rejoin();
     // e.message 是 `net/ws.ts` 的 `resumeRelay` 丟出來的原因（固定清單），交給 troubleBanner 顯示時翻
     }).catch((e: unknown) => back(e instanceof Error ? e.message : '接不回剛剛的連線局'));
-  }, () => back('接不回剛剛的連線局'));
+  }, () => back('接不回剛剛的連線局', true));
 }
 
 function startCoop(app: App, tx: Transport, isHost: boolean): void {

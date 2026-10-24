@@ -1,12 +1,12 @@
 import { cardStats } from '../engine/deck';
-import { seenAttackDef } from '../engine/hell';
+import { seenAttackDef, seenNeedsNote } from '../engine/hell';
 import type { CardDef, CardInstance } from '../engine/types';
 import { artUrl, cardArtKey, localHero } from './assets';
 import { attachCardPeek } from './cardpeek';
 import { cardName } from '../i18n/names';
 import { upgradedChangedChars } from './carddiff';
 import { el } from './dom';
-import { cardTypeLabel, describeCardText, term } from '../i18n';
+import { cardTypeLabel, describeCardText, t, term } from '../i18n';
 import { markupKeywords } from './tooltip';
 import { layoutHooks } from './layouthooks';
 
@@ -52,7 +52,8 @@ export function cardNode(card: CardInstance | CardDef, opts: CardViewOpts = {}):
     cost = upgraded ? (def.upgrade.cost ?? def.cost) : def.cost;
   }
 
-  if (opts.seenAttack) def = seenAttackDef(def);
+  const seenNote = !!opts.seenAttack && seenNeedsNote(def, upgraded);
+  if (opts.seenAttack) def = seenAttackDef(def, opts.plays ?? 0);
 
   // 牌型決定底紋顏色、稀有度決定邊框（見 components.css）——兩件事各自一個類別
   const cls = ['card', `type-${def.type}`, `rarity-${def.rarity}`];
@@ -69,7 +70,7 @@ export function cardNode(card: CardInstance | CardDef, opts: CardViewOpts = {}):
   // 費用比的是牌表上的升級費用，不是畫面上顯示的 cost：顯示值對牌張實例走 cardStats，
   // 語意是「這張牌現在幾費」，未來若把秘寶減費（毛線球、破卷軸，目前在 combat.canPlay 才扣）
   // 併進去，拿它來比就會把「戴了減費秘寶」誤標成「升級變便宜」。
-  const plays = opts.plays ?? 0;
+  const plays = opts.seenAttack ? 0 : (opts.plays ?? 0);   // 看穿時分身術的成長已併進印出的總傷害
   const changed = upgraded ? upgradedChangedChars(def, plays) : undefined;
   const costDown = upgraded && (def.upgrade.cost ?? def.cost) < def.cost;
   // 升級反而變貴的也要標（見血封喉＋ 3→4，夜間稽核 低-7）：只標變便宜的話，貓窩預覽時看不出來，升完才發現一般回合打不出來
@@ -79,7 +80,7 @@ export function cardNode(card: CardInstance | CardDef, opts: CardViewOpts = {}):
     el('div', { class: costDown ? 'card-cost cost-down' : costUp ? 'card-cost cost-up' : 'card-cost' }, String(cost)),
     el('img', { class: 'card-art', src: artUrl('cards', cardArtKey(def.art, opts.hero, opts.partnerHero)), alt: cardName(def, opts.hero ?? localHero()), draggable: 'false' }),
     el('div', { class: 'card-name' }, cardName(def, opts.hero ?? localHero()) + (upgraded ? '＋' : '')),
-    el('div', { class: 'card-text' }, markupKeywords(describeCardText(def, upgraded, plays), changed)),
+    el('div', { class: 'card-text' }, markupKeywords(describeCardText(def, upgraded, plays) + (seenNote ? ` ${t('（被看穿：總傷害減半）')}` : ''), changed)),
     el('div', { class: 'card-type' }, cardTypeLabel(def.type), ...(def.coop ? [el('span', { class: 'coop-tag' }, `· ${term('雙人')}`)] : [])));
 
   if (uid !== null) node.dataset['uid'] = String(uid);

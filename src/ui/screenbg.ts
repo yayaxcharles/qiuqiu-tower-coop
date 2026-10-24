@@ -171,7 +171,8 @@ const HELL_BG_LIFT: Readonly<Record<string, number>> = { 'bg/bg_hell_2': 1.22, '
  *（第一關差 27%，很明顯）。這正是當初抽出 `battleBgKey` 要防的事——鍵共用了、放大率沒共用
  *（稽核 2026-09-11 中-1）。
  *
- * 回傳行內樣式字串：`.screen-bg` 的閃爍動畫只動 `filter`，行內寫 `background-size` 不會被蓋掉。
+ * 回傳行內樣式字串：行內寫 `background-size` 不會被動畫蓋掉。門後背景的閃爍是 `::before` 的透明度、不動 filter，
+ * 所以地獄的亮度 filter 在門後也會生效。
  * 圖還沒生好（`artUrl` 回 `data:` 佔位）就回空字串，讓呼叫端自己決定退路。
  */
 export function battleBgStyle(key: string): string {

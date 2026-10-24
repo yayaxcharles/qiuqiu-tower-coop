@@ -392,7 +392,8 @@ img { -webkit-user-drag: none; }
 }
 .notice.out { opacity: 0; }
 /* 地獄包載入／失敗提示條：挪到右上那排按鈕底下，不壓到圖鑑按鈕；失敗那條帶「重新整理」按鈕所以要吃點擊 */
-.notice.hell-bar { top: 74px; display: flex; align-items: center; gap: 14px; pointer-events: auto; }
+.notice.hell-bar { top: 74px; display: flex; align-items: center; gap: 14px; }
+.notice.hell-bar-fail { pointer-events: auto; }
 .notice.hell-bar .btn { padding: 4px 16px; }
 
 .toast { animation: toast-in .28s cubic-bezier(.2, .9, .3, 1.15); }
