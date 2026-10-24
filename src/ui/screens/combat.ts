@@ -2415,7 +2415,9 @@ registerScreen('combat', (app, root, props) => {
     const sealChip = sealed === undefined ? null : el('b', { class: 'miasma seal' }, sealed === 'attack' ? t('封：攻擊') : t('封：技能'));
     if (sealChip) attachTextTooltip(sealChip, t('封條'), t('這一回合被封條封住的牌打不出來（能力牌不受影響）。'));
     const piles = el('div', { class: 'piles' },
-      el('span', {}, t('第 {n} 回合', { n: cs.turn }), ...(miasmaChip ? [miasmaChip] : []), ...(doomChip ? [doomChip] : []), ...(sealChip ? [sealChip] : [])),
+      el('span', {}, t('第 {n} 回合', { n: cs.turn })),
+      // 地獄的小標籤自己一整列、放不下就換行，不擠「第 N 回合」那行（沒有標籤就整列不出現）
+      ...(miasmaChip || doomChip || sealChip ? [el('span', { class: 'hell-tags' }, ...(miasmaChip ? [miasmaChip] : []), ...(doomChip ? [doomChip] : []), ...(sealChip ? [sealChip] : []))] : []),
       // 這一行同時是「牌堆在哪」的座標：新發的牌就是從這裡飛出來的（見 dealFrom）
       // 三個牌堆都點得開（使用者 2026-09-03：「戰鬥中我看不到我的抽牌堆跟棄牌堆」）：
       // 抽牌堆照名字排序，不洩漏真正的順序；棄牌堆、消耗堆照丟進去的順序

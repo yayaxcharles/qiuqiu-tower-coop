@@ -1158,7 +1158,10 @@
 }
 
 /* 地獄第一關的紫霧倒數（跟在回合數後面）。字最小 15px；歸零後亮紅、加粗 */
-.combat .piles .miasma { margin-left: 8px; font-size: 15px; color: #c79bff; cursor: help; }
+/* 標籤自己一整列（跨兩欄）、放不下就換行；有標籤時紀錄框矮一點讓位（只有地獄會有這一列） */
+.combat .piles .hell-tags { grid-column: 1 / -1; display: flex; flex-wrap: wrap; column-gap: 8px; line-height: 1.15; }
+.combat:has(.piles .hell-tags) .log { max-height: 62px; }
+.combat .piles .miasma { font-size: 15px; color: #c79bff; cursor: help; }
 .combat .piles .miasma.full { color: #ff7a7a; text-shadow: 0 0 6px #ff3b3b88; }
 .combat .piles .miasma.seal { color: #ffb347; }
 
