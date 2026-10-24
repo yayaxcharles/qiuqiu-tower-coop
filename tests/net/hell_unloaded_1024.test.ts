@@ -66,7 +66,7 @@ describe('地獄包未載時', () => {
     const { App } = await import('../../src/ui/app');
     const enemies = await import('../../src/content/enemies');
     expect(enemies.isHellLoaded()).toBe(false);
-    const fake = { hellPending: App.prototype.hellPending, navSeq: 0, hellLoading: false, hellWaiters: [] as unknown[] };
+    const fake = { hellPending: App.prototype.hellPending, navSeq: 0, hellLoading: false, hellWaiters: [] as unknown[], hellBar: () => null };
     const whenReady = App.prototype.whenHellReady as (this: typeof fake, d: number, go: () => void, fail: () => void) => void;
     const calls: string[] = [];
     whenReady.call(fake, 6, () => calls.push('go-moved'), () => calls.push('fail-moved'));
