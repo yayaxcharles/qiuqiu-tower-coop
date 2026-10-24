@@ -327,7 +327,8 @@ describe('地獄第二關：封牌', () => {
     endTurn(cs);
     for (const seat of [0, 1]) {
       const a = cs.players[seat]!.hand.find((c) => typeOf(c) === 'attack');
-      if (a) expect(canPlay(cs, a.uid, cs.enemies[0]!.uid, seat).ok, `座位 ${seat}`).toBe(false);
+      expect(a, `座位 ${seat} 手上要有攻擊牌，否則這條什麼都沒驗`).toBeDefined();
+      expect(canPlay(cs, a!.uid, cs.enemies[0]!.uid, seat).ok, `座位 ${seat}`).toBe(false);
     }
   });
 

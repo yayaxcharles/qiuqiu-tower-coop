@@ -374,12 +374,27 @@ describe('關主機制旋鈕（2026-10-24：用機制不用血量）', () => {
     expect(getStatus(e, '爪力') - before).toBe(5);
   });
 
-  it('魔源各形態每回合自己長爪力：第二、三形態 +2、真身 +3，第一形態每回合 +1', () => {
+  it('魔源各形態每回合自己長爪力：形態欄位第二、三 +2、真身 +3，另加本體每回合 +1', () => {
     const d = enemyById[SOURCE]!;
     expect(d.strengthEveryNTurns).toBe(1);
     expect(d.phases!.map((p) => p.strengthPerTurn)).toEqual([2, 2, 3]);
     expect(d.phases![1]!.summonGap).toBe(2);
     expect(d.phases![2]!.learnRider!.every((r) => r.length === 2)).toBe(true);
+  });
+
+  it('魔源爪力實際成長：本體每回合 +1 疊在形態自己的 strengthPerTurn 上，一～四形態每回合 +1／+3／+3／+4', () => {
+    const grow: number[] = [];
+    for (const form of [1, 2, 3, 4]) {
+      const cs = start();
+      const e = toForm(cs, form);
+      cs.hell!.miasmaLeft = 99;   // 紫霧不倒數，免得它的爪力混進來
+      delete cs.hell!.doom;
+      e.move = { intent: 'special', label: '發呆', effects: [{ kind: 'nothing' }] };   // 這一動什麼都不做，只看每回合自己長的
+      const before = getStatus(e, '爪力');
+      endTurn(cs);
+      grow.push(getStatus(e, '爪力') - before);
+    }
+    expect(grow).toEqual([1, 3, 3, 4]);
   });
 
   it('第二關關主囤寶蛙：一招偷 3 張、每個回合都帶封條或塞牌，連續偷→封→打', () => {

@@ -110,7 +110,7 @@ describe('地獄魔物預載', () => {
     expect(a1.has('hell_hoarder_toad')).toBe(false);
     expect(a2.has('hell_source')).toBe(false);
     expect(a3.has('hell_fuse_imp')).toBe(false);
-    // 四十七種一般＋大魔物＋關主加起來，三關各自的名單合起來就是全部（召喚物也算進去）
+    // 四十八種（含魔源本體）一般＋大魔物＋關主加起來，三關各自的名單合起來就是全部（召喚物也算進去）
     const all = new Set([...a1, ...a2, ...a3]);
     for (const e of hellEnemies) expect(all.has(e.id), e.id).toBe(true);
   });
@@ -123,7 +123,7 @@ describe('地獄魔物預載', () => {
     const phases = enemyById.hell_source!.phases?.length ?? 0;
     const keys = monsterArtKeysForAct(3, true);
     expect(keys).toContain('codex/monster_hell_source');
-    // 目前魔源還沒接換階段（Task 7）：有幾個階段就要有幾個鍵；接上三個階段時剛好是 p2～p4
+    // 魔源已接三個換形態階段：有幾個階段就要有幾個鍵，剛好是 p2～p4
     for (let p = 1; p <= phases; p++) expect(keys, `p${p + 1}`).toContain(`codex/monster_hell_source_p${p + 1}`);
   });
 

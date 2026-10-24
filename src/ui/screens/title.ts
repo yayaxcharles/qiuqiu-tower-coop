@@ -36,7 +36,7 @@ registerScreen('title', (app, root) => {
     shareNote.classList.toggle('warn', share && hasSave());
   };
   seed.addEventListener('input', refreshShare);
-  // 難度選擇（2026-09-02）：五級；2026-09-03 起預設全開放（unlockedDifficulty 固定回 5），選到哪級就顯示哪級的最佳成績與這級多了什麼
+  // 難度選擇（2026-09-02）：原本五級（2026-10-21 起加上第 6 級地獄）；2026-09-03 起預設全開放（unlockedDifficulty 固定回最高級 `MAX_DIFFICULTY`），選到哪級就顯示哪級的最佳成績與這級多了什麼
   let level = selectedDifficulty();
   const unlocked = unlockedDifficulty();
   const bestLine = el('div', { class: 'title-best' });

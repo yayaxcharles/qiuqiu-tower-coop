@@ -34,6 +34,7 @@ describe('地獄包未載時', () => {
 
     const res = await share.decodeRun(code);
     expect(res.ok).toBe(false);
+    expect(res.ok ? '' : res.why, '失敗原因是版本對不上（遭遇不存在），不是別的').toContain('版本跟你現在的遊戲對不上');
     expect(enemies.isHellLoaded(), 'decodeRun 先把地獄包載好才驗').toBe(true);
     expect(save.loadRun()?.seed, '存檔沒被動').toBe('my-own-save');
   });

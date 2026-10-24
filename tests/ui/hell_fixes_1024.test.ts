@@ -26,7 +26,7 @@ describe('地獄最終審查修正（2026-10-24）', () => {
     expect(COMBAT).toContain("t('封：技能')");
   });
 
-  it('sealChipI18n：三語都有、日文不含繁中專用字形', () => {
+  it('sealChipI18n：英日兩語都有譯文', () => {
     for (const k of ['封：攻擊', '封：技能', '封條', '這一回合被封條封住的牌打不出來（能力牌不受影響）。']) {
       expect((enUi as Record<string, string>)[k], `en ${k}`).toBeTruthy();
       const ja = (jaUi as Record<string, string>)[k];

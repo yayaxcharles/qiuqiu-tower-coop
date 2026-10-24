@@ -395,7 +395,7 @@ export const hellEnemies: EnemyDef[] = [
   // 一、二形態在第三關本來就有看穿，這是設計稿的規矩（第三關的機制只看關數），不另外關掉。
   // 一、紫霧之繭（快）：開場就有紫霧倒數，比一般關主短 2 回合（`SOURCE_MIASMA_TURNS`）
   { id: 'hell_source', name: '魔源・紫冥', hp: [120, 120], pool: '塔主', pattern: 'cycle', size: 'large', art: 'codex/monster_hell_source',
-    hellMech: ['miasma'], strengthEveryNTurns: 1,   // 2026-10-24：開場就每兩回合 +1 爪力
+    hellMech: ['miasma'], strengthEveryNTurns: 1,   // 本體每回合 +1 爪力；換形態後仍疊在各形態的 `strengthPerTurn` 上，二～四形態實際每回合 +3／+3／+4
     line: '（紫霧裹成的巨繭，慢慢地脈動）', lines: ['（繭上的金色豎瞳，緩緩轉向你）', '……封印，斷了。'],
     moves: [
       mv('attack', '紫霧噴吐', dmg(14), onPlayer('炸毛', 1)),

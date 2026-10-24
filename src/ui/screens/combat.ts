@@ -2660,7 +2660,7 @@ registerScreen('combat', (app, root, props) => {
             for (const u of root.querySelectorAll('.unit.enemy.drag-over')) u.classList.remove('drag-over');
             const shown = tauntSnap(c.uid, uid);   // 嘲諷：高亮落在實際會挨打的那隻（打出去時仍傳原目標，引擎記戰報）
             if (shown !== null) root.querySelector(`.unit.enemy[data-uid="${shown}"]`)?.classList.add('drag-over');
-            damagePreview(uid === null ? null : c.uid, uid ?? undefined);   // 預覽是在複本上真的打一次，嘲諷的改寫自然算進去   // 拖到哪一隻，就先標出會扣多少
+            damagePreview(uid === null ? null : c.uid, uid ?? undefined);   // 預覽是在複本上真的打一次，嘲諷的改寫自然算進去；拖到哪一隻，就先標出會扣多少
           },
           // 點擊那兩條路都先過 canAct()，拖曳這條原本沒有——撒手鐧那類牌打完到自動結束回合之間
           // 有 650 毫秒的空窗，在那時候抓起另一張牌拖到魔物回合再放開，就會繞過那道關
