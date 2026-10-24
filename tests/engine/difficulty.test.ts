@@ -13,11 +13,18 @@ import { me } from '../../src/engine/runplayer';
 
 /** 難度 1～5（2026-09-02）：每級累積，數字全在 content/difficulty.ts */
 describe('難度表', () => {
-  it('五級都有名字與說明，難度 1 什麼都不加、越高越狠', () => {
+  it('難度 6 繼承 5 的全部懲罰並打開地獄', () => {
+    const m5 = difficultyMods(5), m6 = difficultyMods(6);
+    expect(m6).toEqual({ ...m5, hellMode: true });
+    expect(m5.hellMode).toBe(false);
+    expect(MAX_DIFFICULTY).toBe(6);
+    expect(DIFFICULTY_NAMES[5]).toBe('地獄');
+  });
+  it('各級都有名字與說明，難度 1 什麼都不加、越高越狠', () => {
     expect(DIFFICULTY_NAMES.length).toBe(MAX_DIFFICULTY);
     expect(DIFFICULTY_TEXT.length).toBe(MAX_DIFFICULTY);
     const m1 = difficultyMods(1);
-    expect(m1).toEqual({ eliteMul: 1, enemyStrength: 0, hpMul: 1, actHeal: 1, startCurse: null, potionSlots: 3, shopMul: 1, unlucky: false, maxHp: 76, topEliteStrength: 0 });
+    expect(m1).toEqual({ eliteMul: 1, enemyStrength: 0, hpMul: 1, actHeal: 1, startCurse: null, potionSlots: 3, shopMul: 1, unlucky: false, maxHp: 76, topEliteStrength: 0, hellMode: false });
     for (let d = 2; d <= MAX_DIFFICULTY; d++) {
       const a = difficultyMods(d - 1), b = difficultyMods(d);
       expect(b.eliteMul).toBeGreaterThanOrEqual(a.eliteMul);
@@ -81,15 +88,15 @@ describe('難度表', () => {
   it('成績分難度記；五級預設全開（2026-09-03 拍板）', () => {
     const mem = new Map<string, string>();
     setStore({ getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => { mem.set(k, v); }, removeItem: (k) => { mem.delete(k); } });
-    expect(unlockedDifficulty()).toBe(5);
+    expect(unlockedDifficulty()).toBe(MAX_DIFFICULTY);
     const r = newRun('win', 1); r.status = 'won'; r.floor = 45;
     recordBest(r, '2026-09-02');
-    expect(unlockedDifficulty()).toBe(5);
+    expect(unlockedDifficulty()).toBe(MAX_DIFFICULTY);
     expect(loadBestFor(1)?.won).toBe(true);
     expect(loadBestFor(2)).toBeNull();
     const r3 = newRun('lose', 2); r3.status = 'lost'; r3.floor = 12;
     recordBest(r3, '2026-09-02');
-    expect(unlockedDifficulty()).toBe(5);   // 全開，跟通關無關
+    expect(unlockedDifficulty()).toBe(MAX_DIFFICULTY);   // 全開，跟通關無關
     expect(loadBestFor(2)?.floor).toBe(12);
   });
 });

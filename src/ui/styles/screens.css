@@ -1113,11 +1113,13 @@ html[lang="ja"] .scene-goods .shop-item:not(.card-item) .small { -webkit-line-cl
 .diff-btn.d3 { background: linear-gradient(#ffd19a, #f0a24a); color: #3a2a1c; }
 .diff-btn.d4 { background: linear-gradient(#ff9a6a, #e0552a); color: #fff6e2; text-shadow: 0 1px 2px #00000080; }
 .diff-btn.d5 { background: linear-gradient(#e64a3a, #8e1414); color: #fff6e2; text-shadow: 0 1px 2px #000000a6; }
+.diff-btn.d6 { background: linear-gradient(#7a2bb0, #2a0640); color: #f4e2ff; text-shadow: 0 1px 2px #000000bf; }
 .diff-btn.locked { background: linear-gradient(#8a8a8a, #5a5a5a); color: #ddd; }
 .hud-diff.d2 { color: #f5d97a; border-color: #f5d97a99; }
 .hud-diff.d3 { color: #f0a24a; border-color: #f0a24a99; }
 .hud-diff.d4 { color: #ff7a4a; border-color: #ff7a4a99; }
 .hud-diff.d5 { color: #ff4a3a; border-color: #ff4a3ab3; background: #4a0a0a80; }
+.hud-diff.d6 { color: #d9a0ff; border-color: #b36affb3; background: #2a064099; }
 
 /* 紙箱／事件的劇場版面（使用者 2026-09-02：「球球有點擋到字，稍微右移一點」「一定要鑽進去喵的字跟圖卡到了」）：
    1. 球球立繪往左挪 30、名字與對白往右挪 80，腳不再踩在名字上；

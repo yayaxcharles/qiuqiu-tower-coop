@@ -1,11 +1,11 @@
 /**
- * 難度 1～5（2026-09-02，使用者：「設計難度 1 到 5，難度 1 就是目前的設計，每多一級就加血量、精英或不良事件」）。
+ * 難度 1～6（1～5：2026-09-02；6「地獄」：2026-10-23）（2026-09-02，使用者：「設計難度 1 到 5，難度 1 就是目前的設計，每多一級就加血量、精英或不良事件」）。
  * 照殺戮尖塔的「進階」制：效果**累積**，通關某一級才解鎖下一級（解鎖存在瀏覽器裡，見 save.ts）。
  * 每一級只動一組旋鈕，玩家一眼看得出這級多了什麼；數字全部在這張表，調難度改這裡就好。
  */
-export const MAX_DIFFICULTY = 5;
+export const MAX_DIFFICULTY = 6;
 
-export const DIFFICULTY_NAMES = ['見習', '出師', '高手', '宗師', '魔塔'] as const;
+export const DIFFICULTY_NAMES = ['見習', '出師', '高手', '宗師', '魔塔', '地獄'] as const;
 
 /** 每一級「新增」的懲罰（給標題畫面與說明用；實際數值由 difficultyMods 算） */
 export const DIFFICULTY_TEXT = [
@@ -14,6 +14,7 @@ export const DIFFICULTY_TEXT = [
   '所有魔物血量再加一成五；過關時，少掉的生命只補回七成五。',
   '開局牌組多一張「中計了」；忍具只能帶兩支；罐頭鋪貴一成；壞事件更壞（賭輸機率提高、掉血代價乘 1.5）。',
   '最大生命從 76 降到 70；塔頂的大魔物再多 2 點爪力。',
+  '三關各考一種難：紫霧倒數逼你速戰、魔物偷牌封牌打亂牌組、魔物互相配合並看穿你的打法；塔底的魔源有四個形態。',
 ] as const;
 
 export interface DifficultyMods {
@@ -35,6 +36,8 @@ export interface DifficultyMods {
   maxHp: number;
   /** 塔頂大魔物額外魔氣 */
   topEliteStrength: number;
+  /** 難度 6「地獄」：打開地獄專屬內容（地獄魔物、紫霧、魔源；後續工作都掛在這個旗標上） */
+  hellMode: boolean;
 }
 
 export function clampDifficulty(level: number): number {
@@ -54,6 +57,7 @@ export function difficultyMods(level: number): DifficultyMods {
     unlucky: d >= 4,
     maxHp: d >= 5 ? 70 : 76,   // 2026-09-02 使用者：起始血 70→76（難度 5 同步 64→70，維持少 6）
     topEliteStrength: d >= 5 ? 2 : 0,
+    hellMode: d >= 6,
   };
 }
 
