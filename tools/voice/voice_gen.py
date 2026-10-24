@@ -20,7 +20,7 @@ SCRIPT = PROJ / "tools" / "voice" / "script.json"
 LOG = PROJ / "tools" / "voice" / "requests_log.json"
 WORK = PROJ / "vids" / "_audio" / "voice_work"
 MODEL = "gemini-3.8-flash-tts"
-CAP = 50  # 爪破魔塔：主線＋吐槽約 33 次＋試聽 8 次（2026-09-28 使用者同意）
+CAP = 80  # 爪破魔塔：主線＋吐槽約 33 次＋試聽 8 次（2026-09-28 使用者同意 50）；地獄配音（2026-10-24 使用者同意提高到 80）
 
 p = argparse.ArgumentParser()
 p.add_argument("--group", required=True)
@@ -109,7 +109,29 @@ def daily_quota_hit():
 content = {"type": "text", "text": text, "annotations": [{"type": "speech_metadata", "style": G["style"]}]}
 print(f"{a.group}（{G['name']}／{G['voice']}）{len(lines)} 句、{len(text)} 字；已用 {used()}/{CAP} 次請求")
 print(text)
-for attempt in range(3):
+# ---- 撞牆閘門（2026-10-02 使用者規則：撞牆最多試 2 次就停；之後 24 小時內所有 Gemini 請求都不送）----
+WALL = Path(os.environ.get("USERPROFILE", str(Path.home()))) / ".api_wall" / "gemini.json"
+WALL_PAT = re.compile(r"429|RESOURCE_EXHAUSTED|403|PERMISSION_DENIED|per.?day|500|503|UNAVAILABLE", re.I)
+
+
+def wall_check():
+    try:
+        st = json.loads(WALL.read_text(encoding="utf-8"))
+    except Exception:
+        return
+    if float(st.get("blocked_until", 0)) > time.time():
+        sys.exit(f"Gemini 撞牆暫停中，到 {time.strftime('%m-%d %H:%M', time.localtime(st['blocked_until']))} 才會再試"
+                 f"（要提早解除請刪 {WALL}）")
+
+
+def wall_hit(msg):
+    WALL.parent.mkdir(parents=True, exist_ok=True)
+    WALL.write_text(json.dumps({"blocked_until": time.time() + 24 * 3600, "at": time.strftime("%Y-%m-%d %H:%M"),
+                                "reason": (msg or "timeout")[:200]}, ensure_ascii=False), encoding="utf-8")
+
+
+wall_check()
+for attempt in range(2):  # 2026-10-02：最多試 2 次（重試 1 次）
     if used() >= CAP:
         sys.exit(f"已用滿 {CAP} 次請求，停止")
     try:
@@ -133,22 +155,21 @@ for attempt in range(3):
         msg = str(e)
         if isinstance(e, TimeoutError):
             log_request("tts", len(text), "timeout")
-            if daily_quota_hit():
-                sys.exit("今天的額度用完了（每天 100 次，約台灣早上 8 點重置）")
-            client = genai.Client(api_key=API_KEY)
         else:
             log_request("tts", len(text), "error " + re.sub(r"\s+", " ", msg)[:120])
         if "402" in msg or "prepayment credits are depleted" in msg:
             sys.exit("Gemini 預付額度用完了")
-        if re.search(r"per.?day", msg, re.I):
-            sys.exit(f"今天的額度用完了：{msg[:160]}")
-        if isinstance(e, TimeoutError) or any(c in msg for c in ("429", "500", "503", "RESOURCE_EXHAUSTED")):
-            print(f"暫時錯誤，{20 * (attempt + 1)} 秒後重試：{msg[:160]}")
-            time.sleep(20 * (attempt + 1))
-            continue
+        if isinstance(e, TimeoutError) or WALL_PAT.search(msg):
+            if attempt == 0:
+                print(f"撞牆，20 秒後重試一次（不探測額度）：{msg[:160]}")
+                client = genai.Client(api_key=API_KEY)
+                time.sleep(20)
+                continue
+            wall_hit(msg)
+            sys.exit(f"重試一次仍撞牆：24 小時內不再送任何 Gemini 請求（{WALL}）：{msg[:160]}")
         sys.exit(f"失敗：{msg[:300]}")
 else:
-    sys.exit("重試三次仍失敗")
+    sys.exit("重試一次仍失敗")
 
 job = {"group": a.group, "lang": G["lang"], "split": G["split"], "wav": str(raw),
        "lines": [{"id": l["id"], "tts": l["tts"]} for l in lines],
