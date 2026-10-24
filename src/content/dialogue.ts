@@ -1565,7 +1565,7 @@ export const MIXED_FIRST_MEET: Readonly<Record<string, Readonly<Record<string, s
 
 /**
  * 地獄（難度 6）魔物的初見吐槽（192 句）放在 `hell-quips.ts`，不進首載：一般難度的玩家永遠看不到。
- * 地獄的圖開始預載時（`ui/preload.ts` 的 `preloadAct(…, hell=true)`）順手叫一次 `loadHellQuips()`；
+ * 進地獄局時（`ui/netload.ts` 的 `warmRun`）順手叫一次 `loadHellQuips()`；
  * 載好之前 `firstMeetLine` 對 `hell_*` 回空字串，畫面端（`toast`）看到空字串就略過，
  * 慢網路頂多少一句泡泡。純顯示用文字、不碰亂數與戰鬥狀態，連線兩邊各載各的不影響同步。
  */
