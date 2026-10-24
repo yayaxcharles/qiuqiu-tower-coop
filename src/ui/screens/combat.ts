@@ -2219,7 +2219,7 @@ registerScreen('combat', (app, root, props) => {
       }
       if (e.stolen > 0) row.prepend(chip(t('叼著小魚乾'), null, String(e.stolen), 'bad'));
       // 地獄第二關偷來的牌：掛牌名（原主的牌名，連線時各看各的角色版本），打倒牠才拿得回來
-      if (e.stolenCards?.length) row.prepend(chip(t('偷走的牌'), null, e.stolenCards.map((x) => nameFor(cs.players[x.seat]?.hero, x.card.cardId) + (x.card.upgraded ? '＋' : '')).join('、'), 'bad'));
+      if (e.stolenCards?.length) row.prepend(chip(t('偷走的牌'), null, e.stolenCards.map((x) => nameFor(cs.players[x.seat]?.hero, x.card.cardId) + (x.card.upgraded ? '＋' : '')).join('、'), 'bad stolen'));
       // 地獄第三關：嘲諷（單體攻擊都改打牠）與同伴倒下暴怒，都是畫面上看不出來的規則，照慣例掛牌
       if (def?.taunt) row.prepend(chip(t('嘲諷'), null, '', 'bad'));
       if (def?.enrageOnAllyDeath) row.prepend(chip(t('同伴倒下暴怒'), null, `+${def.enrageOnAllyDeath}`, 'bad'));

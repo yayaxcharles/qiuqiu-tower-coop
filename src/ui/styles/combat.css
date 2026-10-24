@@ -1159,6 +1159,9 @@
 
 /* 地獄第一關的紫霧倒數（跟在回合數後面）。字最小 15px；歸零後亮紅、加粗 */
 /* 標籤自己一整列（跨兩欄）、放不下就換行；有標籤時紀錄框矮一點讓位（只有地獄會有這一列） */
+/* 地獄「偷走的牌」小牌子：共用 chip 是 12px（擠版 10px）太小，只把這一個放大到 15px，字多就換行、不撐出欄外 */
+.combat .unit .chip.stolen, .combat.crowd .unit .chip.stolen { font-size: 15px; line-height: 18px; gap: 4px; max-width: 100%; box-sizing: border-box; align-items: flex-start; text-align: left; }
+.combat .unit .chip.stolen span { min-width: 0; overflow-wrap: anywhere; }
 .combat .piles .hell-tags { grid-column: 1 / -1; display: flex; flex-wrap: wrap; column-gap: 8px; line-height: 1.15; }
 .combat:has(.piles .hell-tags) .log { max-height: 62px; }
 .combat .piles .miasma { font-size: 15px; color: #c79bff; cursor: help; }
