@@ -31,7 +31,7 @@ import { notice, playDialogue, toast, bubbleOverUnit, heroSpeaker } from './dial
 import { speechBubbleAt } from './enemylayout';
 import { clear, el, ENTER_MS, keepLoops } from './dom';
 import { retireLeavingScreen, swapScreen } from './screenswap';
-import { closeScreenModals, closeStoryOverlays, setOverlayRoot } from './overlay';
+import { closeScreenModals, closeStoryOverlays, overlayRoot, setOverlayRoot } from './overlay';
 import { hideTooltip } from './tooltip';
 import { relayout } from './layouthooks';
 import { me } from '../engine/runplayer';
@@ -319,6 +319,23 @@ export class App {
     void import('./netload-run').then((m) => { m.dropFirstPoses(); if (run) void m.preloadNextFights(run); }, () => undefined);
   }
 
+  /**
+   * 地獄包的載入／失敗提示條：放在標題畫面右上那排按鈕底下（`.notice` 在正上方，會壓到圖鑑按鈕）。
+   * 載入失敗時瀏覽器會記住這次失敗的動態載入，同一頁再試也不會重新抓，所以失敗提示附「重新整理」按鈕（標題畫面重整不掉存檔）。
+   */
+  private hellBar(text: string, reload = false): HTMLElement | null {
+    const layer = overlayRoot();
+    if (!layer) return null;
+    const bar = el('div', { class: 'notice hell-bar' }, el('span', {}, text));
+    if (reload) {
+      bar.classList.add('hell-bar-fail');
+      bar.append(el('button', { class: 'btn', onclick: () => location.reload() }, i18nT('重新整理')));
+      window.setTimeout(() => bar.remove(), 15000);
+    } else window.setTimeout(() => bar.remove(), 20000);
+    layer.append(bar);
+    return bar;
+  }
+
   /** 這一級是地獄、而地獄包（`content/enemies.ts` 的 `ensureHell`）還沒載好 */
   hellPending(difficulty: number): boolean { return difficultyMods(difficulty).hellMode && !isHellLoaded(); }
 
@@ -336,10 +353,11 @@ export class App {
     this.hellWaiters.push({ seq: this.navSeq, go, fail });
     if (this.hellLoading) return;
     this.hellLoading = true;
-    notice(i18nT('地獄資料載入中…'));
+    const bar = this.hellBar(i18nT('地獄資料載入中…'));
     const settle = (ok: boolean): void => {
       this.hellLoading = false;
-      if (!ok) notice(i18nT('地獄資料載入失敗，請檢查網路後再試一次。'));
+      bar?.remove();
+      if (!ok) this.hellBar(i18nT('地獄資料載入失敗，請重新整理頁面再試一次。'), true);
       for (const w of this.hellWaiters.splice(0)) {
         if (w.seq !== this.navSeq) continue;
         (ok ? w.go : w.fail)();

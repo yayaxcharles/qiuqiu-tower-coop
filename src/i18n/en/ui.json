@@ -484,6 +484,7 @@
  "載入中…": "Loading…",
  "地獄資料載入中…": "Loading Hell data…",
  "地獄資料載入失敗，請檢查網路後再試一次。": "Couldn't load the Hell data. Check your connection and try again.",
+ "地獄資料載入失敗，請重新整理頁面再試一次。": "Couldn't load the Hell data. Please refresh the page and try again.",
  "載入這個局面": "Load This Snapshot",
  "載入這個局面（會蓋掉存檔）": "Load This Snapshot (overwrites your save)",
  "通關難度 {n} 才解鎖": "Unlocks after clearing Difficulty {n}",
