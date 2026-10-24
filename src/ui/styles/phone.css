@@ -55,7 +55,6 @@ html[data-device="phone"][data-orient="landscape"] .combat .piles > :last-child 
 html[data-device="phone"][data-orient="landscape"] .combat .log { font-size: 18px; line-height: 24px; padding-top: 0; max-height: 78px; }
 /* 地獄標籤那一列多佔一到兩行，紀錄框讓位：只留兩行（行高 24×2＋下內距 2） */
 html[data-device="phone"][data-orient="landscape"] .combat:has(.piles .hell-tags) .log { max-height: 50px; padding-bottom: 2px; }
-html[data-device="phone"][data-orient="landscape"] .combat .piles .hell-tags { line-height: 1; }
 /* 狀態列的小鈕（牌組、圖鑑、分享、音樂、音效）15 → 17、內距收窄。狀態列是一整條橫排、寬度是死的，量過（740×360）：
    19 時秘寶一大堆（.crowded）最右邊的音效鈕被擠到 1316、出了舞台；秘寶六件（還差一件才算 crowded）也到 1289；
    而血條是整列唯一會縮的，鈕一放大它就被擠到剩一小截、「76 / 76 生命」切掉。所以鈕 17、血條保底 150、擠的時候音量拉桿窄一點 */
