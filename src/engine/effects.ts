@@ -412,8 +412,11 @@ export function applyOne(cs: CombatState, fx: Effect, ctx: EffectCtx, queue: Eff
       const raw = fx.half ? Math.floor(theirs / 2) : theirs;
       const extra = Math.min(raw, fx.cap);
       // 兩份合起來一次給：分兩次的話貓步會被套兩次（交辦單的單人替代那條）
-      gainBlock(cs, p, fx.amount + extra);
-      if (extra > 0) log(cs, mate === p ? '靠著原本的架勢多擋了 {n} 點' : '靠對方的架勢多擋了 {n} 點', { n: extra });
+      // 地獄看穿（技能）：給的總量過一次減半；戰報的「多擋」＝實際給的減去牌面本身那份（一般難度原樣＝extra）
+      const total = seenSkill(cs, ctx, fx.amount + extra);
+      const shown = total - seenSkill(cs, ctx, fx.amount);
+      gainBlock(cs, p, total);
+      if (extra > 0 && shown > 0) log(cs, mate === p ? '靠著原本的架勢多擋了 {n} 點' : '靠對方的架勢多擋了 {n} 點', { n: shown });
       return false;
     }
     case 'damageFromAllyStrength': {
@@ -618,7 +621,7 @@ export function applyOne(cs: CombatState, fx: Effect, ctx: EffectCtx, queue: Eff
         const cur = getStatus(t, fx.name);
         // 0 層：基礎版催不動（寫進紀錄，玩家才知道飯糰花去哪）；升級版的「再加 add 層」照加
         if (cur === 0 && !fx.add) { log(cs, '{e}身上沒有{st}，催不動', { e: E(t), st: { st: fx.name } }); continue; }
-        addStatus(t, fx.name, cur + (fx.add ?? 0));
+        addStatus(t, fx.name, seenSkill(cs, ctx, cur + (fx.add ?? 0)));   // 地獄看穿（技能）：加上去的層數減半
         markPoisoner(t, fx.name, p);
       }
       return false;
@@ -799,7 +802,7 @@ export function applyOne(cs: CombatState, fx: Effect, ctx: EffectCtx, queue: Eff
       // 反彈**不減少**：這張是「把回敬的力道也墊到身前」，不是把反彈換掉
       const n = getStatus(p, '反彈');
       if (n <= 0) return false;
-      ctx.selfBlockPool = (ctx.selfBlockPool ?? 0) + n;
+      ctx.selfBlockPool = (ctx.selfBlockPool ?? 0) + seenSkill(cs, ctx, n);   // 地獄看穿（技能）：放進去的蜷縮減半，反彈本身不減
       flushSelfBlock(cs, p, ctx, queue);
       return false;
     }

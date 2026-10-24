@@ -2118,7 +2118,7 @@ registerScreen('combat', (app, root, props) => {
         case 'heal': parts.push(t('自己回復 {n} 點生命', { n: fx.n })); break;
         case 'stealFish': parts.push(t('偷走你 {n} 條小魚乾', { n: fx.n })); break;
         case 'discardRandomHand': parts.push(t('讓你下回合少抽 {n} 張牌', { n: fx.n })); break;
-        case 'stealCard': parts.push(t('順走你手牌裡的 {n} 張牌，藏在牠身上：打倒牠才拿得回來', { n: fx.n })); break;
+        case 'stealCard': parts.push(t('順走你 {n} 張牌藏在牠身上（手上沒牌就拿下一手剛抽到的）：牠倒下、換形態、逃走或戰鬥結束時還你', { n: fx.n })); break;
         case 'sealType': parts.push(fx.type === 'attack' ? t('封住你下一回合的攻擊牌：整回合打不出來（能力牌不受影響）') : t('封住你下一回合的技能牌：整回合打不出來（能力牌不受影響）')); break;
         case 'escape': parts.push(t('逃走')); break;
         // ---- 2026-09-02 第二波魔物的四個新效果 ----
