@@ -1,4 +1,5 @@
 import { cardStats } from '../engine/deck';
+import { seenAttackDef } from '../engine/hell';
 import type { CardDef, CardInstance } from '../engine/types';
 import { artUrl, cardArtKey, localHero } from './assets';
 import { attachCardPeek } from './cardpeek';
@@ -18,6 +19,8 @@ export interface CardViewOpts {
   disabled?: boolean;
   /** 分身術這場已經打過幾次（`cs.cardPlays`）：牌面要印這次實際打幾點 */
   plays?: number;
+  /** 地獄看穿（攻擊）生效中：攻擊牌牌面印減半後的傷害（`seenAttackDef`） */
+  seenAttack?: boolean;
   /**
    * 用**誰**的圖與牌名畫（不填＝這一局玩的那位）。
    *
@@ -48,6 +51,8 @@ export function cardNode(card: CardInstance | CardDef, opts: CardViewOpts = {}):
     upgraded = opts.upgraded ?? false;
     cost = upgraded ? (def.upgrade.cost ?? def.cost) : def.cost;
   }
+
+  if (opts.seenAttack) def = seenAttackDef(def);
 
   // 牌型決定底紋顏色、稀有度決定邊框（見 components.css）——兩件事各自一個類別
   const cls = ['card', `type-${def.type}`, `rarity-${def.rarity}`];

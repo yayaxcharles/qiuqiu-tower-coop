@@ -2522,6 +2522,7 @@ registerScreen('combat', (app, root, props) => {
       const node = cardNode(c, {
         small: true,
         plays: cs.cardPlays?.[c.uid] ?? 0,
+        seenAttack: cs.hell?.seeThrough === 'attack',
         selected: targeting?.kind === 'card' && targeting.uid === c.uid,
         disabled: !canAct() || !chk.ok,
         onClick: () => onCard(c.uid),

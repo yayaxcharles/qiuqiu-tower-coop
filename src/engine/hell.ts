@@ -11,7 +11,7 @@ import { log } from './actions';
 import { E, H } from './logfmt';
 import { addStatus } from './statuses';
 import { DEBUFFS } from './types';
-import type { CardType, CombatState, EnemyCombat, EnemyPhase, HellMech, PlayerCombat, StatusName } from './types';
+import type { CardDef, CardType, CombatState, Effect, EnemyCombat, EnemyPhase, HellMech, PlayerCombat, StatusName } from './types';
 
 export interface HellState {
   act: 1 | 2 | 3;
@@ -308,7 +308,28 @@ export function seeThroughScale(cs: CombatState, type: 'attack' | 'skill'): numb
 /** 套上看穿：被看穿的那類減半，無條件捨去、最少 1（0 維持 0）。沒被看穿原樣回傳 */
 export function seeThroughAmount(cs: CombatState, type: 'attack' | 'skill', n: number): number {
   if (n <= 0 || seeThroughScale(cs, type) === 1) return n;
-  return Math.max(1, Math.floor(n * 0.5));
+  return halveSeen(n);
+}
+function halveSeen(n: number): number { return n <= 0 ? n : Math.max(1, Math.floor(n * 0.5)); }
+
+function halveEffectDamage(fx: Effect): Effect {
+  switch (fx.kind) {
+    case 'damage': case 'damageRamp': case 'damageScatter': return { ...fx, amount: halveSeen(fx.amount) };
+    case 'damageRandom': return { ...fx, min: halveSeen(fx.min), max: halveSeen(fx.max) };
+    default: return fx;
+  }
+}
+/**
+ * 被看穿（攻擊）時牌面該印的樣子：攻擊牌上寫死的傷害數字照 `seeThroughAmount` 的取整減半（牌面不含爪力，所以只減牌上的數字）。
+ * 只動畫面用的複本，不碰牌表；爪力、倍傷等執行時才知道的量仍由引擎算（傷害預覽走引擎）。
+ */
+export function seenAttackDef(def: CardDef): CardDef {
+  if (def.type !== 'attack') return def;
+  return {
+    ...def,
+    effects: def.effects.map(halveEffectDamage),
+    upgrade: def.upgrade.effects ? { ...def.upgrade, effects: def.upgrade.effects.map(halveEffectDamage) } : def.upgrade,
+  };
 }
 
 /** 現在誰在嘲諷：活著、沒逃走、打得到的第一隻（照魔物順序）。沒有回 undefined */
