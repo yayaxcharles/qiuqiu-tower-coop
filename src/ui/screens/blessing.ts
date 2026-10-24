@@ -100,14 +100,17 @@ function blessingScreen(app: App, root: HTMLElement): void {
     const preview = structuredClone(run);
     if (!takeBlessing(preview, seat, i, pick, notes, gains)) { render(); return; }
     mineNotes = { def, notes, gains };
+    // `sent` 要在送出之前設：房主是當場套用，`onRunApplied` 在 `submitRun` 裡就跑完、清掉 `sent` 並重畫了；
+    // 送完才設的話會把它蓋回 true，地獄開局那三張攻擊牌就再也不出現（2026-10-25 連線實測：房主卡在「等同伴」）
+    sent = true;
     if (coop.suspended || !coop.submitRun({ t: 'bless', seat, i, ...(pick.u ? { u: pick.u } : {}), ...(pick.c !== undefined ? { c: pick.c } : {}) })) {
+      sent = false;
       mineNotes = null;
       notice(t('現在送不出去，等連線穩一點再選一次'));
       render();
       return;
     }
-    sent = true;
-    render();
+    if (sent) render();   // 已經繞回來（房主）就不再畫一次：那邊可能已經回地圖了
   }
 
   /** 地獄開局三選一攻擊牌（`''`＝不拿）。單機當場收，連線送出去、繞回來才算 */
@@ -119,13 +122,14 @@ function blessingScreen(app: App, root: HTMLElement): void {
       if (!anyBlessingPending(run)) leave(); else render();
       return;
     }
+    sent = true;   // 同 `commit`：送出之前設
     if (coop.suspended || !coop.submitRun({ t: 'atk', seat, c: cardId })) {
+      sent = false;
       notice(t('現在送不出去，等連線穩一點再選一次'));
       render();
       return;
     }
-    sent = true;
-    render();
+    if (sent) render();
   }
 
   /** 點了第 `i` 張：不用挑的直接選；要挑牌的先開選牌窗，挑好了才選 */
