@@ -596,6 +596,8 @@ export interface EnemyMove {
   learned?: { cardId: string; upgraded: boolean }[];
 }
 export type EnemyPool = '弱' | '中' | '強' | '大魔物' | '塔主' | '召喚';
+/** 地獄關主某個形態額外開的機制（跟所在關數給的取聯集，見 engine/hell.ts 的 `mechActive`）：快＝紫霧、亂＝偷牌封牌、狡猾＝看穿 */
+export type HellMech = 'miasma' | 'chaos' | 'cunning';
 export interface EnemyPhase {
   /** 門檻式變身：血打到 ≤ 此值就進這個階段（貓又、橘皮大王用）。跟 hpBar 二選一。 */
   hpBelow?: number;
@@ -616,6 +618,17 @@ export interface EnemyPhase {
    * 讓爪力、貓步堆不到無限（使用者 2026-09-02 的設計）。紀錄寫「<名字>震散了你 N 點爪力、N 點貓步」。
    */
   drainPlayerPerTurn?: Partial<Record<StatusName, number>>;
+  /** 地獄關主：這個形態額外開的機制（只有魔源用；一般難度的資料沒有這欄，引擎的每一處讀取都先看 `cs.hell`） */
+  hellMech?: HellMech[];
+  /** 這個形態每一動都照抄玩家上一回合打出的牌（鏡中球球那套，見 engine/mimic.ts）；跟 `EnemyDef.learnsPlayerCards` 取「或」 */
+  learnsPlayerCards?: true;
+  /**
+   * 抄牌的那一招另外附帶的「亂」：照牠的回合數輪流接在抄來的效果後面（魔源真身用，三種難一起來）。
+   * 附上去的是偷牌、封牌、塞牌這類效果，不是傷害，所以不改變抄牌的傷害量。
+   */
+  learnRider?: EnemyEffect[][];
+  /** 召喚的最短間隔（牠自己的回合數）；不填＝全域的 `SUMMON_GAP`。魔源千面每三回合召一次用 */
+  summonGap?: number;
 }
 export interface EnemyDef {
   id: string;
@@ -628,6 +641,8 @@ export interface EnemyDef {
    * （翻法見 engine/mimic.ts；一次抽幾張看遭遇的 learnCards）。moves 只在牌組裡沒半張學得會時當退路。
    */
   learnsPlayerCards?: true;
+  /** 地獄關主第一形態額外開的機制（後面的形態看 `EnemyPhase.hellMech`）。見 engine/hell.ts 的 `mechActive` */
+  hellMech?: HellMech[];
   moves: EnemyMove[];
   line: string;
   /** 開場台詞的其他版本：戰鬥開始時從 line 與 lines 裡挑一句（2026-09-02 使用者：「出場台詞做幾個不同的隨機」） */

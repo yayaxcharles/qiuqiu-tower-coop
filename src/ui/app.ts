@@ -863,10 +863,20 @@ export class App {
         // 連線局也不播（2026-09-23 美術盤點）：比照開場的 `video: false`——那支是球球單人的故事（只有他跟師父），
         // 混搭局接著演的是兩人合演的結局，而且一台在看片、另一台乾等
         const endVideo = (go: () => void): void => (!this.coop && (me(run, this.seat).hero ?? 'ninja') === 'ninja' ? playVideo('ending', go) : (setBgm('ending'), go()));
-        endVideo(() => {
+        const playEnding = (): void => endVideo(() => {
           if (slidesReady(endSlides)) playSlides(endSlides, () => this.show('result'));
           else playDialogue(vic, () => this.show('result'), undefined, STORY_LITERAL);
         });
+        // 打倒的是有專屬收場的最終關主（地獄的魔源）就先演牠的收場再接結局；師父沒有收場對白，走原路
+        const finalIds = encounterById[cs.encounterId]?.enemies ?? [];
+        const finalBossId = finalIds.find((id) => enemyById[id]?.pool === '塔主') ?? '';
+        const finalOutro = dialogue.bossDefeatById[finalBossId];
+        const finalDef = enemyById[finalBossId];
+        if (finalOutro && finalDef) {
+          const finalUnit = cs.enemies.find((e) => e.enemyId === finalBossId);
+          const finalCast = { 塔主: { name: finalUnit?.name ?? finalDef.name, portrait: monsterUrl(monsterPhaseKey(finalDef.art, finalUnit?.phase ?? 0), 'idle'), id: finalBossId } };
+          playDialogue(finalOutro, playEnding, finalCast);
+        } else playEnding();
         return;
       }
       // 過關過場也走插圖幻燈片（使用者 2026-09-02：「開頭跟結尾的投影片過場很棒，希望每個關卡關主都有」）：

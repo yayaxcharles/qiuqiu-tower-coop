@@ -868,5 +868,7 @@
  "被看穿了：你上一回合攻擊牌打得最多，這回合你的攻擊牌傷害減半。換個打法就能繞過。": "Read: you played the most Attack cards last turn, so your Attack cards deal half damage this turn. Switch up your play to get around it.",
  "被看穿了：你上一回合技能牌打得最多，這回合你的技能牌給的蜷縮減半、對魔物上的減益層數也減半。換個打法就能繞過。": "Read: you played the most Skill cards last turn, so Curl from your Skill cards is halved, and so are debuff stacks you put on monsters. Switch up your play to get around it.",
  "嘲諷": "Taunt",
- "同伴倒下暴怒": "Rage on Ally Death"
+ "同伴倒下暴怒": "Rage on Ally Death",
+ "紫霧又聚攏了：{n} 回合後魔物爪力暴增": "The purple mist gathers again: in {n} turns the monsters surge in Claw",
+ "紫霧散開了：魔物不再每輪加爪力，你的抽牌也回到正常": "The purple mist disperses: monsters stop gaining Claw each round, and your draw returns to normal"
 }

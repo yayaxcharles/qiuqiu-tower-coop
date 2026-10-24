@@ -185,7 +185,9 @@ export function learnPool(cs: CombatState): CardInstance[] {
 
 /** 這隻魔物會不會照著學（鏡中球球）。在 makeEnemy／advanceMove 裡問，是的話招式不照表走 */
 export function learnsPlayerCards(e: EnemyCombat): boolean {
-  return enemyById[e.enemyId]?.learnsPlayerCards === true;
+  const d = enemyById[e.enemyId];
+  // 本體整場都學，或是這個形態才學（魔源真身，`EnemyPhase.learnsPlayerCards`）
+  return d?.learnsPlayerCards === true || (e.phase > 0 && d?.phases?.[e.phase - 1]?.learnsPlayerCards === true);
 }
 
 /** 噹噹的影子開場帶的反彈（連打好幾下會被打回來）。原本另帶鱗甲 4，3000 局實測一場拖到 18 回合，拿掉 */

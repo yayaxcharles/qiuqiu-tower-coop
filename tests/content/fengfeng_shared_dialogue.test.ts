@@ -10,6 +10,7 @@ const sharedScenes = [
   ...Object.values(dialogue.bossPhase2ById), dialogue.bossPhase2Generic,
   ...Object.values(dialogue.bossPhase3ById), dialogue.bossPhase3Generic,
   ...Object.values(dialogue.bossDefeatById),
+  ...Object.values(dialogue.bossFormTalkById).flat(),   // 地獄尾王換形態的台詞（每個形態一組）
 ].flat();
 // 標題也收（2026-09-23 起標題跟本文走同一張表）
 const sharedEventTexts = events.filter((event) => !event.hero).flatMap((event) =>

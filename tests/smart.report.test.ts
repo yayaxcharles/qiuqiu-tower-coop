@@ -25,9 +25,10 @@ function report(rs: SmartStats[]): string[] {
   const reachAct = (a: number): number => rs.filter((r) => r.act >= a).length;
   const deaths = new Map<string, number>();
   for (const r of rs) if (r.diedTo) deaths.set(r.diedTo, (deaths.get(r.diedTo) ?? 0) + 1);
-  const bossMap = new Map<string, { n: number; w: number; hp: number; turns: number }>();
+  const bossMap = new Map<string, { n: number; w: number; hp: number; turns: number; phases: number[] }>();
   for (const r of rs) for (const b of r.bosses) {
-    const cur = bossMap.get(b.id) ?? { n: 0, w: 0, hp: 0, turns: 0 };
+    const cur = bossMap.get(b.id) ?? { n: 0, w: 0, hp: 0, turns: 0, phases: [] };
+    cur.phases[b.phase ?? 0] = (cur.phases[b.phase ?? 0] ?? 0) + 1;
     cur.n += 1; cur.w += b.won ? 1 : 0; cur.hp += b.hpIn / b.maxHp; cur.turns += b.turns;
     bossMap.set(b.id, cur);
   }
@@ -58,7 +59,7 @@ function report(rs: SmartStats[]): string[] {
     '陣亡樓層：' + [...floorDeaths.entries()].sort((a, b) => a[0] - b[0]).map(([f, c]) => `${f}F×${c}`).join('、'),
     '陣亡遭遇排行：' + [...deaths.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([id, c]) => `${id}×${c}`).join('、'),
     '遭遇明細（依樓層）：\n  ' + encLines.join('\n  '),
-    '關主：' + [...bossMap.entries()].map(([id, b]) => `${id} ${b.w}/${b.n}（進場血 ${(b.hp / b.n * 100).toFixed(0)}%、${(b.turns / b.n).toFixed(1)} 回合）`).join('｜'),
+    '關主：' + [...bossMap.entries()].map(([id, b]) => `${id} ${b.w}/${b.n}（進場血 ${(b.hp / b.n * 100).toFixed(0)}%、${(b.turns / b.n).toFixed(1)} 回合${b.phases.length > 1 ? `、打到各形態 ${Array.from(b.phases, (x) => x ?? 0).join('/')}` : ''}）`).join('｜'),
   ];
   return lines;
 }

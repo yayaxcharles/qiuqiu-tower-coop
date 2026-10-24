@@ -39,7 +39,9 @@ describe('關主換階段換臉', () => {
       const set = M.monsters[key];
       if (!set) { missing.push(`${def.name}：清單裡沒有 ${key}`); continue; }
       // 2026-09-16 第二批補齊挨打與防禦，五張全到
-      for (const pose of ['idle', 'attack', 'hurt', 'block', 'down']) {
+      // 魔源（hell_source）四個形態只有最後一個（_p4）畫了倒下：前面的形態都走血條換形態，不會倒（見 tools/down_art.test.ts）
+      const poses = def.id === 'hell_source' ? ['idle', 'attack', 'hurt', 'block'] : ['idle', 'attack', 'hurt', 'block', 'down'];
+      for (const pose of poses) {
         if (!set[pose]) missing.push(`${def.name} 的 ${key} 少了 ${pose}`);
       }
     }

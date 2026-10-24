@@ -29,7 +29,9 @@ describe('師父的連線倍率：照遭遇覆寫成 2.4，其他關主照舊 3.
   it('查表：只有師父換，單人一律 1，不給遭遇 id 就照池', () => {
     expect(coopHpMul('塔主', 2, 'tower_master')).toBe(2.4);
     expect(coopHpMul('塔主', 1, 'tower_master')).toBe(1);
-    const others = encounters.filter((e) => e.pool === '塔主' && e.id !== 'tower_master');
+    // 地獄尾王魔源（hell_source）起始照師父的倍率（coopscale.ts，第八步量過再調），不在「其他關主照舊」這一列
+    const others = encounters.filter((e) => e.pool === '塔主' && e.id !== 'tower_master' && e.id !== 'hell_source');
+    expect(coopHpMul('塔主', 2, 'hell_source')).toBe(2.4);
     expect(others.length).toBeGreaterThanOrEqual(9);
     for (const e of others) expect(coopHpMul(e.pool, 2, e.id), e.id).toBe(3.0);
     expect(coopHpMul('塔主', 2)).toBe(3.0);

@@ -93,6 +93,7 @@ const COOP_HP: Record<EnemyPool, readonly number[]> = {
 export const COOP_HP_BY_ENCOUNTER: Readonly<Record<string, readonly number[]>> = {
   //               1人  2人  3人（照池那張表的比例留著，今天只做兩人）
   tower_master: [1, 2.4, 3.6],
+  hell_source: [1, 2.4, 3.6],   // 地獄尾王魔源：起始照師父，第八步量過再調
 };
 
 /**

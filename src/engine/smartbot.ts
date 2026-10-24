@@ -54,7 +54,8 @@ export interface SmartStats {
   /** 陣亡的那場遭遇（打贏就是 null） */
   diedTo: string | null;
   /** 每一場關主戰：進場血量與結果 */
-  bosses: { id: string; act: number; hpIn: number; maxHp: number; won: boolean; turns: number }[];
+  /** `phase`＝打到第幾個形態（0＝第一形態；換血條的關主才會 > 0，量魔源四形態用） */
+  bosses: { id: string; act: number; hpIn: number; maxHp: number; won: boolean; turns: number; phase?: number }[];
   /** 每一場戰鬥：遭遇、掉了多少血、回合數 */
   fights: { id: string; floor: number; act: number; hpLost: number; turns: number; won: boolean; str: number }[];
 }
@@ -1434,7 +1435,7 @@ function fight(run: RunState, rng: Rng, encounterId: string | undefined, bonusFi
   const isBoss = encounterById[cs.encounterId]?.pool === '塔主';
   const r = finishCombat(run, cs, bonusFish);
   stats.fights.push({ id: cs.encounterId, floor: run.floor, act: run.act, hpLost: hpIn - (r ? me(run).hp : 0), turns: cs.turn, won: !!r, str: cs.player.statuses['爪力'] ?? 0 });
-  if (isBoss) stats.bosses.push({ id: cs.encounterId, act: run.act, hpIn, maxHp: me(run).maxHp, won: !!r, turns: cs.turn });
+  if (isBoss) stats.bosses.push({ id: cs.encounterId, act: run.act, hpIn, maxHp: me(run).maxHp, won: !!r, turns: cs.turn, phase: Math.max(0, ...cs.enemies.map((e) => e.phase)) });
   if (!r) { stats.diedTo = (cs.turn > 200 ? '僵局:' : '') + cs.encounterId; return; }
   if (r.cards.length) { takeCardReward(run, r, pickCard(run, r.cards)); closeCardReward(r); }
 }

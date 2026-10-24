@@ -7,7 +7,7 @@ import { applyEffects } from './effects';
 import { addStatus, computeAttack, computeBlock, getStatus, removeStatus } from './statuses';
 import { DEBUFFS } from './types';
 import { learnedMove, learnsPlayerCards, SHADOW_DANGDANG } from './mimic';
-import { enrageOnAllyDeath, returnAllStolen, returnStolen, sealType, seeThroughAmount, stealCards } from './hell';
+import { enrageOnAllyDeath, onHellFormChange, returnAllStolen, returnStolen, sealType, seeThroughAmount, stealCards } from './hell';
 import type { CardInstance, CombatState, EnemyCombat, EnemyEffect, EnemyMove, EnemyPhase, PlayerCombat, Unit, StatusName } from './types';
 
 /** 沉睡中的魔物頭上顯示的意圖。每次都是同一份物件，畫面比對「這一拍出的是哪一招」才穩 */
@@ -374,6 +374,15 @@ export function damagePlayer(cs: CombatState, attacker: Unit, base: number,
 function currentPhase(e: EnemyCombat): EnemyPhase | undefined {
   return enemyById[e.enemyId]?.phases?.[e.phase - 1];
 }
+/**
+ * 抄牌的招另外附帶的「亂」（魔源真身，`EnemyPhase.learnRider`）：照牠的回合數輪流接一組效果在後面，
+ * 意圖牌的說明就會多出偷牌、封牌或塞牌。沒設的形態原樣回傳（同一個物件，一般難度的鏡中影子完全不受影響）。
+ */
+function withLearnRider(e: EnemyCombat, m: EnemyMove): EnemyMove {
+  const rider = currentPhase(e)?.learnRider;
+  if (!rider || rider.length === 0) return m;
+  return { ...m, effects: [...m.effects, ...rider[e.turnCount % rider.length]!] };
+}
 function moveSet(e: EnemyCombat): { moves: EnemyMove[]; pattern: 'cycle' | 'random' } {
   const def = enemyById[e.enemyId]!;
   const ph = currentPhase(e);
@@ -416,7 +425,7 @@ function isSummon(m: EnemyMove): boolean { return m.effects.some((f) => f.kind =
  */
 function moveReady(cs: CombatState, e: EnemyCombat, m: EnemyMove): boolean {
   if (isSummon(m)) {
-    return e.lastSummonTurn === undefined || (e.turnCount + 1) - e.lastSummonTurn >= SUMMON_GAP;
+    return e.lastSummonTurn === undefined || (e.turnCount + 1) - e.lastSummonTurn >= (currentPhase(e)?.summonGap ?? SUMMON_GAP);
   }
   if (m.effects.some((f) => f.kind === 'escape')) {
     if (e.stolen <= 0 || e.stolenTurn === undefined) return false;   // 空手不跑
@@ -435,7 +444,7 @@ export function advanceMove(cs: CombatState, e: EnemyCombat): void {
     e.queuedMove = q;
   }
   // 照著學的（鏡中球球）每一動都從球球的牌組抽，抽不到才照表
-  if (learnsPlayerCards(e)) { const learned = learnedMove(cs, e); if (learned) { e.move = learned; return; } }
+  if (learnsPlayerCards(e)) { const learned = learnedMove(cs, e); if (learned) { e.move = withLearnRider(e, learned); return; } }
   const { moves, pattern } = moveSet(e);
   /**
    * 被冷卻擋掉的那一招**排進佇列，不是丟掉**（稽核 2026-09-10 中-1）。
@@ -484,6 +493,7 @@ function checkPhase(cs: CombatState, e: EnemyCombat): void {
   if (!next || next.hpBelow === undefined || e.hp > next.hpBelow || e.dead) return;
   e.phase += 1;
   returnStolen(cs, e);   // 地獄第二關：換形態＝偷的牌一次還回來
+  onHellFormChange(cs, e);   // 地獄關主：紫霧跟著新形態開或關（沒標形態機制的魔物什麼都不做）
   // 用 onEnterMove 時 moveIndex 設 -1：那招做完 advanceMove 會 +1，新階段從第一招開始（稽核 2026-09-04 L-5）
   e.moveIndex = next.onEnterMove ? -1 : 0;
   if (next.line) log(cs, '{e}：{line}', { e: E(e), line: { say: next.line } });
@@ -701,6 +711,7 @@ export function damageEnemy(cs: CombatState, e: EnemyCombat, base: number,
     if (next?.hpBar) {
       e.phase += 1;
       returnStolen(cs, e);   // 地獄第二關：換血條＝偷的牌一次還回來
+      onHellFormChange(cs, e);   // 地獄關主（魔源）：紫霧跟著新形態開或關
       // 下一條血照這場的血量倍率放大（連線、難度），跟第一條血同一套（makeEnemy）。
       // 以前直接寫表上的數字：兩人連線時第一條是三倍、後兩條還是單人的量（2026-09-22 平衡量測發現，使用者拍板修）
       e.hp = Math.max(1, Math.round(next.hpBar * (cs.mods?.hpMul ?? 1)));

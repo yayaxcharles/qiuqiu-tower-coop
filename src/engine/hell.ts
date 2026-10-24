@@ -10,7 +10,7 @@ import { HAND_LIMIT } from './deck';
 import { log } from './actions';
 import { E, H } from './logfmt';
 import { addStatus } from './statuses';
-import type { CardType, CombatState, EnemyCombat, PlayerCombat } from './types';
+import type { CardType, CombatState, EnemyCombat, HellMech, PlayerCombat } from './types';
 
 export interface HellState {
   act: 1 | 2 | 3;
@@ -27,12 +27,54 @@ export const MIASMA_TURNS: Record<'normal' | 'elite' | 'boss', number> = { norma
 /** 紫霧歸零後，每一輪魔物各加的爪力 */
 export const MIASMA_CLAW = 2;
 
+/** 魔源（形態自己開紫霧）的倒數：比一般關主（10）短 2 回合，第一形態與真身重新起算都用這個 */
+export const SOURCE_MIASMA_TURNS = MIASMA_TURNS.boss - 2;
+
 /** 開戰時呼叫一次（`startCombat`，第一回合開始之前）：掛上地獄狀態，第一關再加紫霧倒數 */
 export function initHell(cs: CombatState, act: 1 | 2 | 3): void {
   cs.hell = { act };
-  if (act !== 1) return;
-  const pool = encounterById[cs.encounterId]?.pool;
-  cs.hell.miasmaLeft = MIASMA_TURNS[pool === '塔主' ? 'boss' : pool === '大魔物' ? 'elite' : 'normal'];
+  const enc = encounterById[cs.encounterId];
+  if (act === 1) {
+    cs.hell.miasmaLeft = MIASMA_TURNS[enc?.pool === '塔主' ? 'boss' : enc?.pool === '大魔物' ? 'elite' : 'normal'];
+    return;
+  }
+  // 關主的第一形態自己帶紫霧（魔源「紫霧之繭」）：用遭遇表上的魔物資料判斷，不依賴場上的魔物已經建好
+  if (enc?.enemies.some((id) => enemyById[id]?.hellMech?.includes('miasma'))) cs.hell.miasmaLeft = SOURCE_MIASMA_TURNS;
+}
+
+// ===== 關主的形態機制：關數給的 ∪ 當下形態自己帶的 =====
+
+/** 這隻魔物當下這個形態額外開的機制：還沒換形態看本體資料，換過看那個階段。沒標＝undefined */
+export function formMechs(e: EnemyCombat): readonly HellMech[] | undefined {
+  const d = enemyById[e.enemyId];
+  return e.phase > 0 ? d?.phases?.[e.phase - 1]?.hellMech : d?.hellMech;
+}
+
+const ACT_MECH: Record<1 | 2 | 3, HellMech> = { 1: 'miasma', 2: 'chaos', 3: 'cunning' };
+
+/**
+ * 這一場現在有沒有這種機制：所在關數給的（第一關快、第二關亂、第三關狡猾），加上場上活著的魔物當下形態額外開的。
+ * 一般難度（`cs.hell` 沒有）恆為 false，連場上的魔物都不看。
+ */
+export function mechActive(cs: CombatState, m: HellMech): boolean {
+  const h = cs.hell;
+  if (!h) return false;
+  if (ACT_MECH[h.act] === m) return true;
+  return cs.enemies.some((e) => !e.dead && !e.escaped && formMechs(e)?.includes(m) === true);
+}
+
+/** 關主換形態（`damageEnemy` 換血條、`checkPhase` 換門檻階段，已經 `phase += 1` 之後叫）：紫霧跟著新形態開或關 */
+export function onHellFormChange(cs: CombatState, e: EnemyCombat): void {
+  const h = cs.hell;
+  const mech = formMechs(e);
+  if (!h || !mech) return;
+  if (mech.includes('miasma')) {
+    h.miasmaLeft = SOURCE_MIASMA_TURNS;   // 真身重新起算，跟第一形態同一個回合數
+    log(cs, '紫霧又聚攏了：{n} 回合後魔物爪力暴增', { n: SOURCE_MIASMA_TURNS });
+  } else if (h.miasmaLeft !== undefined && h.act !== 1) {
+    delete h.miasmaLeft;
+    log(cs, '紫霧散開了：魔物不再每輪加爪力，你的抽牌也回到正常');
+  }
 }
 
 /**
@@ -156,11 +198,11 @@ export function isSealed(cs: CombatState, type: CardType): 'attack' | 'skill' | 
 // ===== 第三關「狡猾」：看穿、嘲諷、同伴倒下暴怒 =====
 
 /**
- * 這一場有沒有「狡猾」機制（看穿）。**全部的判斷只問這一支**：目前＝地獄第三關；
- * 魔源第三、四形態也要開時，只改這裡（第七步）。
+ * 這一場有沒有「狡猾」機制（看穿、嘲諷、暴怒）。**全部的判斷只問這一支**：地獄第三關，
+ * 或場上有魔源在第三、四形態（`mechActive`：關數給的 ∪ 形態給的）。
  */
 export function cunningActive(cs: CombatState): boolean {
-  return cs.hell?.act === 3;
+  return mechActive(cs, 'cunning');
 }
 
 /** 玩家打出一張牌時記一筆（`playCard` 叫）。能力牌不記；連線兩位記在同一份。沒有狡猾機制就什麼都不做 */
@@ -203,6 +245,7 @@ export function seeThroughAmount(cs: CombatState, type: 'attack' | 'skill', n: n
 
 /** 現在誰在嘲諷：活著、沒逃走、打得到的第一隻（照魔物順序）。沒有回 undefined */
 export function tauntingEnemy(cs: CombatState): EnemyCombat | undefined {
+  if (!cunningActive(cs)) return undefined;   // 資料就算混進別的關，也要過狡猾這道閘
   return cs.enemies.find((e) => enemyById[e.enemyId]?.taunt && !e.dead && !e.escaped && e.invulnIn <= 0);
 }
 
@@ -220,6 +263,7 @@ export function redirectToTaunter(cs: CombatState, targetUid: number | undefined
 
 /** 有魔物被打倒時叫（`killEnemy`）：場上帶「同伴倒下暴怒」的各加爪力 */
 export function enrageOnAllyDeath(cs: CombatState, dead: EnemyCombat): void {
+  if (!cunningActive(cs)) return;
   for (const o of cs.enemies) {
     const n = enemyById[o.enemyId]?.enrageOnAllyDeath;
     if (!n || o === dead || o.dead || o.escaped) continue;

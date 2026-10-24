@@ -4,7 +4,7 @@ import type { EnemyDef, EnemyEffect, EnemyMove, EncounterDef } from '../engine/t
  * 難度 6「地獄」的魔物與遭遇（設計稿 docs/superpowers/specs/2026-10-21-hell-difficulty-design.md）。
  *
  * 三關各 12 隻一般＋3 隻大魔物＋1 隻關主，編號 `hell_<工單名>`，立繪 `codex/monster_hell_<工單名>`（工單 tools/make_hell_jobs.py）。
- * 第三關的關主魔源（`hell_source`）這裡只放第一形態；換階段、四個形態的招式之後再補。
+ * 第三關的關主魔源（`hell_source`）是四形態（血條式換形態），招式與機制都在它那一筆裡。
  *
  * 這一版的招式只用**現有**效果，血量與傷害照同關同池的現有魔物。新機制（偷牌、封牌、看穿、嘲諷、同伴倒下暴怒）
  * 要換上的地方都標了 `// Task N:`，之後只改那一行效果，不動結構。
@@ -388,14 +388,55 @@ export const hellEnemies: EnemyDef[] = [
       mv('attack', '骨手拍', dmg(19)),
       mv('block', '列陣', { kind: 'blockAllies', amount: 10 }),
     ] },
-  // ----- 關主：魔源（這一版只有第一形態「紫霧之繭」；四階段之後再補）-----
-  { id: 'hell_source', name: '魔源・紫冥', hp: [150, 150], pool: '塔主', pattern: 'cycle', size: 'large', art: 'codex/monster_hell_source',
+  // ----- 關主：魔源「紫冥」四形態（設計：spec 尾王段；血條式換形態，沿用師父的蹲下調息）-----
+  // 四條血合計 660＝師父（120＋240＋300）的量級、明顯高過第二關關主（240）；每條血的數字等第八步量測再調。
+  // 形態機制＝關數給的（第三關＝狡猾）∪ 形態自己的 `hellMech`（見 engine/hell.ts 的 `mechActive`）：
+  // 一、二形態在第三關本來就有看穿，這是設計稿的規矩（第三關的機制只看關數），不另外關掉。
+  // 一、紫霧之繭（快）：開場就有紫霧倒數，比一般關主短 2 回合（`SOURCE_MIASMA_TURNS`）
+  { id: 'hell_source', name: '魔源・紫冥', hp: [120, 120], pool: '塔主', pattern: 'cycle', size: 'large', art: 'codex/monster_hell_source',
+    hellMech: ['miasma'],
     line: '（紫霧裹成的巨繭，慢慢地脈動）', lines: ['（繭上的金色豎瞳，緩緩轉向你）', '……封印，斷了。'],
     moves: [
       mv('attack', '紫霧噴吐', dmg(12), onPlayer('炸毛', 1)),
       mv('block', '繭甲', blk(14)),
       mv('buff', '魔氣湧', selfClaw(2)),
       mv('attack', '破繭衝', dmg(10, 2)),
+    ],
+    phases: [
+      // 二、破繭・千手（亂）：偷牌、封攻擊或技能、塞壞牌；換形態時偷的牌一次還回來（`returnStolen`）
+      {
+        hpBar: 150, line: '破繭', pattern: 'cycle', hellMech: ['chaos'],
+        onEnter: [blk(14)],
+        moves: [
+          mv('attack', '千手攫牌', steal(2), dmg(8)),
+          mv('attack', '封印・攻', dmg(10), seal('attack')),
+          mv('debuff', '塞牌亂舞', dazed(2, 'draw'), slime(1), dmg(6)),
+          mv('block', '封印・技', blk(12), seal('skill')),
+          mv('attack', '千手連打', dmg(7, 3)),
+        ],
+      },
+      // 三、千面（狡猾）：每回合換一張面具（照表輪換，不擲骰），每三回合第三張面具召一隻第三關的小怪（同種最多 2 隻）
+      {
+        hpBar: 170, line: '千面', pattern: 'cycle', hellMech: ['cunning'], summonGap: 3,
+        onEnter: [],
+        moves: [
+          mv('attack', '怒面', dmg(20)),
+          mv('block', '哭面', blk(16), dmg(8)),
+          mv('summon', '笑面', { kind: 'summon', enemyId: 'hell_medicine_bat', n: 1, max: 2 }, onPlayer('炸毛', 1), dmg(6)),
+        ],
+      },
+      // 四、真身・九尾黑貓神（全部＋模仿）：三種機制同時開；每一動照抄你上一回合打出的牌（`mimic.ts`），
+      // 抄來的招另外輪流附偷牌、封攻擊、塞牌、封技能（`learnRider`）。抄不到牌時才退回下面這三招
+      {
+        hpBar: 220, line: '真身', pattern: 'cycle', hellMech: ['miasma', 'chaos', 'cunning'], learnsPlayerCards: true,
+        learnRider: [[steal(1)], [seal('attack')], [dazed(2, 'draw')], [seal('skill')]],
+        onEnter: [selfClaw(2)],
+        moves: [
+          mv('attack', '九尾連擊', dmg(7, 3)),
+          mv('attack', '黑貓神威', dmg(16), selfClaw(1)),
+          mv('block', '九尾護體', blk(16)),
+        ],
+      },
     ] },
 ];
 

@@ -4437,7 +4437,7 @@ registerScreen('combat', (app, root, props) => {
      * 底下那兩支換口氣、換名牌的就整個跳過——連線時「球球：……喵」是球球本人在講。
      */
     const coop = coopBossLines(bossId, phase >= 2 ? 'phase3' : 'phase2', my().hero);
-    const lines = coop ?? (phase >= 2
+    const lines = coop ?? dialogue.bossFormTalkById[bossId]?.[phase - 1] ?? (phase >= 2
       ? (dialogue.bossPhase3ById[bossId] ?? dialogue.bossPhase3Generic)
       : (dialogue.bossPhase2ById[bossId] ?? dialogue.bossPhase2Generic));
     // 「塔主」木牌只留給師父本人；其他關主的吐槽掛自己的名字（貓又婆婆等）
