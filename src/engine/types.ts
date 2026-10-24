@@ -995,7 +995,11 @@ export interface RunPlayer {
    * `took`＝點了哪一樣。可選：舊存檔、除錯頁直接開的局沒有這一欄＝不演；有 `offer` 沒 `took`＝還沒選（重新整理回來看到同四張）。
    * `took` 進整局指紋（`net/hash.ts`）。代號與效果見 `content/blessings.ts`、套用見 `engine/blessing.ts`。
    */
-  bless?: { offer: string[]; took?: string };
+  /**
+   * 開局祝福。`atk`＝地獄局開局另送的「三選一攻擊牌」（三張牌 id，`rollBlessings` 摸好）；
+   * `atkTook`＝挑了哪張（`''`＝跳過）。`atk` 有、`atkTook` 還沒有＝這一步還沒做
+   */
+  bless?: { offer: string[]; took?: string; atk?: string[]; atkTook?: string };
   /**
    * 稀有牌保底：連續幾次戰鬥獎勵沒開出稀有牌（每次 +1，開出就歸零）。
    * 每一點讓下一次的稀有權重多 4——連續槓龜的手氣會自己回來。

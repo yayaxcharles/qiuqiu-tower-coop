@@ -26,7 +26,7 @@ import { ambushOutcomes } from './qmark';
 import type { CardInstance, CombatState, Effect, EnemyCombat, MapNode, PlayerCombat, RelicPool, RunEffect, RunState, Unit } from './types';
 import { me } from './runplayer';
 import { blessingById, type BlessingDef } from '../content/blessings';
-import { blessChoices, blessPickable, blessPickCount, rollBlessings, takeBlessing, type BlessPick } from './blessing';
+import { blessChoices, blessPickable, blessPickCount, rollBlessings, takeBlessing, takeStartAttack, type BlessPick } from './blessing';
 
 /**
  * 會算傷害的機器人（2026-09-02）。
@@ -1613,7 +1613,18 @@ export function smartBless(run: RunState, seat = 0): string | null {
     .map((x) => ({ ...x, v: blessingScore(run, x.def, seat) })).sort((a, b) => b.v - a.v);
   const best = scored[0];
   if (!best) return null;
-  return takeBlessing(run, seat, best.i, blessingPickFor(run, best.def, seat)) ? best.def.id : null;
+  if (!takeBlessing(run, seat, best.i, blessingPickFor(run, best.def, seat))) return null;
+  smartStartAttack(run, seat);
+  return best.def.id;
+}
+
+/** 地獄開局三選一攻擊牌：照戰利品的挑法，都不夠格就拿評分最高的（白送的牌不跳過）。沒有這一步（難度 1～5）就什麼都不做 */
+export function smartStartAttack(run: RunState, seat = 0): void {
+  const atk = me(run, seat).bless?.atk;
+  if (!atk?.length) return;
+  const opts = atk.map((id) => ({ id }));
+  const c = pickCard(run, opts, seat) ?? atk.slice().sort((a, b) => rating(b) - rating(a))[0];
+  takeStartAttack(run, seat, c ?? '');
 }
 
 /**

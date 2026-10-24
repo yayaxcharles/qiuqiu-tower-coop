@@ -244,7 +244,12 @@ export function checkRun(input: Partial<RunState>): RunState | null {
     const offer = o && typeof o === 'object' && Array.isArray(o.offer) ? o.offer as unknown[] : null;
     const good = !!offer && offer.length === 4 && offer.every((id) => typeof id === 'string' && Object.hasOwn(blessingById, id))
       && (o!.took === undefined || (typeof o!.took === 'string' && offer.includes(o!.took)));
-    if (!good) delete p.bless;
+    if (!good) { delete p.bless; continue; }
+    // 地獄開局三選一攻擊牌：壞掉的只丟這一步（不補發也不重發）；挑的牌不在三張裡就當跳過
+    const atk = (b as { atk?: unknown }).atk;
+    const bb = p.bless!;
+    if (atk !== undefined && !(Array.isArray(atk) && atk.length > 0 && atk.length <= 3 && atk.every((id) => typeof id === 'string' && Object.hasOwn(cardById, id)))) { delete bb.atk; delete bb.atkTook; continue; }
+    if (bb.atkTook !== undefined && (typeof bb.atkTook !== 'string' || (bb.atkTook !== '' && !bb.atk?.includes(bb.atkTook)))) bb.atkTook = '';
   }
   // 地圖沒有節點陣列、或站在一個地圖上不存在的節點上，一樣當作不相容
   if (!usableMap(run.map, run.currentNode)) return null;

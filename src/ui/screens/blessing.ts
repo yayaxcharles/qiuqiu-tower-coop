@@ -3,12 +3,13 @@ import { blessingById, type BlessingDef } from '../../content/blessings';
 import { BLESS_COOP_TOOK, BLESS_COOP_WAIT, BLESS_NAMES, BLESS_OPENING, blessCardText, blessTakeLine, type BlessLoc } from '../../content/blessing-text';
 import { potionById } from '../../content/potions';
 import { relicById } from '../../content/relics';
-import { anyBlessingPending, blessChoices, blessPickable, blessPickCount, offeredBlessing, takeBlessing, type BlessPick } from '../../engine/blessing';
+import { anyBlessingPending, blessChoices, blessPickable, blessPickCount, offeredBlessing, startAtkPending, takeBlessing, takeStartAttack, type BlessPick } from '../../engine/blessing';
 import { heroName, type Hero } from '../../engine/hero';
 import { runMods, type RunGain } from '../../engine/run';
 import { me } from '../../engine/runplayer';
 import type { RunState } from '../../engine/types';
 import { registerScreen, type App } from '../app';
+import { cardById } from '../../content/cards';
 import { artUrl, eventArtKey } from '../assets';
 import { attachCardPeek } from '../cardpeek';
 import { cardNode } from '../cardview';
@@ -91,6 +92,7 @@ function blessingScreen(app: App, root: HTMLElement): void {
       if (!takeBlessing(run, seat, i, pick, notes, gains)) { render(); return; }
       play('relic');
       mineNotes = { def, notes, gains };
+      if (startAtkPending(run, seat)) { render(); return; }   // 地獄：接著挑開局攻擊牌
       leave();
       return;
     }
@@ -100,6 +102,24 @@ function blessingScreen(app: App, root: HTMLElement): void {
     mineNotes = { def, notes, gains };
     if (coop.suspended || !coop.submitRun({ t: 'bless', seat, i, ...(pick.u ? { u: pick.u } : {}), ...(pick.c !== undefined ? { c: pick.c } : {}) })) {
       mineNotes = null;
+      notice(t('現在送不出去，等連線穩一點再選一次'));
+      render();
+      return;
+    }
+    sent = true;
+    render();
+  }
+
+  /** 地獄開局三選一攻擊牌（`''`＝不拿）。單機當場收，連線送出去、繞回來才算 */
+  function commitAtk(cardId: string): void {
+    if (sent || !startAtkPending(run, seat)) return;
+    play(cardId ? 'relic' : 'click');
+    if (!coop) {
+      if (!takeStartAttack(run, seat, cardId)) { render(); return; }
+      if (!anyBlessingPending(run)) leave(); else render();
+      return;
+    }
+    if (coop.suspended || !coop.submitRun({ t: 'atk', seat, c: cardId })) {
       notice(t('現在送不出去，等連線穩一點再選一次'));
       render();
       return;
@@ -167,7 +187,17 @@ function blessingScreen(app: App, root: HTMLElement): void {
     let body: HTMLElement;
     let text: string;
     let actions: (Node | string)[] = [];
-    if (choosing !== null) {
+    if (startAtkPending(run, seat) && !sent) {
+      // 地獄開局：祝福挑完、進地圖之前，從三張一般攻擊牌挑一張（可以不拿）。畫面借三選一那一張的版面
+      const grid = el('div', { class: 'reward-cards' });
+      for (const id of mine.bless?.atk ?? []) {
+        const c = cardById[id];
+        if (c) grid.append(cardNode(c, { onClick: () => commitAtk(id) }));
+      }
+      body = el('div', { class: 'bless-stage' }, grid);
+      text = t('出發前，挑一張攻擊牌');
+      actions = [el('button', { class: 'btn', onclick: () => commitAtk('') }, t('不拿，直接出發'))];
+    } else if (choosing !== null) {
       // 三選一（一疊招式圖）：三張牌排在主圖的位置，點一張就是它；「返回」回到包袱四樣
       const i = choosing;
       const def = offeredBlessing(run, seat, i)!;
@@ -207,9 +237,9 @@ function blessingScreen(app: App, root: HTMLElement): void {
   if (coop) {
     coop.onRunApplied((applied) => {
       for (const one of applied) {
-        if (one.a.t !== 'bless') continue;
+        if (one.a.t !== 'bless' && one.a.t !== 'atk') continue;
         if (one.a.seat === seat) { sent = false; play('relic'); }
-        else if (one.a.seat === partnerSeat) {
+        else if (one.a.t === 'bless' && one.a.seat === partnerSeat) {
           const id = partner?.bless?.took;
           if (id) notice(say(BLESS_COOP_TOOK).replace('{同伴}', partnerName).replace('{名稱}', blessName(id)));
         }

@@ -887,5 +887,7 @@
  "滅世！": "Doom!",
  "滅世 {n}": "Doom {n}",
  "九尾滅世": "Nine-Tail Apocalypse",
- "倒數歸零那一輪，魔源的下一動是九尾滅世：{dmg} 點，照常吃爪力。放完會重新倒數。": "On the round the countdown hits 0, the Source's next move is Nine-Tail Apocalypse: {dmg} damage, boosted by Claw as usual. The countdown restarts afterwards."
+ "倒數歸零那一輪，魔源的下一動是九尾滅世：{dmg} 點，照常吃爪力。放完會重新倒數。": "On the round the countdown hits 0, the Source's next move is Nine-Tail Apocalypse: {dmg} damage, boosted by Claw as usual. The countdown restarts afterwards.",
+ "出發前，挑一張攻擊牌": "Pick an attack card before setting out",
+ "不拿，直接出發": "Skip and head out"
 }

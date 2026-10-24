@@ -1,7 +1,7 @@
 import { buyCard, buyPotion, buyRelic, buyRemove, buySwap, canPurifyAtShop, canSwap, canTakeRestCard, miasmaRelicsOf, notMyCard, priceFor, potionCapacity, purifyAtShop, removePrice, replacePotion, reshuffleShop, rest, revivePartner, RESHUFFLE_COST, shopClosed, shopService, takeRelic, takeRestCard, type ShopStock } from '../engine/run';
 import { ownsRelic } from '../content/relics';
 import type { RunState } from '../engine/types';
-import { canTakeBlessing, takeBlessing, type BlessPick } from '../engine/blessing';
+import { canTakeBlessing, startAtkPending, takeBlessing, takeStartAttack, type BlessPick } from '../engine/blessing';
 
 /**
  * 戰鬥**以外**的動作——商店、打盹、紙箱那些（連線版 2026-09-11）。
@@ -41,6 +41,8 @@ export type RunAction =
    * 一個動作就結案：效果用這一位自己的分支亂數，兩人誰先繞回來都一樣（見 `engine/blessing.ts`）
    */
   | { t: 'bless'; seat: number; i: number; u?: number[]; c?: string }
+  /** 地獄開局三選一攻擊牌：`c`＝挑的牌（`''`＝跳過）。祝福選完才輪到，一人一次 */
+  | { t: 'atk'; seat: number; c: string }
   /**
    * 我這一格弄完了，可以上樓。
    *
@@ -73,6 +75,7 @@ export function canApplyRun(ctx: RunCtx, a: RunAction): boolean {
     case 'relic': return !p.down && !ownsRelic(p.relics, a.id);   // 淨化版在身上也算有（推前審查五 高-3，跟 `takeRelic` 同一個判準）
     case 'swap': return !p.down && a.i >= 0 && a.i < p.potions.length;
     case 'bless': return canTakeBlessing(run, a.seat, a.i, blessPickOf(a));
+    case 'atk': return startAtkPending(run, a.seat) && (a.c === '' || !!run.players[a.seat]?.bless?.atk?.includes(a.c));
   }
   if (p.down) return false;                        // 倒下的人不逛街也不打盹
   switch (a.t) {
@@ -127,6 +130,7 @@ export function applyRunAction(ctx: RunCtx, a: RunAction): boolean {
     case 'relic': return takeRelic(run, a.id, a.seat);
     case 'swap': return replacePotion(run, a.i, a.id, a.seat);
     case 'bless': return takeBlessing(run, a.seat, a.i, blessPickOf(a));
+    case 'atk': return takeStartAttack(run, a.seat, a.c);
     case 'buy': {
       if (!shop) return false;
       if (a.k === 'swap') return buySwap(run, shop, a.u, a.seat) !== null;

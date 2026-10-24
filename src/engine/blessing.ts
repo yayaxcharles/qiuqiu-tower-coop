@@ -3,7 +3,7 @@ import { BLESSINGS, BLESS_CLASSES, blessingById, type BlessingDef, type BlessPic
 import { relicById } from '../content/relics';
 import { heroOf, pickable } from './hero';
 import { Rng, seedFromString } from './rng';
-import { addCard, applyRunEffects, removeCard, runRng, transformCard, upgradeCard, type RunGain } from './run';
+import { addCard, applyRunEffects, removeCard, runMods, runRng, transformCard, upgradeCard, type RunGain } from './run';
 import { me } from './runplayer';
 import { note, type LogArg } from './logfmt';
 import type { CardDef, CardInstance, RunEffect, RunState } from './types';
@@ -34,13 +34,41 @@ export function rollBlessings(run: RunState): void {
     if (p.bless) return;
     const rng = new Rng(seedFromString(`${run.seed}|bless|${seat}`));
     p.bless = { offer: BLESS_CLASSES.map((cls) => rng.pick(BLESSINGS.filter((b) => b.cls === cls && blessingAvailable(b))).id) };
+    // 地獄：出發前另給一份三選一攻擊牌（使用者試玩 2026-10-24）。同樣用分支亂數，難度 1～5 不摸、不動任何亂數
+    if (runMods(run).hellMode) {
+      const atk = startAttackChoices(run, seat);
+      if (atk.length) p.bless.atk = atk.map((c) => c.id);
+    }
   });
 }
 
-/** 這一位還沒選（有包袱、還沒拿） */
+/** 地獄開局三選一：這一位能拿的一般稀有度（common）忍術池攻擊牌，抽三張不同的（分支亂數 `…|atk`） */
+export function startAttackChoices(run: RunState, seat: number): CardDef[] {
+  const hero = heroOf(me(run, seat));
+  const cands = cards.filter((c) => c.pool === '忍術' && c.type === 'attack' && c.rarity === 'common' && pickable(c, hero, run.players.length));
+  return new Rng(seedFromString(`${run.seed}|bless|${seat}|atk`)).shuffle(cands).slice(0, 3);
+}
+
+/** 這一位的開局攻擊牌還沒挑（也不能跳過沒表態）：要等祝福選完才輪到 */
+export function startAtkPending(run: RunState, seat: number): boolean {
+  const b = run.players[seat]?.bless;
+  return !!b && b.took !== undefined && !!b.atk?.length && b.atkTook === undefined;
+}
+
+/** 挑開局攻擊牌（`cardId` 空字串＝跳過）。不在三張裡、還沒輪到、已經挑過都回 false，什麼都沒動 */
+export function takeStartAttack(run: RunState, seat: number, cardId: string): boolean {
+  const b = run.players[seat]?.bless;
+  if (!b || !startAtkPending(run, seat)) return false;
+  if (cardId !== '' && !b.atk!.includes(cardId)) return false;
+  if (cardId !== '') addCard(run, cardId, false, seat);
+  b.atkTook = cardId;
+  return true;
+}
+
+/** 這一位還沒選（有包袱、還沒拿；地獄還要等開局攻擊牌挑完） */
 export function blessingPending(run: RunState, seat: number): boolean {
   const b = run.players[seat]?.bless;
-  return !!b && b.took === undefined;
+  return !!b && (b.took === undefined || startAtkPending(run, seat));
 }
 /** 還有人沒選（連線要兩個人都選好才一起進地圖） */
 export function anyBlessingPending(run: RunState): boolean {
@@ -157,6 +185,6 @@ export function takeBlessing(run: RunState, seat: number, i: number, pick: Bless
       }
     }
   });
-  p.bless = { offer: p.bless!.offer, took: def.id };
+  p.bless = { ...p.bless!, took: def.id };
   return true;
 }
