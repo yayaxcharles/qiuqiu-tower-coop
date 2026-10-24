@@ -927,7 +927,8 @@ export class App {
         // 整段結局幻燈片一直配著最終戰的戰鬥曲，點完進結算畫面才換
         // 連線局也不播（2026-09-23 美術盤點）：比照開場的 `video: false`——那支是球球單人的故事（只有他跟師父），
         // 混搭局接著演的是兩人合演的結局，而且一台在看片、另一台乾等
-        const endVideo = (go: () => void): void => (!this.coop && (me(run, this.seat).hero ?? 'ninja') === 'ninja' ? playVideo('ending', go) : (setBgm('ending'), go()));
+        // 地獄局也不播（使用者 2026-10-24）：原版結尾影片演的是一般結局，跟地獄收場對不上
+        const endVideo = (go: () => void): void => (!this.coop && !runMods(run).hellMode && (me(run, this.seat).hero ?? 'ninja') === 'ninja' ? playVideo('ending', go) : (setBgm('ending'), go()));
         const playEnding = (): void => endVideo(() => {
           if (slidesReady(endSlides)) playSlides(endSlides, () => this.show('result'));
           else playDialogue(vic, () => this.show('result'), undefined, STORY_LITERAL);

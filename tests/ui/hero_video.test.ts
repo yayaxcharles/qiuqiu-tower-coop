@@ -43,7 +43,13 @@ describe('過場影片要看角色', () => {
 
   it('連線局通關不播球球的單人結尾影片（2026-09-23，比照開場連線不播）', () => {
     const line = SRC.split('\n').find((l) => /playVideo\('ending'/.test(l) && !/^\s*(\/\/|\*)/.test(l)) ?? '';
-    expect(line).toMatch(/!this\.coop && \(me\(run, this\.seat\)\.hero \?\? 'ninja'\) === 'ninja' \? playVideo\('ending'/);
+    expect(line).toMatch(/!this\.coop && !runMods\(run\)\.hellMode && \(me\(run, this\.seat\)\.hero \?\? 'ninja'\) === 'ninja' \? playVideo\('ending'/);
+  });
+
+  it('地獄局通關不播原版結尾影片（2026-10-24 使用者裁定），改走結局曲＋幻燈片', () => {
+    const line = SRC.replace(/\r\n/g, '\n').split('\n').find((l) => /const endVideo =/.test(l)) ?? '';
+    expect(line).toContain('!runMods(run).hellMode');
+    expect(line).toContain("(setBgm('ending'), go())");
   });
 
   it('開頭影片檔已移除、結尾影片檔還在', () => {
