@@ -179,10 +179,11 @@ function makeSession(app: App, tx: Transport, isHost: boolean, resume?: { gen: n
   }
   // 連線戰鬥打到一半重新整理或關分頁，先讓瀏覽器問一聲（2026-10-25 使用者：「按重新整理前先問一聲」）：
   // 接回只能回到這一層的地圖、那一格整場重打，地獄魔源戰會從第一形態重來。按取消就什麼都沒發生。
-  // 只在戰鬥中問（地圖、獎勵畫面重新整理沒損失）；打完的那一刻（`won`/`lost`）不問
+  // 戰鬥畫面與打完後的選牌畫面都問：接回的存檔點是開打前的地圖，選牌時重新整理那場也要重打（實測 2026-10-25）。
+  // 地圖重新整理沒損失、整局輸了（`lost`）也沒東西可接，不問
   window.addEventListener('beforeunload', (e) => {
-    const cs = app.cs;
-    if (app.coop !== session || session.stopped || cs?.phase !== 'player') return;
+    const where = app.stage.dataset['screen'];
+    if (app.coop !== session || session.stopped || (where !== 'combat' && where !== 'reward') || app.cs?.phase === 'lost') return;
     e.preventDefault();
     e.returnValue = '';
   });
