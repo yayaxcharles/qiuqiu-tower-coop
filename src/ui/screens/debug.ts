@@ -1,5 +1,5 @@
 import { cards, inHeroCollection, starterDeckFor } from '../../content/cards';
-import { actClearSlides, endingSlides, prologueSlides } from '../storyslides';
+import { actClearSlides, endingSlides, hellTopSceneSlides, prologueSlides } from '../storyslides';
 import { newRun as engineNewRun } from '../../engine/run';
 import { actVariantKey } from '../screenbg';
 import { events } from '../../content/events';
@@ -208,6 +208,9 @@ registerScreen('debug', (app, root) => {
     group('第二關打完（三張）', actClearSlides(hero, 2));
     // 結局第一句依打法換、難度 4 起多一句旁白：這裡列起手牌組、難度 1 的那一版
     group('結局（兩張，起手牌組・難度 1 的版本）', endingSlides(hero, [...starterDeckFor(hero)], 1));
+    // 地獄（難度 6）塔頂段與結局（2026-10-25 補圖）：單人版；連線配對的圖由測試對路由
+    group('地獄塔頂（一張）', hellTopSceneSlides(hero));
+    group('地獄結局（起手牌組）', endingSlides(hero, [...starterDeckFor(hero)], 6));
   }
 
   // ---- 場景：所有非事件的底圖，外加「直接跳到那個畫面」的按鈕 ----
