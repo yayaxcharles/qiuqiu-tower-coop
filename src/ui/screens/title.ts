@@ -76,6 +76,9 @@ registerScreen('title', (app, root) => {
     startBtn.setAttribute('disabled', 'disabled');
     startBtn.textContent = t('載入中…');
     void decodeRun(seed.value).then((res) => {
+      // 等的期間（地獄局要先下載地獄資料）玩家已經按了續玩、離開標題：這份結果作廢，不存也不開，免得蓋掉剛續玩的那一局（審查 2026-10-25）
+      // 退場中的那一層還在頁面上、只是拿掉了 `id="screen"`（`screenswap.ts`），所以看它還在不在目前的畫面裡，不能只看 isConnected
+      if (!startBtn.closest('#screen')) return;
       startBtn.removeAttribute('disabled');
       if (!res.ok) { shareNote.textContent = t('✗ {why}', { why: t(res.why) }); shareNote.classList.add('warn'); refreshShareLabel(); return; } // i18n-dynamic (src/engine/sharecode.ts:69,70,75,79,81)
       // 先存起來再開，這樣中途重整還能按「續玩」回到這個局面

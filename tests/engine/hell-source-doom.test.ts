@@ -180,6 +180,27 @@ describe('魔源真身：九尾滅世倒數', () => {
     expect(e.move).toBe(DOOM.move);
   });
 
+  it('先手香跳過那一輪：倒數停在 0、頭上照舊是滅世，下一輪真的放出去（審查 2026-10-25 中-1）', () => {
+    const cs = start();
+    const e = toForm(cs, 4);
+    e.invulnIn = 0;
+    for (let i = 0; i < DOOM.turns; i++) miasmaTick(cs);
+    expect(e.move).toBe(DOOM.move);
+    cs.skipEnemies = true;   // 先手香的效果
+    cs.player.block = 0;
+    const hp0 = cs.player.hp;
+    endTurn(cs);
+    expect(cs.player.hp).toBe(hp0);
+    expect(cs.hell?.doom).toBe(0);
+    expect(e.move.label).toBe(DOOM.move.label);
+    const base = (DOOM.move.effects.find((f) => f.kind === 'damage') as { amount: number }).amount;
+    cs.player.block = 0;
+    const hp1 = cs.player.hp;
+    endTurn(cs);
+    expect(hp1 - cs.player.hp).toBeGreaterThanOrEqual(base);
+    expect(cs.hell?.doom).toBe(DOOM.turns - 1);   // 放完才重新起算
+  });
+
   it('魔源倒了就不再數', () => {
     const cs = start();
     const e = toForm(cs, 4);

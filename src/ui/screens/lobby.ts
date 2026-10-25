@@ -192,6 +192,8 @@ export function rejoinCoop(app: App, rec: RejoinRecord): void {
   const back = (why: string, keepRecord = false): void => {
     if (!keepRecord) clearRejoin();   // 地獄包載入失敗：記錄留著，提示請玩家重新整理，重整後還能再接回一次
     app.leaveCoop();
+    // `leaveCoop` 自己也會清記錄：要留的話清完再寫回去（審查 2026-10-25 中-2）。有效期從現在重新起算，玩家照提示重新整理就接得回
+    if (keepRecord) { const { recv, ...rest } = rec; writeRejoin(rest); noteRejoinRecv(recv); }
     app.show('title');
     troubleBanner(app, why);   // troubleBanner 顯示時才翻譯
   };
@@ -247,7 +249,8 @@ function startCoop(app: App, tx: Transport, isHost: boolean): void {
      */
     const diff = selectedDifficulty();
     // 難度 6：地獄包（`content/enemies.ts`）先載好才宣布開局，這樣主機不會在客戶端還沒開局前就先動作；載不到就收線回標題
-    app.whenHellReady(diff, () => { session.start(seed, diff, '', heroes); begin(seed, diff, heroes); }, giveUp);
+    // 等地獄包的期間房客走了（會話已停）：不開局，房客那支同樣有這一行（審查 2026-10-25 小-5）
+    app.whenHellReady(diff, () => { if (session.stopped) return; session.start(seed, diff, '', heroes); begin(seed, diff, heroes); }, giveUp);
   } else {
     // 客戶端等主機宣布，收到才開——不能自己挑種子，那樣兩邊一定不一樣。難度 6 要等地獄包載好才開局（兩邊都在開戰前載好）
     session.onStartRun((seed, diff, _enc, heroes) => app.whenHellReady(diff, () => { if (session.stopped) return; begin(seed, diff, heroes); }, giveUp));

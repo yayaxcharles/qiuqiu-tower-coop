@@ -398,13 +398,16 @@ interface Snap {
   handN: number;   // 手牌張數與飯糰：同伴讓我抽牌／分飯糰時，只換立繪那條路碰不到手牌與側欄，要退回整頁重畫
   energy: number;
   relicFiredLen: number;   // 這一拍哪幾件秘寶動了：跟 `cs.relicFired` 相減就知道（見 `flashRelics`）
+  /** 側欄地獄小標籤（紫霧、滅世、封條）的內容：同伴打進魔源下一形態時這幾個會變，局部更新碰不到側欄，要退回整頁重畫（審查 2026-10-25 中-4） */
+  hellTags: string;
 }
 /** `me`＝**這台機器的那一位**（座位 0 或 1）。快照是拿來比「我這邊變了什麼」的，不能固定看第一位 */
+const hellTagsKey = (cs: CombatState): string => `${cs.hell?.miasmaLeft ?? ''}|${cs.hell?.doom ?? ''}|${cs.hell?.sealed ?? ''}`;
 function snap(cs: CombatState, me: PlayerCombat): Snap {
   return {
     phase: cs.phase,
     hp: me.hp, block: me.block, logLen: cs.log.length, hitsLen: cs.hits.length, handN: me.hand.length, energy: me.energy,
-    energyGain: cs.energyGain, relicFiredLen: cs.relicFired.length,
+    energyGain: cs.energyGain, relicFiredLen: cs.relicFired.length, hellTags: hellTagsKey(cs),
     buff: sumStatus(me, GOOD_STATUS), debuff: sumStatus(me, BAD_STATUS),
     growth: getStatus(me, '爪力') + getStatus(me, '貓步'),
     choke: getStatus(me, '中毒'), stealth: getStatus(me, '隱身'),
@@ -2733,6 +2736,7 @@ registerScreen('combat', (app, root, props) => {
     const field = box?.querySelector<HTMLElement>('.field');
     if (!box || !field) return false;
     if (before.handN !== my().hand.length || before.energy !== my().energy) return false;   // 手牌或飯糰變了（同伴的「你也抽一張」「飯糰分你」）：退回整頁重畫（審查 中-1）
+    if (before.hellTags !== hellTagsKey(cs)) return false;   // 紫霧、滅世、封條變了：側欄的小標籤要重建
     if (cs.enemies.some((e) => !e.dead && !lineup.includes(e.uid))) return false;
     for (const e of cs.enemies) {
       const old = field.querySelector<HTMLElement>(`.unit.enemy[data-uid="${e.uid}"]`);

@@ -358,10 +358,10 @@ export class App {
       this.hellLoading = false;
       bar?.remove();
       if (!ok) this.hellBar(i18nT('地獄資料載入失敗，請重新整理頁面再試一次。'), true);
-      for (const w of this.hellWaiters.splice(0)) {
-        if (w.seq !== this.navSeq) continue;
-        (ok ? w.go : w.fail)();
-      }
+      // 只算最後一次：等的期間連按「出發」、換角色再按，每按一次就掛一筆，全部照跑會疊出好幾份序章（審查 2026-10-25 中-3）。
+      // 同一個畫面上掛著的幾筆都是互相取代的開局動作，最後按的那一次才是玩家要的
+      const last = this.hellWaiters.splice(0).filter((w) => w.seq === this.navSeq).pop();
+      if (last) (ok ? last.go : last.fail)();
     };
     ensureHell().then(() => settle(true), () => settle(false));
   }

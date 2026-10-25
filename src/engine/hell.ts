@@ -140,6 +140,9 @@ function doomTick(cs: CombatState, h: HellState): void {
   for (const e of cs.enemies) {
     const d = e.dead ? undefined : phaseOf(e)?.doom;
     if (!d) continue;
+    // 頭上還是滅世＝這一輪沒放出去（先手香跳過魔物回合）：倒數停在 0、照舊預告，真的放完才重新起算（審查 2026-10-25 中-1）。
+    // 比招名不比物件：連線重新同步與存檔讀回都會複製整個戰鬥狀態
+    if (h.doom === 0 && e.move?.label === d.move.label) return;
     if (h.doom > 0 ? --h.doom : (h.doom = d.turns - 1)) return;
     e.move = d.move;
     log(cs, '{e}蓄滿了力', { e: E(e) });
@@ -320,9 +323,12 @@ function halveEffectDamage(fx: Effect, plays: number): Effect {
     default: return fx;
   }
 }
-/** 算式型攻擊：總傷害要到 `damageEnemy` 才減半，牌面寫不出減半後的數字，只能句尾補一句 */
+/**
+ * 算式型攻擊：總傷害要到 `damageEnemy` 才減半，牌面寫不出減半後的數字，只能句尾補一句。
+ * `execByStatus`（一針斃命）不在這裡：斬殺是一次打掉剩下的血、不吃看穿，原本補那句跟實際對不上（審查 2026-10-25 小-6）
+ */
 const SEEN_FORMULA: ReadonlySet<Effect['kind']> = new Set(
-  ['damageSpendQi', 'damageSpendBlock', 'damageFromAllyStrength', 'damageEqualBlock', 'damageByStatus', 'execByStatus', 'damageByOwnStatus']);
+  ['damageSpendQi', 'damageSpendBlock', 'damageFromAllyStrength', 'damageEqualBlock', 'damageByStatus', 'damageByOwnStatus']);
 /** 被看穿（攻擊）時，這張牌的牌面要不要補「（被看穿：總傷害減半）」 */
 export function seenNeedsNote(def: CardDef, upgraded: boolean): boolean {
   if (def.type !== 'attack') return false;
