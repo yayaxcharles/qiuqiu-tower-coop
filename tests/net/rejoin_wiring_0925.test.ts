@@ -30,6 +30,15 @@ describe('接回的接線', () => {
     expect(make, '建會話時不可以無條件打開').not.toMatch(/^\s*tx\.stayOnReload\?\.\(true\);/m);
   });
 
+  it('大廳：連線戰鬥中重新整理先問一聲（2026-10-25），只在這個會話、還沒打完的戰鬥裡問', () => {
+    const make = between(LOBBY, 'function makeSession(', '\n}\n');
+    const guard = between(make, "window.addEventListener('beforeunload'", '});');
+    expect(guard).toMatch(/app\.coop !== session/);
+    expect(guard).toMatch(/session\.stopped/);
+    expect(guard).toMatch(/cs\?\.phase !== 'player'\) return;/);
+    expect(guard).toMatch(/e\.preventDefault\(\);/);
+  });
+
   it('大廳：開新的一局先清掉上一局留在分頁裡的記錄，才建會話', () => {
     const start = between(LOBBY, 'function startCoop(', '\n}\n');
     const clearAt = start.indexOf('clearRejoin();');

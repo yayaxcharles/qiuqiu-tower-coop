@@ -177,6 +177,15 @@ function makeSession(app: App, tx: Transport, isHost: boolean, resume?: { gen: n
     // 有效期從離開頁面那一刻算（跟中繼等人的算法一樣，推前稽核 中-1）；記錄已經清掉的話什麼都不做
     window.addEventListener('pagehide', touchRejoin);
   }
+  // 連線戰鬥打到一半重新整理或關分頁，先讓瀏覽器問一聲（2026-10-25 使用者：「按重新整理前先問一聲」）：
+  // 接回只能回到這一層的地圖、那一格整場重打，地獄魔源戰會從第一形態重來。按取消就什麼都沒發生。
+  // 只在戰鬥中問（地圖、獎勵畫面重新整理沒損失）；打完的那一刻（`won`/`lost`）不問
+  window.addEventListener('beforeunload', (e) => {
+    const cs = app.cs;
+    if (app.coop !== session || session.stopped || cs?.phase !== 'player') return;
+    e.preventDefault();
+    e.returnValue = '';
+  });
   app.coop = session;
   app.seat = seat;
   return session;
