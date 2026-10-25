@@ -24,9 +24,8 @@ export interface NameWrapAdapter {
 export function runNameWrap(a: NameWrapAdapter): number {
   a.wrap();
   let ws = Math.round(a.base * NAME_WRAP_SIZE * 2) / 2;
-  ws = Math.max(ws, Math.min(a.base, 15));
   a.setSize(ws);
-  for (let i = 0; i < 6 && ws > 15 && (a.tooWide() || a.tooTall(ws)); i++) { ws -= 0.5; a.setSize(ws); }
+  for (let i = 0; i < 6 && ws > 10 && (a.tooWide() || a.tooTall(ws)); i++) { ws -= 0.5; a.setSize(ws); }
   return ws;
 }
 

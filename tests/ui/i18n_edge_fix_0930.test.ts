@@ -245,16 +245,14 @@ describe('意圖牌與名字牌（中-6、中-7）', () => {
 });
 
 describe('牌面（高-3、中-5）', () => {
-  it('牌名兩行：字級為原本 0.85 倍；兩行還放不下再縮，最低 15', () => {
+  it('牌名兩行：字級為原本 0.85 倍；兩行還放不下再縮到最低 10', () => {
     let size = 0;
     let wrapped = false;
-    const s = runNameWrap({ base: 20, wrap: () => { wrapped = true; }, setSize: (px) => { size = px; }, tooWide: () => false, tooTall: () => false });
+    const s = runNameWrap({ base: 14, wrap: () => { wrapped = true; }, setSize: (px) => { size = px; }, tooWide: () => false, tooTall: () => false });
     expect(wrapped).toBe(true);
-    expect(s).toBe(17);
-    const s2 = runNameWrap({ base: 20, wrap: () => undefined, setSize: (px) => { size = px; }, tooWide: () => size > 15.5, tooTall: () => false });
-    expect(s2).toBe(15.5);
-    const s3 = runNameWrap({ base: 17, wrap: () => undefined, setSize: (px) => { size = px; }, tooWide: () => true, tooTall: () => true });
-    expect(s3).toBe(15);   // 0.85 倍算出 14.5，墊到 15
+    expect(s).toBe(12);
+    const s2 = runNameWrap({ base: 14, wrap: () => undefined, setSize: (px) => { size = px; }, tooWide: () => size > 10.5, tooTall: () => false });
+    expect(s2).toBe(10.5);
   });
   it('規則文字：先收行距；放得下就不動牌圖；不夠才一次 2px 縮牌圖，最多縮到七成', () => {
     let tight = false;
@@ -343,7 +341,7 @@ describe('首載瘦身：英日才用的版面程式不進首載，只留掛鉤'
     expect(read('src/ui/scene.ts')).toContain('layoutHooks.scene?.(scene, box)');
     expect(read('src/ui/scene.ts')).toContain('layoutHooks.showcase?.(scene, box)');
     expect(read('src/ui/cardview.ts')).toContain("layoutHooks.card?.(node, 'name')");
-    expect(read('src/ui/cardview.ts')).toContain("layoutHooks.card(node, 'text')");
+    expect(read('src/ui/cardview.ts')).toContain("layoutHooks.card?.(node, 'text')");
     expect(read('src/ui/screens/blessing.ts')).toContain('layoutHooks.bless?.(scene)');
     expect(read('src/ui/screens/combat.ts').match(/layoutHooks\.labels\?\.\(/g)?.length).toBe(3);
   });

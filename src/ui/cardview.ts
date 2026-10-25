@@ -99,10 +99,10 @@ export function cardNode(card: CardInstance | CardDef, opts: CardViewOpts = {}):
  *
  * 先處理牌名，因為牌名換行會多佔一行的高度、規則文字要在那之後才量：
  *   ① 牌名固定一行，放不下就一路縮到 9px；
- *   ② 縮到 15px 還放不下（英文「Secret Art: Thousand-Pound Drop」這種）：換成兩行（`layoutHooks.card`，英日語言包掛上來的，見 `cardfit.ts`）。
+ *   ② 縮到 9px 還放不下（英文「Secret Art: Thousand-Pound Drop」這種）：換成兩行（`layoutHooks.card`，英日語言包掛上來的，見 `cardfit.ts`）。
  * 規則文字：
- *   ③ 字從 15 起每次降 0.5，最低 15（使用者 2026-10-25：戰鬥畫面字級下限 15，所以實際上不縮了）；
- *   ④ 還被切：把牌圖高度讓給文字（英日走同一個掛鉤，繁中就地處理）。
+ *   ③ 字從 15／13 一路每次降 0.5，最低 10；
+ *   ④ 縮到 10 還被切（英文連線牌尾巴那句單人規則）：收行距、把牌圖高度讓給文字（同一個掛鉤）。字不再縮，手機上 10 像素已經很小。
  * ②④ 只有英日走到，放在語言包旁邊，首載不背這段程式。
  */
 function fitCardText(node: HTMLElement): void {
@@ -114,24 +114,17 @@ function fitCardText(node: HTMLElement): void {
     const name = node.querySelector<HTMLElement>('.card-name');
     if (name) {
       let ns = parseFloat(getComputedStyle(name).fontSize);
-      for (let i = 0; i < 16 && name.scrollWidth > name.clientWidth && ns > 15; i++) {
+      for (let i = 0; i < 16 && name.scrollWidth > name.clientWidth && ns > 9; i++) {
         ns -= 0.5;
         name.style.fontSize = `${ns}px`;
       }
       if (name.scrollWidth > name.clientWidth) layoutHooks.card?.(node, 'name');
     }
     let size = parseFloat(getComputedStyle(t).fontSize);
-    for (let i = 0; i < 10 && t.scrollHeight > t.clientHeight && size > 15; i++) {
+    for (let i = 0; i < 10 && t.scrollHeight > t.clientHeight && size > 10; i++) {
       size -= 0.5;
       t.style.fontSize = `${size}px`;
     }
-    if (t.scrollHeight > t.clientHeight) {
-      if (layoutHooks.card) layoutHooks.card(node, 'text');
-      else {   // 繁中沒有語言包：字不再縮（15 是下限），牌圖最多讓出三成高度給文字（同 cardfit.ts 的 ART_MIN_RATIO）
-        const art = node.querySelector<HTMLElement>('.card-art');
-        const full = art ? art.offsetHeight : 0;
-        for (let h = full - 2; art && h >= full * 0.7 && t.scrollHeight > t.clientHeight; h -= 2) art.style.height = `${h}px`;
-      }
-    }
+    if (t.scrollHeight > t.clientHeight) layoutHooks.card?.(node, 'text');
   });
 }

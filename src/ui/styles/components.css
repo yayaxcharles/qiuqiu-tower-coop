@@ -481,7 +481,7 @@
 }
 .card-art {
   width: 150px;
-  height: 96px;   /* 120→104→96：把高度讓給規則文字（2026-09-06 字體放大；2026-10-25 字級下限 15） */
+  height: 104px;   /* 120→104：把高度讓給規則文字（2026-09-06 字體放大） */
   object-fit: contain;
   margin-top: 8px;
 }
@@ -510,9 +510,9 @@
      再長的由 cardview.ts 的 fitCardText 自動縮一級，不會溢出 */
   font-size: 15px;
   font-weight: 700;
-  padding: 0 4px;
+  padding: 1px 6px;
   text-align: center;
-  line-height: 1.2;
+  line-height: 1.3;
   flex: 1;
   /* 撐不下時留在自己的格子裡（否則 flex 會把牌型標籤擠出牌外），溢出由 fitCardText 縮字處理 */
   min-height: 0;
@@ -522,16 +522,14 @@
   /* 類型從一行灰字變成底部的小標籤，跟規則文字分得開 */
   align-self: stretch;
   text-align: center;   /* 標籤本身是整條寬的，不設這個字會靠在左下角 */
-  margin: 0 8px 2px;
-  padding: 0;
-  line-height: 16px;
+  margin: 0 8px 3px;   /* 下邊距 4→3：把一像素讓給四行規則文字（稽核 2026-09-06 中-5） */
+  padding: 1px 0 2px;
   border-radius: 5px;
   background: #3a2a1c14;
   color: var(--ink);
-  font-size: 15px;
+  font-size: 11px;
   opacity: .75;
-  letter-spacing: 0;
-  white-space: nowrap;   /* 英日的「· Co-op」15px 下會折行把標籤撐高 */
+  letter-spacing: 2px;
 }
 
 /*
@@ -552,24 +550,24 @@
   height: 25.5px;
   border-width: 1.7px;
   line-height: 22px;
-  font-size: 15px;
+  font-size: 13.6px;
 }
 .card.small .card-art {
   width: 127.5px;
-  height: 60px;   /* 102→84→60：讓位給文字，字級下限 15、最長五行（2026-10-25） */
+  height: 84px;   /* 102→84：讓位給文字；四行在正黑體只剩一像素餘裕，其他字體行高更高會踩到自動縮字（稽核 2026-09-06 中-5） */
   margin-top: 6.8px;
 }
 .card.small .card-name {
-  font-size: 15px;   /* 要不比規則文字小 */
+  font-size: 14px;   /* 12.75→14：同上，要比 13px 的規則文字大 */
   margin-top: 1.7px;
-  line-height: 1.2;
 }
 .card.small .card-text {
-  font-size: 15px;   /* 13→15：戰鬥手牌字級下限 15（使用者 2026-10-25） */
-  padding: 0 3px;
+  font-size: 13px;   /* 10.6→13：戰鬥手牌就是這個規格，原本在 1080p 螢幕上只有 12 像素 */
+  padding: 1px 5px;
 }
 .card.small .card-type {
-  font-size: 15px;
+  font-size: 9.35px;
+  padding-bottom: 3.4px;
 }
 /* 三種牌用紙紋分辨。底色留著當退路：紙紋沒生好時 var() 會是空的，至少還有原本的淡色。
    平鋪 128 而不是原尺寸 256：牌只有 170 寬，磚太大等於看不到紋理。 */
