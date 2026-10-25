@@ -4,6 +4,7 @@
  */
 import { afterEach, describe, expect, it } from 'vitest';
 import { createHash } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
 import snapshot from './fixtures/vanilla_story_snapshot.json';
 import APP_RAW from '../../src/ui/app.ts?raw';
 import { deckLeaning, dialogue, qiuqiuLineOk, feifeiLineOk, setCoopStory, storyFor, victoryLinesFor, type DialogueLine } from '../../src/content/dialogue';
@@ -201,13 +202,14 @@ describe('地獄結局（連線）', () => {
     // 圖的切點：難度 6 跟難度 5 分到的張數一樣、每張都有句子、句子合起來等於整段結局、切點標記還在原本那句
     const s6 = endingSlides(me, deck, 6);
     const s5 = endingSlides(me, deck, 5);
-    // 球球＋菲菲地獄版前面多一張「師父被魔氣纏住」（2026-10-25），其他配對張數不變
-    const qf = [me, other].sort().join('+') === 'feifei+ninja';
-    expect(s6.length).toBe(s5.length + (qf ? 1 : 0));
-    expect(s6.length).toBeGreaterThan(0);
+    // 地獄版前面多一張「師父被魔氣纏住」（2026-10-25：球球＋菲菲借菲菲版，其他五組補了雙人版），換圖點在主角回話之後
+    expect(s6.length).toBe(s5.length + 1);
+    expect(s6[0]!.img).toMatch(/corrupt$/);
+    expect(s6[0]!.lines.map((l) => l.text)).toContain('重出江湖。');   // 球球＋菲菲在「懷裡」那句換（第 6 句），其他在回話後（第 5 句）
+    expect(s6[1]!.img).toBe(s5[0]!.img);
     for (const s of s6) expect(s.lines.length).toBeGreaterThan(0);
     expect(tt(s6.flatMap((s) => s.lines))).toEqual(tt(v));
-    s6.slice(qf ? 1 : 0, -1).forEach((s, i) => {   // 多出來那張是在相擁圖裡面切開的，不是原本的切點
+    s6.slice(1, -1).forEach((s, i) => {   // 多出來那張是在相擁圖裡面切開的，不是原本的切點
       expect(s.lines[s.lines.length - 1]!.slideBreak, `第 ${i + 1} 張最後一句是切點`).toBe(true);
       expect(s.lines[s.lines.length - 1]!.text).toBe(s5[i]!.lines[s5[i]!.lines.length - 1]!.text);
     });
@@ -268,6 +270,34 @@ describe('地獄單人結局：相擁圖等到「抱進懷裡」那句才出現�
     expect(s[0]!.lines.some((l) => /懷裡/.test(l.text))).toBe(false);
     expect(tt(s.flatMap((x) => x.lines))).toEqual(tt(victoryLinesFor(deckOf(me), 6, me)));
     expect(endingSlides(me, deckOf(me), 5)[0]!.img, '難度 5 不受影響').toBe('bg/feifei_coop_ninja_victory1');
+  });
+
+  it.each([['dangdang', 3], ['fengfeng', 4]] as [H, number][])('%s：前幾句配自己版本的被魔氣纏住那張，主角回話之後才換相擁圖（2026-10-25 補圖）', (hero, n) => {
+    coop(null);
+    const s = endingSlides(hero, deckOf(hero), 6);
+    const s5 = endingSlides(hero, deckOf(hero), 5);
+    expect(s.length).toBe(n);
+    expect(s.length).toBe(s5.length + 1);
+    expect(s[0]!.img).toBe(`bg/${hero}_still_corrupt`);
+    expect(s[0]!.lines.map((l) => l.text)).toContain('重出江湖。');
+    expect(s[0]!.lines.length).toBe(4);
+    expect(s[1]!.img).toBe(`bg/${hero}_still_embrace`);
+    expect(s.slice(1).map((x) => x.img)).toEqual(s5.map((x) => x.img));
+    expect(tt(s.flatMap((x) => x.lines))).toEqual(tt(victoryLinesFor(deckOf(hero), 6, hero)));
+  });
+
+  it('同角色雙人照單人那份', () => {
+    coop('dangdang');
+    expect(endingSlides('dangdang', deckOf('dangdang'), 6)[0]!.img).toBe('bg/dangdang_still_corrupt');
+  });
+
+  it('補的圖都登記在 manifest', () => {
+    const m = JSON.parse(readFileSync('public/assets/manifest.json', 'utf-8')) as { bg: Record<string, string> };
+    for (const k of ['dangdang_still_corrupt', 'fengfeng_still_corrupt', 'dangdang_coop_ninja_corrupt', 'dangdang_coop_feifei_corrupt',
+      'fengfeng_coop_ninja_corrupt', 'fengfeng_coop_feifei_corrupt', 'fengfeng_coop_dangdang_corrupt']) {
+      expect(m.bg[`bg/${k}`], k).toBe(`assets/bg/${k}.webp`);
+      expect(existsSync(`public/assets/bg/${k}.webp`), k).toBe(true);
+    }
   });
 
   it('難度 5 仍是兩張（不受影響）', () => {

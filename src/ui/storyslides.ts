@@ -184,11 +184,12 @@ export function endingSlides(hero: string | undefined, deckIds: string[], diffic
   const coopArt = coopArtFor(hero);
   if (coopArt) {
     const s = coopSlides(coopArt.victory, vic);
-    // 地獄（2026-10-25 使用者裁定，同下方單人那段）：球球＋菲菲的第一張是三人相擁，前幾句師父才剛醒，
-    // 先配菲菲版「師父被魔氣纏住」（圖裡菲菲、球球都在），抱進懷裡那句起才換相擁圖。其他配對沒有合適的圖，照舊
-    const hug = s[0] ? s[0].lines.findIndex((l, i) => i > 0 && /懷裡/.test(l.text)) : -1;
-    if (difficulty >= 6 && coopStoryKey(hero) === 'feifei+ninja' && hug > 0) {
-      return [{ img: 'bg/feifei_still_corrupt', lines: s[0]!.lines.slice(0, hug) }, { img: s[0]!.img, lines: s[0]!.lines.slice(hug) }, ...s.slice(1)];
+    // 地獄：第一張相擁圖前面先插「師父被魔氣纏住」那張（見 `hellWakeEnd`）。球球＋菲菲借菲菲版（圖裡兩人都在，10-25 使用者裁定），
+    // 其他五組 10-25 補了各自的雙人版
+    const corrupt = difficulty >= 6 ? HELL_CORRUPT_COOP[coopStoryKey(hero) ?? ''] : undefined;
+    const at = s[0] ? hellWakeEnd(s[0].lines) : -1;
+    if (corrupt && at > 0 && at < s[0]!.lines.length) {
+      return [{ img: `bg/${corrupt}`, lines: s[0]!.lines.slice(0, at) }, { img: s[0]!.img, lines: s[0]!.lines.slice(at) }, ...s.slice(1)];
     }
     return s;
   }
@@ -196,30 +197,49 @@ export function endingSlides(hero: string | undefined, deckIds: string[], diffic
   const cut = Math.max(1, vic.findIndex((l) => l.slideBreak) + 1);
   /*
    * 地獄（2026-10-24 使用者裁定 B）：開頭幾句（注連繩接回去、師父睜開眼睛、重出江湖）師父才剛醒、人還跪在裂縫邊，
-   * 「抱在一起」那張要等到「把……攬／抱進懷裡」那句才對得上。球球、菲菲有「師父被魔氣纏住」那張，前幾句先配它，
-   * 抱進懷裡那句起才換相擁圖；噹噹、封封沒有對應的既有圖，維持原樣（只用既有圖，不生新圖）。
+   * 「抱在一起」那張要等到師父動手抱人那句才對得上，前幾句先配「師父被魔氣纏住」那張。
+   * 球球、菲菲用既有圖；噹噹、封封 10-25 補了各自的版本。
    */
-  const hugAt = vic.findIndex((l, i) => i > 0 && /懷裡/.test(l.text));
-  const corrupt = hero === 'feifei' ? 'feifei_still_corrupt' : hero === undefined || hero === 'ninja' ? 'still_corrupt' : '';
-  if (difficulty >= 6 && corrupt && hugAt > 0 && hugAt < cut) {
-    return [
-      { img: `bg/${corrupt}`, lines: vic.slice(0, hugAt) },
-      { img: stillKey(hero, 'still_embrace'), lines: vic.slice(hugAt, cut) },
-      { img: stillKey(hero, 'still_home'), lines: vic.slice(cut) },
-    ];
-  }
+  const at = difficulty >= 6 ? hellWakeEnd(vic) : -1;
+  const corrupt = HELL_CORRUPT_SOLO[hero ?? 'ninja'];
+  const wake: Slide[] = corrupt && at > 0 && at < cut ? [{ img: `bg/${corrupt}`, lines: vic.slice(0, at) }] : [];
+  const from = wake.length ? at : 0;
   if (hero === 'fengfeng') {
     // 封封結局最後一段是幾天後的院子練劍（EP01），在村口熱湯那張之後，自己配一張圖。
     // 打法插句、伏筆旁白都插在前面（見 `victoryLinesFor`），院子那段的起點要照第一句找，不能寫死第 10 句；
     // 那一句收在具名常數裡（2026-09-23 稽核 低-6：原本寫 `victory[10]`，結局多一句少一句就切到別人的話上）
     const found = vic.findIndex((l) => l.text === FENGFENG_YARD_FIRST);
     const yardStart = found > 0 ? found : vic.length;
-    return ['still_embrace', 'still_home', 'story_ep01'].map((n, i) => ({
+    return [...wake, ...['still_embrace', 'still_home', 'story_ep01'].map((n, i) => ({
       img: stillKey(hero, n),
-      lines: i === 0 ? vic.slice(0, cut) : i === 1 ? vic.slice(cut, yardStart) : vic.slice(yardStart),
-    }));
+      lines: i === 0 ? vic.slice(from, cut) : i === 1 ? vic.slice(cut, yardStart) : vic.slice(yardStart),
+    }))];
   }
-  return ['still_embrace', 'still_home'].map((n, i) => ({
-    img: stillKey(hero, n), lines: i === 0 ? vic.slice(0, cut) : vic.slice(cut),
-  }));
+  return [...wake, ...['still_embrace', 'still_home'].map((n, i) => ({
+    img: stillKey(hero, n), lines: i === 0 ? vic.slice(from, cut) : vic.slice(cut),
+  }))];
+}
+
+/** 地獄結局「師父被魔氣纏住」那張（單人照角色、連線照 `coopStoryKey`）。同角色雙人走單人那份 */
+const HELL_CORRUPT_SOLO: Readonly<Record<string, string>> = {
+  ninja: 'still_corrupt', feifei: 'feifei_still_corrupt', dangdang: 'dangdang_still_corrupt', fengfeng: 'fengfeng_still_corrupt',
+};
+const HELL_CORRUPT_COOP: Readonly<Record<string, string>> = {
+  'feifei+ninja': 'feifei_still_corrupt',
+  'dangdang+ninja': 'dangdang_coop_ninja_corrupt',
+  'dangdang+feifei': 'dangdang_coop_feifei_corrupt',
+  'fengfeng+ninja': 'fengfeng_coop_ninja_corrupt',
+  'feifei+fengfeng': 'fengfeng_coop_feifei_corrupt',
+  'dangdang+fengfeng': 'fengfeng_coop_dangdang_corrupt',
+};
+
+/**
+ * 地獄結局師父剛醒的那幾句到哪裡為止（之後才換相擁圖）。有「抱／攬進懷裡」那句就從那句換；
+ * 噹噹、封封與多數連線版沒有那句，就在「重出江湖」、主角回話之後換（地獄結局固定是 開頭→交代→重出江湖→回話）。
+ */
+function hellWakeEnd(lines: readonly DialogueLine[]): number {
+  const hug = lines.findIndex((l, i) => i > 0 && /懷裡/.test(l.text));
+  if (hug > 0) return hug;
+  const back = lines.findIndex((l) => l.speaker === '大俠貓' && l.text === '重出江湖。');
+  return back >= 0 ? back + 2 : -1;
 }
