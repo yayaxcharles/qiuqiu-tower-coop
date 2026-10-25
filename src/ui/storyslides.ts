@@ -220,6 +220,29 @@ export function endingSlides(hero: string | undefined, deckIds: string[], diffic
   }))];
 }
 
+/**
+ * 地獄塔頂段（`hellTopScene`：師父倒在裂縫邊、魔源的繭浮上來）一整段配一張（2026-10-25 補圖）。
+ * 單人照角色；不同角色連線照 `coopStoryKey`（連線版是只有旁白的那份，圖畫兩人並肩擋在師父前面）；同角色雙人走單人那份。
+ */
+export function hellTopSceneSlides(hero: string | undefined): Slide[] {
+  const lines = storyFor(hero).hellTopScene;
+  if (!lines.length) return [];
+  const key = coopStoryKey(hero);
+  const img = key !== null ? HELL_TOP_COOP[key] : HELL_TOP_SOLO[hero ?? 'ninja'];
+  return img ? [{ img: `bg/${img}`, lines }] : [];
+}
+const HELL_TOP_SOLO: Readonly<Record<string, string>> = {
+  ninja: 'still_hell_top', feifei: 'feifei_still_hell_top', dangdang: 'dangdang_still_hell_top', fengfeng: 'fengfeng_still_hell_top',
+};
+const HELL_TOP_COOP: Readonly<Record<string, string>> = {
+  'feifei+ninja': 'feifei_coop_ninja_hell_top',
+  'dangdang+ninja': 'dangdang_coop_ninja_hell_top',
+  'dangdang+feifei': 'dangdang_coop_feifei_hell_top',
+  'fengfeng+ninja': 'fengfeng_coop_ninja_hell_top',
+  'feifei+fengfeng': 'fengfeng_coop_feifei_hell_top',
+  'dangdang+fengfeng': 'fengfeng_coop_dangdang_hell_top',
+};
+
 /** 地獄結局「師父被魔氣纏住」那張（單人照角色、連線照 `coopStoryKey`）。同角色雙人走單人那份 */
 const HELL_CORRUPT_SOLO: Readonly<Record<string, string>> = {
   ninja: 'still_corrupt', feifei: 'feifei_still_corrupt', dangdang: 'dangdang_still_corrupt', fengfeng: 'fengfeng_still_corrupt',

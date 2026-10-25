@@ -1,6 +1,6 @@
 import { victoryLinesFor, coopBossLines, dialogue, firstMeetLine, pick, planPick, setCoopStory, storyFor, type DialogueLine } from '../content/dialogue';
 import { playSlides, slidesReady, type Slide } from './slides';
-import { actClearSlides, endingSlides, prologueSlides, topSceneSlides } from './storyslides';
+import { actClearSlides, endingSlides, hellTopSceneSlides, prologueSlides, topSceneSlides } from './storyslides';
 import { playVideo, type VideoName } from './video';
 import { coopArtReady, follow, warmBlessing, warmEncounter, warmEventArt, warmQmarkArt, type Progress } from './preload';
 import { MAP_GATE_MS, gateProgress, progressBar, runProgress, warmRun } from './netload';
@@ -843,11 +843,11 @@ export class App {
       // 塔頂門外段落只在第三關最終頭目前播放一次；前兩關的關主不應提前消耗這段劇情。
       // 地獄（難度 6）的尾王是魔源、不是大俠貓：原本那段演的是師父在門後，跟魔源開場「你把師父怎麼了」矛盾，
       // 改播地獄版（`hellTopScene`：師父倒在裂縫邊；兩位不同角色合演時 `storyFor` 已換成只有旁白的連線版）。
-      // 原版的圖畫的是大俠貓站著出手，地獄版不配圖、照字面播純對白
+      // 原版的圖畫的是大俠貓站著出手，地獄版配自己的圖（10-25 補：師父倒在裂縫邊、繭浮上來，見 `hellTopSceneSlides`）
       const hell = runMods(run).hellMode;
       const topStory = run.act >= ACTS ? storyFor(localHero()) : undefined;
       const top = topStory ? (hell ? topStory.hellTopScene : topStory.topScene) : [];
-      const topSlides = hell ? [] : topSceneSlides(localHero());
+      const topSlides = hell ? hellTopSceneSlides(localHero()) : topSceneSlides(localHero());
       if (top.length) this.playOnce(`topScene:${run.act}`, top, playBoss, STORY_LITERAL, topSlides);
       else playBoss();
     } else go();

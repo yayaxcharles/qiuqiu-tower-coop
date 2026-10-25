@@ -8,7 +8,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import snapshot from './fixtures/vanilla_story_snapshot.json';
 import APP_RAW from '../../src/ui/app.ts?raw';
 import { deckLeaning, dialogue, qiuqiuLineOk, feifeiLineOk, setCoopStory, storyFor, victoryLinesFor, type DialogueLine } from '../../src/content/dialogue';
-import { endingSlides } from '../../src/ui/storyslides';
+import { endingSlides, hellTopSceneSlides } from '../../src/ui/storyslides';
 import { starterDeckFor } from '../../src/content/cards';
 
 const APP = APP_RAW.replace(/\r\n/g, '\n');
@@ -97,10 +97,10 @@ describe('地獄塔頂段', () => {
     }
   });
 
-  it('app.ts：地獄播 hellTopScene（不配原版的圖）、難度 1～5 照舊播 topScene', () => {
+  it('app.ts：地獄播 hellTopScene（配地獄版的圖、不配原版的圖）、難度 1～5 照舊播 topScene', () => {
     expect(APP).toContain('const hell = runMods(run).hellMode;');
     expect(APP).toContain('const top = topStory ? (hell ? topStory.hellTopScene : topStory.topScene) : [];');
-    expect(APP).toContain('const topSlides = hell ? [] : topSceneSlides(localHero());');
+    expect(APP).toContain('const topSlides = hell ? hellTopSceneSlides(localHero()) : topSceneSlides(localHero());');
     expect(APP).toContain('storyFor(localHero())');
     expect(APP).toContain('this.playOnce(`topScene:${run.act}`, top, playBoss, STORY_LITERAL, topSlides)');
   });
@@ -298,6 +298,30 @@ describe('地獄單人結局：相擁圖等到「抱進懷裡」那句才出現�
       expect(m.bg[`bg/${k}`], k).toBe(`assets/bg/${k}.webp`);
       expect(existsSync(`public/assets/bg/${k}.webp`), k).toBe(true);
     }
+  });
+
+  it('地獄塔頂段：單人照角色、不同角色連線照配對、同角色雙人照單人，一整段配一張，圖都登記了（2026-10-25 補圖）', () => {
+    const m = JSON.parse(readFileSync('public/assets/manifest.json', 'utf-8')) as { bg: Record<string, string> };
+    const check = (me: H, other: H | null, img: string): void => {
+      coop(other);
+      const s = hellTopSceneSlides(me);
+      expect(s.length, `${me}+${other}`).toBe(1);
+      expect(s[0]!.img).toBe(`bg/${img}`);
+      expect(tt(s[0]!.lines)).toEqual(tt(storyFor(me).hellTopScene));
+      expect(m.bg[`bg/${img}`], img).toBe(`assets/bg/${img}.webp`);
+      expect(existsSync(`public/assets/bg/${img}.webp`), img).toBe(true);
+    };
+    check('ninja', null, 'still_hell_top');
+    check('feifei', null, 'feifei_still_hell_top');
+    check('dangdang', null, 'dangdang_still_hell_top');
+    check('fengfeng', null, 'fengfeng_still_hell_top');
+    check('dangdang', 'dangdang', 'dangdang_still_hell_top');
+    const pairImg: Record<string, string> = {
+      'feifei+ninja': 'feifei_coop_ninja_hell_top', 'dangdang+ninja': 'dangdang_coop_ninja_hell_top', 'dangdang+feifei': 'dangdang_coop_feifei_hell_top',
+      'fengfeng+ninja': 'fengfeng_coop_ninja_hell_top', 'feifei+fengfeng': 'fengfeng_coop_feifei_hell_top', 'dangdang+fengfeng': 'fengfeng_coop_dangdang_hell_top',
+    };
+    for (const [a, b] of pairs) { check(a, b, pairImg[[a, b].sort().join('+')]!); check(b, a, pairImg[[a, b].sort().join('+')]!); }
+    expect(APP).toContain('hell ? hellTopSceneSlides(localHero()) : topSceneSlides(localHero())');
   });
 
   it('難度 5 仍是兩張（不受影響）', () => {

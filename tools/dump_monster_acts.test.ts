@@ -45,6 +45,8 @@ it('dump monster acts', () => {
   for (const key of art26Keys('low')) { const path = manifest.bg[key]; if (path) out[path] = 0; }
   // 地獄（難度 6）的九張戰鬥背景（2026-10-24）：開場不載（`deferredBgKeys`），進關由 `preloadAct(act, …, hell)` 抓，同一類寫 0
   for (const act of [1, 2, 3]) for (const key of hellBgKeys(act)) { const path = manifest.bg[key]; if (path) out[path] = 0; }
+  // 地獄塔頂段球球那張（2026-10-25）：沒有角色前綴，`deferredBgKeys` 另外列進去、播到才抓，同一類寫 0
+  { const path = manifest.bg['bg/still_hell_top']; if (path) out[path] = 0; }
   // 不是事件的事件類主圖（祝福主圖、問號格三張揭曉圖，2026-09-23 第三批）：用到的畫面自己在背景抓（`bgacts.ts` 的 `NON_EVENT_ART`），同一類寫 0。
   // 角色版的揭曉圖由下面「角色專屬」那一圈收
   for (const id of NON_EVENT_ART) { const path = manifest.bg[`bg/event_${id}`]; if (path) out[path] = 0; }

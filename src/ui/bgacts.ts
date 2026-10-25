@@ -155,5 +155,6 @@ export function deferredBgKeys(): Set<string> {
   const screenArt = NON_EVENT_ART.map((id) => `bg/event_${id}`);
   // 第一關的新戰鬥背景（2026-10-06）也延後：進入一局才由 `preloadAct(1)` 抓（見 `art26Keys`），所以要加在減法之後
   // 地獄的九張戰鬥背景（2026-10-24）：難度 6 才用，開場一律不載
-  return new Set([...[...bgKeysForAct(2), ...bgKeysForAct(3), ...slides, ...eventMainKeys(), ...screenArt].filter((k) => !first.has(k)), ...art26Keys('low'), ...[1, 2, 3].flatMap(hellBgKeys)]);
+  // 地獄塔頂段球球那張（2026-10-25）：球球的劇情圖沒有角色前綴，不列進來就被當成開場要載的；跟其他角色版一樣播到才抓
+  return new Set([...[...bgKeysForAct(2), ...bgKeysForAct(3), ...slides, ...eventMainKeys(), ...screenArt].filter((k) => !first.has(k)), ...art26Keys('low'), ...[1, 2, 3].flatMap(hellBgKeys), 'bg/still_hell_top']);
 }
