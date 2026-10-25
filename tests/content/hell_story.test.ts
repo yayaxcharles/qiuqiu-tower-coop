@@ -201,11 +201,13 @@ describe('地獄結局（連線）', () => {
     // 圖的切點：難度 6 跟難度 5 分到的張數一樣、每張都有句子、句子合起來等於整段結局、切點標記還在原本那句
     const s6 = endingSlides(me, deck, 6);
     const s5 = endingSlides(me, deck, 5);
-    expect(s6.length).toBe(s5.length);
+    // 球球＋菲菲地獄版前面多一張「師父被魔氣纏住」（2026-10-25），其他配對張數不變
+    const qf = [me, other].sort().join('+') === 'feifei+ninja';
+    expect(s6.length).toBe(s5.length + (qf ? 1 : 0));
     expect(s6.length).toBeGreaterThan(0);
     for (const s of s6) expect(s.lines.length).toBeGreaterThan(0);
     expect(tt(s6.flatMap((s) => s.lines))).toEqual(tt(v));
-    s6.slice(0, -1).forEach((s, i) => {
+    s6.slice(qf ? 1 : 0, -1).forEach((s, i) => {   // 多出來那張是在相擁圖裡面切開的，不是原本的切點
       expect(s.lines[s.lines.length - 1]!.slideBreak, `第 ${i + 1} 張最後一句是切點`).toBe(true);
       expect(s.lines[s.lines.length - 1]!.text).toBe(s5[i]!.lines[s5[i]!.lines.length - 1]!.text);
     });
@@ -255,6 +257,17 @@ describe('地獄單人結局：相擁圖等到「抱進懷裡」那句才出現�
     expect(s[1]!.lines[0]!.text).toMatch(/懷裡/);
     expect(s[0]!.lines.some((l) => /懷裡/.test(l.text))).toBe(false);
     expect(tt(s.flatMap((x) => x.lines))).toEqual(tt(victoryLinesFor(deckOf(hero), 6, hero)));
+  });
+
+  it.each([['ninja', 'feifei'], ['feifei', 'ninja']] as [H, H][])('連線 %s＋%s：前幾句配菲菲版被魔氣纏住那張、抱進懷裡起才換相擁圖（2026-10-25）', (me, other) => {
+    coop(other);
+    const s = endingSlides(me, deckOf(me), 6);
+    expect(s[0]!.img).toBe('bg/feifei_still_corrupt');
+    expect(s[1]!.img).toBe('bg/feifei_coop_ninja_victory1');
+    expect(s[1]!.lines[0]!.text).toMatch(/懷裡/);
+    expect(s[0]!.lines.some((l) => /懷裡/.test(l.text))).toBe(false);
+    expect(tt(s.flatMap((x) => x.lines))).toEqual(tt(victoryLinesFor(deckOf(me), 6, me)));
+    expect(endingSlides(me, deckOf(me), 5)[0]!.img, '難度 5 不受影響').toBe('bg/feifei_coop_ninja_victory1');
   });
 
   it('難度 5 仍是兩張（不受影響）', () => {

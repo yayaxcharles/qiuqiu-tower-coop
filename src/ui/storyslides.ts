@@ -182,7 +182,16 @@ export function topSceneSlides(hero: string | undefined): Slide[] {
 export function endingSlides(hero: string | undefined, deckIds: string[], difficulty: number, ctx?: VictoryCtx): Slide[] {
   const vic = victoryLinesFor(deckIds, difficulty, hero, ctx);
   const coopArt = coopArtFor(hero);
-  if (coopArt) return coopSlides(coopArt.victory, vic);
+  if (coopArt) {
+    const s = coopSlides(coopArt.victory, vic);
+    // 地獄（2026-10-25 使用者裁定，同下方單人那段）：球球＋菲菲的第一張是三人相擁，前幾句師父才剛醒，
+    // 先配菲菲版「師父被魔氣纏住」（圖裡菲菲、球球都在），抱進懷裡那句起才換相擁圖。其他配對沒有合適的圖，照舊
+    const hug = s[0] ? s[0].lines.findIndex((l, i) => i > 0 && /懷裡/.test(l.text)) : -1;
+    if (difficulty >= 6 && coopStoryKey(hero) === 'feifei+ninja' && hug > 0) {
+      return [{ img: 'bg/feifei_still_corrupt', lines: s[0]!.lines.slice(0, hug) }, { img: s[0]!.img, lines: s[0]!.lines.slice(hug) }, ...s.slice(1)];
+    }
+    return s;
+  }
   if (hasCoopScene(hero)) return [];
   const cut = Math.max(1, vic.findIndex((l) => l.slideBreak) + 1);
   /*
