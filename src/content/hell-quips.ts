@@ -144,7 +144,7 @@ export const HELL_FIRST_MEET: Record<string, Record<string, string>> = {
     hell_vault_tortoise: '殼縮起來擋得厚，鎖死封技能。慢慢敲。',
     hell_card_dragon: '吐牌塞廢牌，吞牌拿兩張。非打倒牠不還。',
     hell_chain_warden: '甩鏈封攻擊牌，鑰匙串重擊最痛。護甲留好。',
-    hell_hoarder_toad: '蓋印封技能，舌頭捲兩張牌。打倒牠，牌才拿得回來。',
+    hell_hoarder_toad: '蓋印封攻擊、連砸封技能，舌頭捲兩張牌。打倒牠，牌才拿得回來。',
     hell_spy_crow: '舉望遠鏡的，先偵察再俯衝。別被牠亂了手腳。',
     hell_smoke_rat: '煙遁以後打不到。等牠出手露臉再還擊。',
     hell_mirror_eye: '鏡眼在記我們出什麼。同一種別連著出。',
