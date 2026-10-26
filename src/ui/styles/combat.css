@@ -317,7 +317,14 @@
   border-radius: 8px;
   font-size: 15px;
   font-weight: bold;
-  white-space: nowrap;
+  /* 一般長度（200 以內）照舊一整行；地獄第三關的「＋偷牌＋封技能（看穿：攻擊）」這種長牌子超過 200 就在 200 處換行，
+     不疊到隔壁魔物（魔物之間只隔約 205）、也不截掉尾巴的關鍵字。數字要跟 `labelfit.ts` 的 `INTENT_MAX_W` 一致 */
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 200px;
+  text-align: center;
+  white-space: normal;
+  text-wrap: balance;
   color: #fff;
   text-shadow: 0 1px 2px #0000009e;
   box-shadow: 0 2px 0 #00000042, inset 0 1px 0 #ffffff59, inset 0 -2px 4px #0000002e;
@@ -335,12 +342,8 @@
 }
 /* 七種意圖各一塊生出來的木牌。用 `border-image` 九宮格：兩端固定、中間橫向拉伸，
    配合「攻 4」到「叫幫手」不同長度的字。木紋本來就是橫的（生圖時就照這個要求畫），
-   所以橫拉不會露餡。生不出來的話下面的漸層當退路，不會開天窗。 */
-.combat .intent[class*='i-'] {
-  border-image-slice: 34% 22% 30% 22% fill;
-  border-image-width: 12px 9px 11px 9px;
-  border-image-repeat: stretch;
-}
+   所以橫拉不會露餡。生不出來的話下面的漸層當退路，不會開天窗。
+   （九宮格的 slice／width／repeat 三行本來就被下面 `border-image: none` 蓋掉，2026-10-26 拿掉，騰出 130 KB 樣式預算給意圖牌換行） */
 .combat .i-block { background: linear-gradient(#5b9bde, #2e6db4); border-image-source: var(--ui-intent-block); }
 .combat .i-buff { background: linear-gradient(#e0a63c, #b87515); border-image-source: var(--ui-intent-buff); }
 .combat .i-debuff { background: linear-gradient(#a86fd0, #7a3fae); border-image-source: var(--ui-intent-debuff); }

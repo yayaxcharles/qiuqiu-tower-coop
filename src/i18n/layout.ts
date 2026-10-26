@@ -145,21 +145,20 @@ function fitBlessing(scene: HTMLElement): void {
 
 // ---- 意圖牌與名字牌（中-6、中-7）----
 function fitIntent(n: HTMLElement): void {
-  // 還原：縮字、省略號那層都拿掉
+  // 還原：縮字拿掉
   n.style.removeProperty('font-size');
-  const ell = n.firstElementChild;
-  if (ell?.classList.contains('ell')) { ell.replaceWith(...ell.childNodes); }
-  if (n.offsetWidth <= INTENT_MAX_W) return;
-  const a: LabelAdapter = { baseSize: parseFloat(getComputedStyle(n).fontSize) || 14, width: () => n.offsetWidth, setSize: (px) => { n.style.fontSize = `${px}px`; } };
-  if (!fitIntentWidth(a)) return;
-  // 縮到下限還放不下：牌子裡包一層 span 做省略號，牌子本身保持可見溢出（紅光圈、落影是牌子的偽元素，牌子一裁切就被切掉）
-  const cs = getComputedStyle(n);
-  const chrome = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth);
-  const wrap = document.createElement('span');
-  wrap.className = 'ell';
-  wrap.style.cssText = `display:block;overflow:hidden;text-overflow:ellipsis;max-width:${INTENT_MAX_W - chrome}px`;
-  wrap.append(...n.childNodes);
-  n.append(wrap);
+  // 量「不換行時的自然寬度」：樣式表把牌子限在 200 以內換行，量之前先放開。縮到下限（15）還放不下的，
+  // 還原後交給樣式表在 200 處換行——兩行都看得到，關鍵字（看穿：攻擊）不再被省略號吃掉，也不疊到隔壁魔物
+  n.style.whiteSpace = 'nowrap';
+  n.style.maxWidth = 'none';
+  try {
+    if (n.offsetWidth <= INTENT_MAX_W) return;
+    const a: LabelAdapter = { baseSize: parseFloat(getComputedStyle(n).fontSize) || 14, width: () => n.offsetWidth, setSize: (px) => { n.style.fontSize = `${px}px`; } };
+    fitIntentWidth(a);
+  } finally {
+    n.style.removeProperty('white-space');
+    n.style.removeProperty('max-width');
+  }
 }
 
 function fitName(n: HTMLElement): void {

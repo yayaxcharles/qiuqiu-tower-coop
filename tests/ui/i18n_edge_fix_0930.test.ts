@@ -236,11 +236,22 @@ describe('意圖牌與名字牌（中-6、中-7）', () => {
     expect(fitNameWidth(ok.a, 190)).toBe(false);
     expect(ok.s.size).toBe(15);
   });
-  it('省略號不能裁切牌子本身（紅光圈、落影是牌子的偽元素）：程式把省略號做在牌子裡面那層 span，牌子自己不設 overflow', () => {
+  it('縮到下限（15）還放不下的意圖牌：樣式表在 200 處換行，不截省略號（10-26：日文「見透かし」關鍵字被截；繁中疊到隔壁魔物）', () => {
     const src = read('src/i18n/layout.ts');
-    expect(src).toContain("wrap.className = 'ell'");
-    expect(src).toContain('display:block;overflow:hidden;text-overflow:ellipsis');
+    expect(src).not.toContain("'ell'");
+    expect(src).not.toContain('text-overflow');
     expect(src).not.toMatch(/n\.style\.(overflow|textOverflow)/);
+    // 量自然寬度時放開換行與寬度上限，量完還原（否則牌子永遠 <= 200，縮字那一步量不到）
+    expect(src).toContain("n.style.whiteSpace = 'nowrap'");
+    expect(src).toContain("n.style.removeProperty('white-space')");
+    expect(src).toContain("n.style.removeProperty('max-width')");
+    const css = read('src/ui/styles/combat.css');
+    const rule = /\n\.combat \.intent \{[\s\S]*?\n\}/.exec(css)![0];
+    expect(rule).toContain(`max-width: ${INTENT_MAX_W}px;`);
+    expect(rule).toContain('width: max-content;');
+    expect(rule).toContain('white-space: normal;');
+    expect(rule).not.toContain('nowrap');
+    expect(rule).toMatch(/font-size: 15px;/);   // 字不縮到 15 以下
   });
 });
 
