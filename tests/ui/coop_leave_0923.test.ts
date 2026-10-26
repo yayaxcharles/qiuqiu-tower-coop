@@ -102,6 +102,7 @@ describe('高-1（b）：序章、只播一次的劇情播完時，這一局已�
       storyFor: () => ({ prologue: [{ speaker: '旁白', text: '…' }] }), prologueSlides: () => [{ img: 'x', lines: [] }],
       slidesReady: () => true, playSlides: (_s: unknown, done: () => void) => { slidesDone = done; },
       playDialogue: () => {}, hasCoopScene: () => true, OPENING_CLIP: {}, playVideo: () => {}, setBgm: () => {},
+      runMods: () => ({ hellMode: false }),   // 地獄不播序章（2026-10-26），這條測的是一般難度
     });
     const app = new A() as { run: RunState | null; playPrologue(h: string, after: () => void, o: { video?: boolean }): void };
     const after = vi.fn();

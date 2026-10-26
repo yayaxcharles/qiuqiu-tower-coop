@@ -3,6 +3,7 @@ import { artUrl, heroArtUrl } from '../assets';
 import { cardById, starterDeckFor } from '../../content/cards';
 import { fengfengSelection } from '../../content/fengfeng-dialogue';
 import { relicById } from '../../content/relics';
+import { difficultyMods } from '../../content/difficulty';
 import { describeCardText } from '../../i18n';
 import { el } from '../dom';
 import { screenBg } from '../screenbg';
@@ -109,7 +110,8 @@ registerScreen('heroselect', (app, root, props) => {
     for (const node of [...cards.children, ...detail.children]) {
       node.classList.toggle('selected', node.getAttribute('data-hero') === chosen);
     }
-    warmSlides(prologueSlides(chosen));   // 序章幻燈片的圖先抓好、解碼好，按下出發換片時才不會閃
+    // 序章幻燈片的圖先抓好、解碼好，按下出發換片時才不會閃；地獄不播序章（`App.playPrologue`），不抓
+    if (!difficultyMods(difficulty ?? 1).hellMode) warmSlides(prologueSlides(chosen));
     goBtn.textContent = t('就{p}了，出發', { p: t(heroPronoun({ hero: chosen })) }); // i18n-dynamic (src/engine/hero.ts:79)
   };
 

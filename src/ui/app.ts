@@ -415,6 +415,9 @@ export class App {
     const run = this.run;
     if (!run || run.flags['prologue']) { after(); return; }
     run.flags['prologue'] = true;   // 旗標規矩同 playOnce：不在這裡存檔
+    // 地獄（難度 6）不播開頭影片與序章幻燈片，選完角色直接進祝福（使用者 2026-10-26：「地獄模式開頭還用那個好怪」「開頭就不要那些說明了」）。
+    // 影片收尾原本會順手切第一關曲，跳過要自己切（同下面沒片子的角色）
+    if (runMods(run).hellMode) { setBgm('act1'); after(); return; }
     const pro = storyFor(hero).prologue;
     const proSlides = prologueSlides(hero);   // 圖配哪幾句見 storyslides.ts（除錯頁也叫同一支）
     // 播完時這一局還是同一局才接下去（2026-09-23 稽核 高-1）：連線斷了、回標題之後 `leaveCoop` 已經把這一局丟了，
