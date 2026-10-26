@@ -3,7 +3,7 @@ import { clear, el } from '../dom';
 import { clearKeepBg, screenBg } from '../screenbg';
 import { hostRoom as hostDirect, joinRoom as joinDirect } from '../../net/rtc';
 import { hostRoom as hostRelay, joinRoom as joinRelay, resumeRoom as resumeRelay } from '../../net/ws';
-import { clearRejoin, noteRejoinRecv, touchRejoin, writeRejoin, type RejoinRecord } from '../../net/rejoin';
+import { clearRejoin, keepRejoinAfterFail, noteRejoinRecv, shouldConfirmLeave, touchRejoin, writeRejoin, type RejoinRecord } from '../../net/rejoin';
 import { CoopSession, REJOIN_WHY } from '../../net/session';
 import { newCoopRun } from '../../engine/run';
 import type { App } from '../app';
@@ -180,10 +180,14 @@ function makeSession(app: App, tx: Transport, isHost: boolean, resume?: { gen: n
   // 連線戰鬥打到一半重新整理或關分頁，先讓瀏覽器問一聲（2026-10-25 使用者：「按重新整理前先問一聲」）：
   // 接回只能回到這一層的地圖、那一格整場重打，地獄魔源戰會從第一形態重來。按取消就什麼都沒發生。
   // 戰鬥畫面與打完後的選牌畫面都問：接回的存檔點是開打前的地圖，選牌時重新整理那場也要重打（實測 2026-10-25）。
-  // 地圖重新整理沒損失、整局輸了（`lost`）也沒東西可接，不問
+  // 還沒有存檔點（序章、開局祝福、地獄挑攻擊牌）也問：那段接不回來、整局作廢（稽核 2026-10-26 第 2 條）。
+  // 地圖重新整理沒損失；整局結束（全滅、通關，連收場對白、結局幻燈片都算）沒東西可接，不問（稽核 2026-10-26 第 1 條）。判斷在 `shouldConfirmLeave`
   window.addEventListener('beforeunload', (e) => {
-    const where = app.stage.dataset['screen'];
-    if (app.coop !== session || session.stopped || (where !== 'combat' && where !== 'reward') || app.cs?.phase === 'lost') return;
+    if (!shouldConfirmLeave({
+      screen: app.stage.dataset['screen'], sameSession: app.coop === session, stopped: session.stopped,
+      finished: session.finished, hasCheckpoint: session.hasCheckpoint, hasRun: !!app.run,
+      runStatus: app.run?.status, phase: app.cs?.phase,
+    })) return;
     e.preventDefault();
     e.returnValue = '';
   });
@@ -202,9 +206,16 @@ export function rejoinCoop(app: App, rec: RejoinRecord): void {
   const back = (why: string, keepRecord = false): void => {
     if (!keepRecord) clearRejoin();   // 地獄包載入失敗：記錄留著，提示請玩家重新整理，重整後還能再接回一次
     app.leaveCoop();
-    // `leaveCoop` 自己也會清記錄：要留的話清完再寫回去（審查 2026-10-25 中-2）。有效期從現在重新起算，玩家照提示重新整理就接得回
-    if (keepRecord) { const { recv, ...rest } = rec; writeRejoin(rest); noteRejoinRecv(recv); }
+    // `leaveCoop` 自己也會清記錄：要留的話清完再寫回去（審查 2026-10-25 中-2）。有效期從現在重新起算、離開頁面時再更新一次，玩家照提示重新整理就接得回
+    if (keepRecord) keepRejoinAfterFail(rec, window);
     app.show('title');
+    if (keepRecord) {
+      // 記錄留著、重新整理就接得回來：只留 `whenHellReady` 已經跳出的「請重新整理頁面再試一次」，不再補「接不回」那句（稽核 2026-10-26 第 3 條）
+      document.querySelectorAll('.net-link[data-who="rejoin"]').forEach((n) => n.remove());
+      // eslint-disable-next-line no-console
+      console.warn('[連線] 地獄資料載入失敗，接回記錄留著：', why);
+      return;
+    }
     troubleBanner(app, why);   // troubleBanner 顯示時才翻譯
   };
   // 存檔點是難度 6 的話，地獄包先載好才接線（存檔點進 `resyncTo` 驗證、之後開戰都要用到地獄資料）；載不到就放棄接回

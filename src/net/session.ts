@@ -431,6 +431,10 @@ export class CoopSession {
 
   /** 已經停掉了（分岔或斷線）。停掉之後什麼都不再做 */
   get stopped(): boolean { return this.dead; }
+  /** 這一局已經打完（全滅或通關，`runOver` 之後）。離開前確認框靠它判斷不用再問（稽核 2026-10-26 第 1 條） */
+  get finished(): boolean { return this.over; }
+  /** 已經記下過存檔點（回到過地圖）。還沒有的話（序章、開局祝福）重新整理就整局作廢（稽核 2026-10-26 第 2 條） */
+  get hasCheckpoint(): boolean { return this.checkpointJson !== null; }
 
   /**
    * 我要做一個動作。回傳 false＝這個動作現在做不出來，**連送都不該送**。

@@ -89,3 +89,47 @@ export function touchRejoin(): void {
 export function clearRejoin(): void {
   try { store()?.removeItem(KEY()); store()?.removeItem(RECV_KEY()); } catch { /* 同上 */ }
 }
+
+/** 離開前確認框要看的現況（`lobby.ts` 的 `beforeunload` 餵進來；抽成純函式是為了不用瀏覽器就能測） */
+export interface LeaveCtx {
+  /** 目前畫面名（`stage.dataset.screen`） */
+  screen: string | undefined;
+  /** 這個會話還是目前這個連線局的會話 */
+  sameSession: boolean;
+  stopped: boolean;
+  /** `CoopSession.finished`：勝負已判定（`runOver` 之後），含收場對白、結局幻燈片、勝負判定到結算之間的空窗 */
+  finished: boolean;
+  /** 已經有存檔點（回到過地圖）。沒有的話重新整理接不回來 */
+  hasCheckpoint: boolean;
+  /** 這一局已經開出來了（`app.run`）。大廳等人連線的時候還沒有，沒東西可失去 */
+  hasRun: boolean;
+  /** `app.run?.status`：'playing' 以外（won／lost）＝整局結束 */
+  runStatus: string | undefined;
+  /** `app.cs?.phase` */
+  phase: string | undefined;
+}
+
+/**
+ * 重新整理或關分頁前，要不要讓瀏覽器問一聲（2026-10-25 加、2026-10-26 稽核第 1、2 條補）。
+ * 原則：重新整理後接不回原樣的畫面就問；整局已經結束沒東西可接就不問；在地圖上（接得回）、單人局都不問。
+ * - 整局結束（全滅、通關、收場對白、結局幻燈片、結算）：不問
+ * - 戰鬥、戰後選牌：問（接回只能回到開打前的地圖）
+ * - 還沒有存檔點（序章、開局祝福、地獄挑攻擊牌）：問（接不回來，整局作廢）
+ */
+export function shouldConfirmLeave(c: LeaveCtx): boolean {
+  if (!c.sameSession || c.stopped) return false;
+  if (c.finished || c.phase === 'lost' || (c.runStatus !== undefined && c.runStatus !== 'playing')) return false;
+  if (c.screen === 'combat' || c.screen === 'reward') return true;
+  return c.hasRun && !c.hasCheckpoint;
+}
+
+/**
+ * 接回時地獄資料包載入失敗、記錄要留著：把記錄寫回去（`leaveCoop` 會把它清掉），有效期從現在重新起算，
+ * 並掛 `pagehide` 在離開頁面那一刻再更新一次（跟正常接回的會話一樣），玩家照提示重新整理就接得回來
+ */
+export function keepRejoinAfterFail(rec: RejoinRecord, win: { addEventListener: (type: 'pagehide', fn: () => void) => void }): void {
+  const { recv, ...rest } = rec;
+  writeRejoin(rest);
+  noteRejoinRecv(recv);
+  win.addEventListener('pagehide', touchRejoin);
+}

@@ -17,7 +17,7 @@ describe('地獄審查 2026-10-25', () => {
   it('中-2 接回時地獄包載不到：leaveCoop 也要留著接回紀錄', () => {
     const i = LOBBY.indexOf('const back = (why: string, keepRecord = false): void => {');
     const leave = LOBBY.indexOf('app.leaveCoop();', i);
-    const restore = LOBBY.indexOf('if (keepRecord) { const { recv, ...rest } = rec; writeRejoin(rest); noteRejoinRecv(recv); }', i);
+    const restore = LOBBY.indexOf('if (keepRecord) keepRejoinAfterFail(rec, window);', i);   // 寫回的內容與 pagehide 見 tests/net/leave_guard_1026.test.ts
     expect(i).toBeGreaterThan(0);
     expect(restore).toBeGreaterThan(leave);   // 清完再寫回去，順序反了就白寫
     expect(APP).toContain('clearRejoin();   // 自己離開連線局');

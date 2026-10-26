@@ -33,10 +33,10 @@ describe('接回的接線', () => {
   it('大廳：連線戰鬥與選牌畫面重新整理先問一聲（2026-10-25），只在這個會話、整局還沒輸時問', () => {
     const make = between(LOBBY, 'function makeSession(', '\n}\n');
     const guard = between(make, "window.addEventListener('beforeunload'", '});');
-    expect(guard).toMatch(/app\.coop !== session/);
-    expect(guard).toMatch(/session\.stopped/);
-    expect(guard).toMatch(/where !== 'combat' && where !== 'reward'/);
-    expect(guard).toMatch(/app\.cs\?\.phase === 'lost'\) return;/);
+    expect(guard).toMatch(/sameSession: app\.coop === session/);
+    expect(guard).toMatch(/stopped: session\.stopped/);
+    expect(guard).toMatch(/phase: app\.cs\?\.phase/);
+    expect(guard).toMatch(/\}\)\) return;/);   // 判斷本身在 `shouldConfirmLeave`，測試見 leave_guard_1026.test.ts
     expect(guard).toMatch(/e\.preventDefault\(\);/);
   });
 
