@@ -397,12 +397,15 @@ describe('關主機制旋鈕（2026-10-24：用機制不用血量）', () => {
     expect(grow).toEqual([1, 3, 3, 4]);
   });
 
-  it('第二關關主囤寶蛙：一招偷 3 張、每個回合都帶封條或塞牌，連續偷→封→打', () => {
+  it('第二關關主囤寶蛙：長舌偷 2 張且不封技能（留一個能打定身的回合），其餘三招各帶封條或塞牌', () => {
+    // 2026-10-26 調難度：偷 3→2、長舌不再同時封技能；血量與遭遇倍率不動（使用者：用設定難、不要血量難）
     const d = enemyById['hell_hoarder_toad']!;
     const kinds = d.moves.map((m) => m.effects.map((f) => f.kind));
-    expect(d.moves[0]!.effects.find((f) => f.kind === 'stealCard')).toMatchObject({ n: 3 });
-    expect(d.moves.every((m) => m.effects.some((f) => f.kind === 'sealType' || f.kind === 'giveCard'))).toBe(true);
-    expect(kinds.flat().filter((k) => k === 'sealType').length).toBe(3);
+    expect(d.moves[0]!.effects.find((f) => f.kind === 'stealCard')).toMatchObject({ n: 2 });
+    expect(kinds[0]).not.toContain('sealType');
+    expect(d.moves.slice(1).every((m) => m.effects.some((f) => f.kind === 'sealType' || f.kind === 'giveCard'))).toBe(true);
+    expect(kinds.flat().filter((k) => k === 'sealType').length).toBe(2);
     expect(d.strengthEveryNTurns).toBe(1);
+    expect(d.hp).toEqual([240, 240]);
   });
 });

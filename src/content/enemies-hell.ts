@@ -263,8 +263,9 @@ export const hellEnemies: EnemyDef[] = [
   { id: 'hell_hoarder_toad', name: '囤寶蛙大名', hp: [240, 240], pool: '塔主', pattern: 'cycle', size: 'large', art: 'codex/monster_hell_hoarder_toad', strengthEveryNTurns: 1,
     line: '這些都是本大名的，一張也不許少。', lines: ['（坐在牌堆上，大印章靠在膝蓋）', '你的牌，先借我保管。'],
     moves: [
-      // 2026-10-24 改成「偷→封→打」連鎖：偷三張＋封技能、蓋印封攻擊、坐擁寶山塞壞牌、連砸再封技能；每個回合都在搶手牌或封牌
-      mv('attack', '長舌捲牌', steal(3), dmg(12), seal('skill')),   // 偷牌＋封技能
+      // 2026-10-24 改成「偷→封→打」連鎖：偷牌、蓋印封攻擊、坐擁寶山塞壞牌、連砸封技能；每個回合都在搶手牌或封牌
+      // 2026-10-26 調難度（使用者定：用設定難、不要血量難）：長舌偷 3→2 張、不再同時封技能，讓每四回合多一個能打定身的回合
+      mv('attack', '長舌捲牌', steal(2), dmg(12)),   // 偷牌
       mv('attack', '蓋印', dmg(16), seal('attack')),   // 封牌：蓋印封住攻擊牌
       mv('block', '坐擁寶山', blk(16), { kind: 'heal', n: 8 }, dazed(2, 'draw')),   // 塞壞牌
       mv('attack', '大印連砸', dmg(10, 3), seal('skill')),
