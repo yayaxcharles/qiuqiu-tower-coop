@@ -18,7 +18,8 @@ describe('地獄不播序章', () => {
     expect(skip).toBeLessThan(body.indexOf('playVideo(clip, play)'));
   });
 
-  it('選角畫面：地獄不先抓序章的圖', () => {
+  it('選角畫面：地獄不先抓序章的圖，改先抓包袱畫面與主圖', () => {
     expect(PICK).toMatch(/if \(!difficultyMods\(difficulty \?\? 1\)\.hellMode\) warmSlides\(prologueSlides\(chosen\)\);/);
+    expect(PICK).toMatch(/else \{ void loadBlessingScreen\(\)[^\n]*eventArtKey\('bless_bundle', chosen\)/);
   });
 });

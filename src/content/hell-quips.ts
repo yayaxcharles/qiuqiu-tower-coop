@@ -42,7 +42,7 @@ export const HELL_FIRST_MEET: Record<string, Record<string, string>> = {
     hell_vault_tortoise: '殼像一扇金庫門，鎖盤一轉，技能牌就被鎖死喵。',
     hell_card_dragon: '牠一張嘴就噴牌，還會吞走我的牌喵！',
     hell_chain_warden: '鐵鍊一甩過來，攻擊牌就被鎖住了喵。',
-    hell_hoarder_toad: '牠坐在牌堆上，蓋章封技能，舌頭一捲牌就沒了喵！',
+    hell_hoarder_toad: '牠坐在牌堆上，蓋章封攻擊、連砸封技能，舌頭一捲牌就沒了喵！',
     hell_spy_crow: '烏鴉舉著望遠鏡一直看我，連我出什麼牌都看得見喵。',
     hell_smoke_rat: '牠一放煙就不見了，打不到的時候先擋著喵。',
     hell_mirror_eye: '牠一直盯著我出牌，同一種出太多會被看穿喵。',

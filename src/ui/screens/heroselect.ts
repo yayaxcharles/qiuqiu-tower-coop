@@ -1,5 +1,6 @@
 import { registerScreen } from '../app';
-import { artUrl, heroArtUrl } from '../assets';
+import { artUrl, decodeAll, eventArtKey, heroArtUrl } from '../assets';
+import { loadBlessingScreen } from '../preload';
 import { cardById, starterDeckFor } from '../../content/cards';
 import { fengfengSelection } from '../../content/fengfeng-dialogue';
 import { relicById } from '../../content/relics';
@@ -110,8 +111,10 @@ registerScreen('heroselect', (app, root, props) => {
     for (const node of [...cards.children, ...detail.children]) {
       node.classList.toggle('selected', node.getAttribute('data-hero') === chosen);
     }
-    // 序章幻燈片的圖先抓好、解碼好，按下出發換片時才不會閃；地獄不播序章（`App.playPrologue`），不抓
+    // 序章幻燈片的圖先抓好、解碼好，按下出發換片時才不會閃；地獄不播序章（`App.playPrologue`），不抓。
+    // 地獄出發後直接進包袱：原本靠序章那十幾秒在背景抓的包袱畫面與主圖（`warmBlessing`），改在這裡先抓，不然會先閃「正在打開包袱……」（檢查 2026-10-26）
     if (!difficultyMods(difficulty ?? 1).hellMode) warmSlides(prologueSlides(chosen));
+    else { void loadBlessingScreen().catch(() => { /* 抓不到就等走到那一步 */ }); void decodeAll([artUrl('bg', eventArtKey('bless_bundle', chosen))], 1, true, undefined, 'high'); }
     goBtn.textContent = t('就{p}了，出發', { p: t(heroPronoun({ hero: chosen })) }); // i18n-dynamic (src/engine/hero.ts:79)
   };
 
