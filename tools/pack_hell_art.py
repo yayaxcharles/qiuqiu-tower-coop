@@ -2,7 +2,8 @@
 """
 pack_hell_art.py — 難度 6「地獄」的綠幕原圖去背、轉 WebP。**不動任何舊素材**；預設不寫 manifest，加 `--register` 才寫。
 
-用法：python tools/pack_hell_art.py [魔物編號 ...]   （不給＝全部；背景每次都重做，很快）
+用法：python tools/pack_hell_art.py [--small-width=N] [魔物編號 ...]   （不給＝全部；背景每次都重做，很快）
+      --small-width=N  小型魔物（原圖 512）整隻縮到畫布最大寬 N（預設 320；0＝不縮）；同一隻各姿勢同一倍率
       python tools/pack_hell_art.py --register     只把倉裡現有的 hell_*.webp、bg_hell_*.webp 登記進 manifest 就結束
                                                    （不重跑去背、不碰圖；可重跑，只覆寫自己的鍵）
 
@@ -25,6 +26,7 @@ manifest 用 `--register` 登記（2026-10-24 Task 3）：它是開場就載的�
   （`monsterPhaseKey` 查 `<原鍵>_p<階段>`）；背景鍵 bg/bg_hell_<關>、bg/bg_hell_<關>_2、_3。
 """
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -36,10 +38,13 @@ from add_sprite import BOX_ASPECT   # noqa: E402
 from chroma_key import key_out   # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-RAW = ROOT / "tools" / "codex_raw"
+RAW = Path(os.environ["QIUQIU_RAW_DIR"]) if os.environ.get("QIUQIU_RAW_DIR") else ROOT / "tools" / "codex_raw"   # 原圖不進版控；工作副本用環境變數指向主資料夾那份（只讀）
 OUT = ROOT / "public" / "assets"
 POSES = ("idle", "attack", "hurt", "block", "down")
 SIZE_BY_RAW = {512: "small", 768: "medium", 1024: "large"}
+# 小型魔物在 1920x1080 只顯示約 195 寬，原本畫布 460 寬解碼記憶體浪費約 5 倍（10-26 效能量測）；
+# 縮到 320 寬（仍有 1.6 倍餘裕）。中型、大型、關主、魔源不縮。
+SMALL_MAX_W = 320
 
 
 MANIFEST = OUT / "manifest.json"
@@ -83,7 +88,13 @@ def main() -> None:
         m = re.match(r"monster_hell_(.+)_(idle|attack|hurt|block|down)$", f.stem)
         if m:
             raws.setdefault(m.group(1), {})[m.group(2)] = f
-    only = set(sys.argv[1:])   # 只重做這幾隻（第二批進倉時不用把第一批 168 張再跑一次，逐點去背一輪要十幾分鐘）
+    args = sys.argv[1:]
+    small_w = SMALL_MAX_W
+    for a in list(args):
+        if a.startswith("--small-width="):   # 小型魔物的畫布最大寬度；0＝不縮（回到 460 寬原樣）
+            small_w = int(a.split("=", 1)[1]); args.remove(a)
+    idle_canvas: dict[str, Image.Image] = {}
+    only = set(args)   # 只重做這幾隻（第二批進倉時不用把第一批 168 張再跑一次，逐點去背一輪要十幾分鐘）
     if only:
         raws = {k: v for k, v in raws.items() if k in only}
     n = total = 0
@@ -99,14 +110,26 @@ def main() -> None:
             canvas = Image.new("RGBA", (idle.width + pad * 2, idle.height + pad * 2), (0, 0, 0, 0))
             canvas.paste(idle, (pad, pad), idle)
             canvas.thumbnail((460, 560), Image.LANCZOS)
-            total += save(canvas, OUT / "monsters" / f"hell_{mid}_idle.webp"); n += 1
+            idle_canvas[mid] = canvas
             sizes[mid] = SIZE_BY_RAW.get(Image.open(poses["idle"]).width, "medium")
-        base = Image.open(OUT / "monsters" / f"hell_{base_mid}_idle.webp")
+        # 待機畫布留在記憶體裡（沒做這一隻的待機、只重做換階段形態時才讀倉裡的檔）；縮小在存檔那一步才做
+        base = idle_canvas.get(base_mid) or Image.open(OUT / "monsters" / f"hell_{base_mid}_idle.webp")
         bbox = base.getbbox() or (0, 0, *base.size)
         ch = base.height
         cw = max(base.width, round(ch * BOX_ASPECT[sizes[base_mid]]))
         bottom_pad = ch - bbox[3]
         base_h = bbox[3] - bbox[1]
+        # 小型魔物整隻縮小：同一隻所有姿勢（含待機）乘同一個倍率，姿勢之間的相對大小不變；
+        # 倍率照共用畫布寬 cw 算（cw＝每個姿勢畫布的寬，待機比它窄時待機會小於 small_w，這是對的）
+        shrink = min(1.0, small_w / cw) if (small_w and sizes[base_mid] == "small") else 1.0
+
+        def put(name: str, img: Image.Image) -> int:
+            if shrink < 1.0:
+                img = img.resize((max(1, round(img.width * shrink)), max(1, round(img.height * shrink))), Image.LANCZOS)
+            return save(img, OUT / "monsters" / f"hell_{mid}_{name}.webp")
+
+        if mid == base_mid:
+            total += put("idle", base); n += 1
         for pose, src in sorted(poses.items()):
             if mid == base_mid and pose == "idle":
                 continue
@@ -119,8 +142,9 @@ def main() -> None:
                 short.append(f"hell_{mid}_{pose}：只有待機的 {im.height / base_h:.0%} 高")
             canvas = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
             canvas.paste(im, ((cw - im.width) // 2, ch - bottom_pad - im.height), im)
-            total += save(canvas, OUT / "monsters" / f"hell_{mid}_{pose}.webp"); n += 1
+            total += put(pose, canvas); n += 1
         print(f"魔物 hell_{mid}（{sizes[base_mid]}）：{'／'.join(sorted(poses))}，畫布 {cw}x{ch}"
+              + (f"，縮成 {round(cw * shrink)}x{round(ch * shrink)}（×{shrink:.3f}）" if shrink < 1.0 else "")
               + ("" if mid == base_mid else f"，照 hell_{base_mid} 對齊"))
     # 每關三張：bg_hell_<關>（第一批）、bg_hell_<關>_2、_3（第二批）；舊版留底的 *.prev-*.png 檔名有「.」，不收
     for src in sorted(RAW.glob("bg_hell_*.png")):
