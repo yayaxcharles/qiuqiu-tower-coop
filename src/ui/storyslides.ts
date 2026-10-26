@@ -257,6 +257,17 @@ const HELL_CORRUPT_COOP: Readonly<Record<string, string>> = {
 };
 
 /**
+ * 地獄第三關關主門那一刻要先抓的兩張劇情圖：塔頂段那張＋結局開頭「師父被魔氣纏住」那張（2026-10-26 稽核 4）。
+ * 照這一局的角色／組合只回用得到的，鍵跟 `hellTopSceneSlides`、`endingSlides` 挑圖走同一組表（測試對過）。
+ */
+export function hellStoryImgKeys(hero: string | undefined): string[] {
+  const key = coopStoryKey(hero);
+  const top = key !== null ? HELL_TOP_COOP[key] : HELL_TOP_SOLO[hero ?? 'ninja'];
+  const corrupt = key !== null ? HELL_CORRUPT_COOP[key] : HELL_CORRUPT_SOLO[hero ?? 'ninja'];
+  return [top, corrupt].filter((k): k is string => !!k).map((k) => `bg/${k}`);
+}
+
+/**
  * 地獄結局師父剛醒的那幾句到哪裡為止（之後才換相擁圖）。有「抱／攬進懷裡」那句就從那句換；
  * 噹噹、封封與多數連線版沒有那句，就在「重出江湖」、主角回話之後換（地獄結局固定是 開頭→交代→重出江湖→回話）。
  */

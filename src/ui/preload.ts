@@ -2,7 +2,7 @@ import { encounterById, encounters, enemyArtFor, enemyById } from '../content/en
 import { eventById, events } from '../content/events';
 import { blessingById } from '../content/blessings';
 import { KEEPERS } from '../content/keepers';
-import { bossPoolForAct } from '../engine/run';
+import { ACTS, bossPoolForAct } from '../engine/run';
 import type { EnemyDef, EnemyEffect, EnemyPool, MapNode, QmarkVariant, RunState } from '../engine/types';
 import { QMARK_ART, qmarkProtected } from '../engine/qmark';
 import { MERCHANT_SPRITES, artUrl, bossArtUrls, coopArtUrlsFor, decodeAll, eventArtHero, eventArtKey, hasMonsterPose, monsterPhaseKey, heroOfKey, localHero, monsterUrl, releaseHeldArt, runStartArtUrls, warmed, type DecodePool, type MonsterPose } from './assets';
@@ -11,6 +11,7 @@ import { deferBgm } from './bgm';
 import { holdHeavyLane } from './heavy-lane';
 import { netSpeed } from './netspeed';
 import { actVariantKey } from './screenbg';
+import { hellStoryImgKeys } from './storyslides';
 
 /**
  * 魔物立繪的分關預載（使用者 2026-09-04：「戰鬥中圖要直接到位，不然會有灰影」）。
@@ -170,6 +171,19 @@ export function warmSlides(act: number): void {
   const h = localHero();
   const mine = (k: string): string => (h === 'ninja' ? k : k.replace('bg/still_', `bg/${h}_still_`));
   void decodeAll(SLIDES_BY_ACT[i]!.map((k) => artUrl('bg', mine(k))), 3, false);
+}
+
+/**
+ * 地獄最後一關的關主門：把塔頂段那張和結局「師父被魔氣纏住」那張也先抓起來（2026-10-26 稽核 4）。
+ *
+ * 這兩張在延後載入清單裡（`bgacts.ts` 的 `deferredBgKeys` 與角色版前綴），不先抓的話，慢網路下推開門、
+ * 塔頂段一開播最多只等 1.2 秒就照樣顯示，會先看到台詞配空底圖。難度 1～5 與前兩關一律不動（回傳 false）。
+ * 照這一局的角色／連線組合只抓用得到的（單人四款、連線六組各一張），不留參照，不 await。
+ */
+export function warmHellStory(act: number, hell: boolean, hero: string | undefined = localHero()): boolean {
+  if (!hell || act < ACTS) return false;
+  void decodeAll(hellStoryImgKeys(hero).map((k) => artUrl('bg', k)), 2, false);
+  return true;
 }
 
 /*

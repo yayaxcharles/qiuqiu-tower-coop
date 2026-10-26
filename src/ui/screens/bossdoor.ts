@@ -4,7 +4,7 @@ import { artUrl } from '../assets';
 import { battleBgKey, battleBgStyle, bossDoorKey } from '../screenbg';
 import { el } from '../dom';
 import { renderHud } from '../hud';
-import { warmSlides } from '../preload';
+import { warmHellStory, warmSlides } from '../preload';
 import { runMods } from '../../engine/run';
 import { t as i18nT } from '../../i18n';
 
@@ -33,6 +33,8 @@ registerScreen('bossdoor', (app, root, props) => {
   // 打完這隻關主就會播過關幻燈片。趁門還關著先抓起來——那三張不再算進首載了（見 bgacts.ts），
   // 而這裡是一關裡唯一「畫面停住、等玩家動作」的時刻，最適合塞預載
   warmSlides(run.act);
+  // 地獄最後一關：塔頂段那張和結局「師父被魔氣纏住」那張也一起抓（難度 1～5 不抓，見 `warmHellStory`）
+  warmHellStory(run.act, runMods(run).hellMode);
 
   const door = artUrl('bg', bossDoorKey(run.act));
   /**
