@@ -154,6 +154,8 @@ export function runFingerprint(run: RunState): string {
       p.nextFight?.length ? `nf${JSON.stringify(p.nextFight)}` : '',
       // 開局祝福拿了哪一樣（2026-09-23 第三批 新A）：有才串，沒選過的局（舊存檔、還在選）指紋一個位元都不變
       ...(p.bless?.took ? [`bl${p.bless.took}`] : []),
+      // 地獄開局挑攻擊牌那一步（稽核 2026-10-26 第 7 條）：「跳過」與「還沒挑」牌組一樣，不串就分辨不出。只在這一局有攻擊牌選項時才串，難度 1～5 與沒這一步的局指紋不變
+      ...(p.bless?.atk?.length ? [`ba${p.bless.atkTook ?? '-'}`] : []),
     ].join('|'));
   }
   return fnv1a(parts.join('||')).toString(16).padStart(8, '0');
