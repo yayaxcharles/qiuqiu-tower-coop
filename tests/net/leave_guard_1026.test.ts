@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import LOBBY_RAW from '../../src/ui/screens/lobby.ts?raw';
 import { CoopSession } from '../../src/net/session';
 import { LoopbackPair } from '../../src/net/transport';
-import { clearRejoin, keepRejoinAfterFail, readRejoin, shouldConfirmLeave, touchRejoin, writeRejoin, type LeaveCtx, type RejoinRecord } from '../../src/net/rejoin';
+import { clearRejoin, keepRejoinAfterFail, readRejoin, shouldConfirmLeave, writeRejoin, type LeaveCtx, type RejoinRecord } from '../../src/net/rejoin';
 import { newCoopRun } from '../../src/engine/run';
 
 /*
@@ -19,9 +19,10 @@ const base: LeaveCtx = {
 const ask = (o: Partial<LeaveCtx>): boolean => shouldConfirmLeave({ ...base, ...o });
 
 describe('離開前確認框：整局結束不再問（第 1 條）', () => {
-  it('戰鬥與選牌問；地圖不問', () => {
+  it('戰鬥、選牌、打完關主的過關畫面問；地圖不問', () => {
     expect(ask({ screen: 'combat', phase: 'player' })).toBe(true);
     expect(ask({ screen: 'reward', phase: 'won' })).toBe(true);
+    expect(ask({ screen: 'actclear', phase: 'won' })).toBe(true);
     expect(ask({ screen: 'map' })).toBe(false);
   });
 
@@ -106,20 +107,15 @@ describe('接回失敗、地獄包沒載到（第 3 條）', () => {
 
   const rec: RejoinRecord = { code: '123456', role: 'join', seat: 1, gen: 2, checkpoint: '{"d":6}', recv: 17, at: 0 };
 
-  it('清掉之後寫回、有效期從現在起算，並掛 pagehide 去更新記錄時間', () => {
+  it('清掉之後寫回、有效期從現在起算（不再延長：中繼那邊照樣在倒數）', () => {
     vi.useFakeTimers();
     vi.setSystemTime(1_000_000);
     writeRejoin({ code: rec.code, role: rec.role, seat: rec.seat, gen: rec.gen, checkpoint: rec.checkpoint });
     clearRejoin();   // leaveCoop 做的事
     expect(readRejoin()).toBeNull();
-    const listeners = new Map<string, () => void>();
-    keepRejoinAfterFail(rec, { addEventListener: (k, fn) => { listeners.set(k, fn); } });
+    keepRejoinAfterFail(rec);
     expect(readRejoin(1_000_000)).toMatchObject({ code: '123456', checkpoint: '{"d":6}', gen: 2, recv: 17 });
-    // 玩家看了很久才離開：離開那一刻重新起算，不會從失敗那一刻算兩分鐘
-    vi.setSystemTime(1_000_000 + 100_000);
-    listeners.get('pagehide')!();
-    expect(listeners.get('pagehide')).toBe(touchRejoin);
-    vi.setSystemTime(1_000_000 + 100_000 + 119_000);
+    vi.setSystemTime(1_000_000 + 119_000);
     expect(readRejoin()).not.toBeNull();
   });
 
@@ -129,7 +125,7 @@ describe('接回失敗、地獄包沒載到（第 3 條）', () => {
     const keepAt = back.indexOf('if (keepRecord) {');
     const bannerAt = back.indexOf('troubleBanner(app, why)');
     expect(keepAt).toBeGreaterThan(0);
-    expect(back).toMatch(/keepRejoinAfterFail\(rec, window\)/);
+    expect(back).toMatch(/keepRejoinAfterFail\(rec\)/);
     expect(back.slice(keepAt, bannerAt)).toMatch(/return;/);
     expect(back.slice(keepAt, bannerAt)).not.toMatch(/troubleBanner/);
     expect(back.slice(keepAt, bannerAt)).toMatch(/data-who="rejoin"/);

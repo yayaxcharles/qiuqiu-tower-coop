@@ -206,8 +206,8 @@ export function rejoinCoop(app: App, rec: RejoinRecord): void {
   const back = (why: string, keepRecord = false): void => {
     if (!keepRecord) clearRejoin();   // 地獄包載入失敗：記錄留著，提示請玩家重新整理，重整後還能再接回一次
     app.leaveCoop();
-    // `leaveCoop` 自己也會清記錄：要留的話清完再寫回去（審查 2026-10-25 中-2）。有效期從現在重新起算、離開頁面時再更新一次，玩家照提示重新整理就接得回
-    if (keepRecord) keepRejoinAfterFail(rec, window);
+    // `leaveCoop` 自己也會清記錄：要留的話清完再寫回去（審查 2026-10-25 中-2）。有效期從現在重新起算，玩家照提示重新整理就接得回
+    if (keepRecord) keepRejoinAfterFail(rec);
     app.show('title');
     if (keepRecord) {
       // 記錄留著、重新整理就接得回來：只留 `whenHellReady` 已經跳出的「請重新整理頁面再試一次」，不再補「接不回」那句（稽核 2026-10-26 第 3 條）

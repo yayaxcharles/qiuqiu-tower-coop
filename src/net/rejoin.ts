@@ -113,23 +113,22 @@ export interface LeaveCtx {
  * 重新整理或關分頁前，要不要讓瀏覽器問一聲（2026-10-25 加、2026-10-26 稽核第 1、2 條補）。
  * 原則：重新整理後接不回原樣的畫面就問；整局已經結束沒東西可接就不問；在地圖上（接得回）、單人局都不問。
  * - 整局結束（全滅、通關、收場對白、結局幻燈片、結算）：不問
- * - 戰鬥、戰後選牌：問（接回只能回到開打前的地圖）
+ * - 戰鬥、戰後選牌、打完關主的過關畫面：問（接回只能回到開打前的地圖，關主要重打；過關畫面是上線前審查 2026-10-26 補的）
  * - 還沒有存檔點（序章、開局祝福、地獄挑攻擊牌）：問（接不回來，整局作廢）
  */
 export function shouldConfirmLeave(c: LeaveCtx): boolean {
   if (!c.sameSession || c.stopped) return false;
   if (c.finished || c.phase === 'lost' || (c.runStatus !== undefined && c.runStatus !== 'playing')) return false;
-  if (c.screen === 'combat' || c.screen === 'reward') return true;
+  if (c.screen === 'combat' || c.screen === 'reward' || c.screen === 'actclear') return true;
   return c.hasRun && !c.hasCheckpoint;
 }
 
 /**
- * 接回時地獄資料包載入失敗、記錄要留著：把記錄寫回去（`leaveCoop` 會把它清掉），有效期從現在重新起算，
- * 並掛 `pagehide` 在離開頁面那一刻再更新一次（跟正常接回的會話一樣），玩家照提示重新整理就接得回來
+ * 接回時地獄資料包載入失敗、記錄要留著：把記錄寫回去（`leaveCoop` 會把它清掉），有效期從現在重新起算，玩家照提示重新整理就接得回來。
+ * 不掛 `pagehide` 延長：這條路沒有重新連上中繼，中繼那邊等人的時間照樣在倒數，本機記錄放得比它久只會先出「正在接回」再跳接不回（上線前審查 2026-10-26）
  */
-export function keepRejoinAfterFail(rec: RejoinRecord, win: { addEventListener: (type: 'pagehide', fn: () => void) => void }): void {
+export function keepRejoinAfterFail(rec: RejoinRecord): void {
   const { recv, ...rest } = rec;
   writeRejoin(rest);
   noteRejoinRecv(recv);
-  win.addEventListener('pagehide', touchRejoin);
 }
