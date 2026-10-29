@@ -342,15 +342,15 @@ export class App {
   private hellLoading = false;
   /** 換畫面的次數（`show` 換到別的畫面就加一）。地獄包載好時玩家若已走到別的畫面，回呼就不能再開局或拉回標題 */
   private navSeq = 0;
-  private hellWaiters: { seq: number; go: () => void; fail: () => void }[] = [];
+  private hellWaiters: { seq: number; go: () => void; fail: () => void; keep?: boolean }[] = [];
   /**
    * 難度 6 的魔物與遭遇資料另包：開新局、續玩、連線開局與接回都要先等它載好才往下（`go`），產生地圖與抽遭遇才拿得到地獄資料。
    * 載不到（斷網）：跳提示、呼叫 `fail`（呼叫端回上一個畫面），**不開局**，下一次再按會重試。
    * 載的期間再來的呼叫掛進清單、載完依序處理；載好時畫面已經換過（`navSeq` 變了）的那一筆就不叫 `go`／`fail`。
    */
-  whenHellReady(difficulty: number, go: () => void, fail: () => void): void {
+  whenHellReady(difficulty: number, go: () => void, fail: () => void, keep = false): void {
     if (!this.hellPending(difficulty)) { go(); return; }
-    this.hellWaiters.push({ seq: this.navSeq, go, fail });
+    this.hellWaiters.push({ seq: this.navSeq, go, fail, keep });
     if (this.hellLoading) return;
     this.hellLoading = true;
     const bar = this.hellBar(i18nT('地獄資料載入中…'));
@@ -366,7 +366,10 @@ export class App {
       if (!ok) this.hellBar(i18nT('地獄資料載入失敗，請重新整理頁面再試一次。'), true);
       // 只算最後一次：等的期間連按「出發」、換角色再按，每按一次就掛一筆，全部照跑會疊出好幾份序章（審查 2026-10-25 中-3）。
       // 同一個畫面上掛著的幾筆都是互相取代的開局動作，最後按的那一次才是玩家要的
-      const last = this.hellWaiters.splice(0).filter((w) => w.seq === this.navSeq).pop();
+      // keep＝連線接回：不跟開局動作互相取代、換過畫面也照叫（呼叫端自己確認連線還在），不然被丟掉時兩邊都卡住（推前審查 2026-10-30）
+      const all = this.hellWaiters.splice(0);
+      const last = all.filter((w) => !w.keep && w.seq === this.navSeq).pop();
+      for (const w of all) if (w.keep) (ok ? w.go : w.fail)();
       if (last) (ok ? last.go : last.fail)();
     };
     ensureHell().then(() => settle(true), () => settle(false));

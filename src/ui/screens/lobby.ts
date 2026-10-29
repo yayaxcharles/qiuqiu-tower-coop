@@ -133,9 +133,9 @@ function resyncTo(app: App, session: CoopSession, seat: number, json: string, wh
   // 主機傳來地獄局、這台還沒載地獄包（自己還沒存檔點就被回收重整，接回前照難度 1 沒載）：`checkRun` 剛剛略過了遭遇檢查，
   // 先載好再整個重跑一次（這次連遭遇一起驗），不然一開戰就「未知的遭遇」卡在地圖（審查 2026-10-30 第 1 條）。載不到就收線回標題，提示由 `whenHellReady` 顯示
   if (app.hellPending(run.difficulty ?? 1)) {
-    app.whenHellReady(run.difficulty ?? 1, () => {
-      if (app.coop === session && !session.stopped) resyncTo(app, session, seat, json, why);
-    }, () => { session.leave(); app.leaveCoop(); app.show('title'); });
+    const alive = (): boolean => app.coop === session && !session.stopped;
+    app.whenHellReady(run.difficulty ?? 1, () => { if (alive()) resyncTo(app, session, seat, json, why); },
+      () => { if (alive()) { session.leave(); app.leaveCoop(); app.show('title'); } }, true);
     return;
   }
   // 劇情幻燈片、過場影片、對白這些蓋在上面的層：演完會自己接下一個畫面，重新同步之後不能再接。
