@@ -66,10 +66,11 @@ export function speakerDisplay(zh: string): string {
  * 魔物招式名。鏡中對手照你牌組學的那一招，中文名是「牌名、牌名（影分身）」現組的，
  * 這裡照 `learned` 重組：牌名照語言、括號裡的招牌（影分身、蓄氣）走代號詞。
  */
-export function moveName(m: { label: string; learned?: readonly { cardId: string; upgraded: boolean }[] }, hero: string | undefined): string {
+export function moveName(m: { label: string; learned?: readonly { cardId: string; upgraded: boolean; hero?: string }[] }, hero: string | undefined): string {
   if (!currentPack()) return m.label;
   if (!m.learned?.length) return moveLabelL(m.label);
-  const names = m.learned.map((c) => { const d = cardById[c.cardId]; return (d ? cardName(d, hero) : c.cardId) + (c.upgraded ? '+' : ''); });
+  // 連線的魔源真身學的牌各帶出牌者（`hero`），照那一位的牌名；沒帶就照傳進來的座位 0
+  const names = m.learned.map((c) => { const d = cardById[c.cardId]; return (d ? cardName(d, c.hero ?? hero) : c.cardId) + (c.upgraded ? '+' : ''); });
   const tags = /（([^（）]+)）$/.exec(m.label)?.[1]?.split('、') ?? [];
   return listJoin(names) + (tags.length ? ` (${listJoin(tags.map(term))})` : '');
 }

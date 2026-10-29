@@ -33,7 +33,8 @@ import { encounterById, enemyById } from '../content/enemies';
 import { cardById, cardNameFor } from '../content/cards';
 import { cardStats } from './deck';
 import { getStatus } from './statuses';
-import type { CardInstance, CombatState, EnemyCombat, EnemyEffect, EnemyMove, Intent, StatusName } from './types';
+import type { Hero } from './hero';
+import type { CardInstance, CombatState, EnemyCombat, EnemyEffect, EnemyMove, Intent, PlayerCombat, StatusName } from './types';
 import { DEBUFFS } from './types';
 
 /*
@@ -177,9 +178,8 @@ export function learnCard(inst: CardInstance): EnemyEffect[] | null {
   return out.length ? out : null;
 }
 
-/** 球球這一局帶進來的牌裡，他學得會的那些。四堆合起來看，不動任何一堆 */
-export function learnPool(cs: CombatState): CardInstance[] {
-  const p = cs.player;
+/** 球球這一局帶進來的牌裡，他學得會的那些。四堆合起來看，不動任何一堆。`p` 不傳＝座位 0 */
+export function learnPool(cs: CombatState, p: PlayerCombat = cs.player): CardInstance[] {
   return [...p.drawPile, ...p.hand, ...p.discardPile, ...p.exhaustPile].filter((c) => learnCard(c) !== null);
 }
 
@@ -188,6 +188,17 @@ export function learnsPlayerCards(e: EnemyCombat): boolean {
   const d = enemyById[e.enemyId];
   // 本體整場都學，或是這個形態才學（魔源真身，`EnemyPhase.learnsPlayerCards`）
   return d?.learnsPlayerCards === true || (e.phase > 0 && d?.phases?.[e.phase - 1]?.learnsPlayerCards === true);
+}
+
+/**
+ * 連線時兩位的牌都學嗎（使用者 2026-10-30 裁定）：只有「某個形態才學」的那種——今天就是魔源真身
+ * （`hell_source` 第四形態的 `EnemyPhase.learnsPlayerCards`）。整場都學的鏡中影子是「照鏡子照座位 0」，
+ * 另一套設計，照舊只看座位 0。
+ */
+function learnsFromAllSeats(e: EnemyCombat | undefined): boolean {
+  if (!e || e.phase <= 0) return false;
+  const d = enemyById[e.enemyId];
+  return d?.learnsPlayerCards !== true && d?.phases?.[e.phase - 1]?.learnsPlayerCards === true;
 }
 
 /** 噹噹的影子開場帶的反彈（連打好幾下會被打回來）。原本另帶鱗甲 4，3000 局實測一場拖到 18 回合，拿掉 */
@@ -212,11 +223,22 @@ export const SHADOW_EXEC_POISON = 8;
  * - 噹噹的影子「鐵壁」：開場帶反彈，出招照抄；抄來的反彈不學（不然他每回合都打反彈牌，影子越疊越厚，一場拖到快 20 回合）
  * - 封封的影子「蓄氣」：每第三動多蓄一次氣，下一次攻擊的傷害加倍（引擎既有的 `chargeNext`；那一動只抄到防禦的話，留到下一個攻擊招）
  *
- * `e` 只有封封那條要用（看這是牠的第幾動）；不傳就當第一動。
+ * **魔源真身連線時兩位的牌都學**（使用者 2026-10-30，`learnsFromAllSeats`）：從沒倒下的兩位上一輪打的牌裡挑費用最高的，
+ * 同費用座位 0 先、再照打出順序；兩位都沒打學得會的才從兩位的牌組隨機抽。上面四條招牌照**被挑中那張牌的出牌者**算。
+ *
+ * `e` 只有封封那條要用（看這是牠的第幾動）；不傳就當第一動。魔源要靠它分辨是不是真身，呼叫端一律傳。
  */
 export function learnedMove(cs: CombatState, e?: EnemyCombat): EnemyMove | undefined {
-  const hero = cs.player.hero ?? 'ninja';
-  if (hero === 'feifei' && getStatus(cs.player, '中毒') >= SHADOW_EXEC_POISON) {
+  /*
+   * 看哪幾位的牌：鏡中影子＝座位 0 一位；魔源真身連線時＝兩位裡沒倒下的（使用者 2026-10-30）。
+   * 每張候選都記著出牌者，招牌（毒、影分身、蓄氣、不學反彈）與牌名照**那張牌的出牌者**算。
+   * 單機兩條路是同一位，結果一個位元都不差（`tests/engine/mimic_source_coop.test.ts` 凍了修改前的快照）。
+   */
+  const multi = learnsFromAllSeats(e) && cs.players.length > 1;
+  const seats = multi ? cs.players.filter((p) => !p.down) : [cs.player];
+  const heroOf = (p: PlayerCombat): Hero => p.hero ?? 'ninja';
+  // 見血封喉：連線的魔源看沒倒下的菲菲（層數各人各算，見 `actions.ts` 的 damageByPlayerStatus）
+  if (seats.some((p) => heroOf(p) === 'feifei' && getStatus(p, '中毒') >= SHADOW_EXEC_POISON)) {
     return { intent: 'attack', label: '見血封喉', effects: [{ kind: 'damageByPlayerStatus', name: '中毒' }] };
   }
   /*
@@ -224,19 +246,21 @@ export function learnedMove(cs: CombatState, e?: EnemyCombat): EnemyMove | undef
    * 一場打到 40 回合。噹噹的影子也不學反彈（理由見檔頭那段）。
    * 濾掉之後一個效果都不剩的牌不算學得會：不然只打了替身術的那一輪，牠下一招會是空的。
    */
-  const learnFor = (c: CardInstance): EnemyEffect[] => (learnCard(c) ?? [])
+  const learnFor = (c: CardInstance, hero: Hero): EnemyEffect[] => (learnCard(c) ?? [])
     .filter((f) => !(f.kind === 'statusSelf' && (f.name === '隱身' || (hero === 'dangdang' && f.name === '反彈'))));
+  const learnable = (p: PlayerCombat) => (c: CardInstance): boolean => learnFor(c, heroOf(p)).length > 0;
   const n = encounterById[cs.encounterId]?.learnCards ?? 1;
   // 連線時座位 0 倒下了，他那份清單停在倒下前那一輪、再也不會清空（2026-09-26 推前審查 中-1）：
-  // 照抄的話影子整場重複同一招，改回隨機抽
-  const played = cs.player.down ? [] : (cs.player.playedThisTurn ?? []).filter((c) => learnFor(c).length > 0);
-  let picks: CardInstance[];
+  // 照抄的話影子整場重複同一招，改回隨機抽。
+  // 魔源連線時兩位的清單接成一串（座位 0 在前、各自照打出順序），同費用就照這個順序決勝
+  const played = seats.flatMap((p) => (p.down ? [] : (p.playedThisTurn ?? []).filter(learnable(p)).map((c) => ({ c, p }))));
+  let picks: { c: CardInstance; p: PlayerCombat }[];
   if (played.length) {
-    picks = played.map((c, i) => ({ c, i, cost: cardStats(c).cost }))
+    picks = played.map((x, i) => ({ x, i, cost: cardStats(x.c).cost }))
       .sort((a, b) => b.cost - a.cost || a.i - b.i).slice(0, n)
-      .sort((a, b) => a.i - b.i).map((x) => x.c);   // 挑完照你打出的順序排，亮牌面時跟你剛才打的一樣
+      .sort((a, b) => a.i - b.i).map((y) => y.x);   // 挑完照你打出的順序排，亮牌面時跟你剛才打的一樣
   } else {
-    const pool = learnPool(cs).filter((c) => learnFor(c).length > 0);
+    const pool = seats.flatMap((p) => learnPool(cs, p).filter(learnable(p)).map((c) => ({ c, p })));
     if (pool.length === 0) return undefined;
     const rest = [...pool];
     picks = [];
@@ -246,21 +270,23 @@ export function learnedMove(cs: CombatState, e?: EnemyCombat): EnemyMove | undef
       rest.splice(rest.indexOf(c), 1);
     }
   }
-  let effects: EnemyEffect[] = picks.flatMap(learnFor);
-  if (hero === 'feifei') {   // 針上帶毒：抄來的每一張攻擊多上一層中毒（每張一層，不是每一下一層：後者 3000 局實測太兇）
-    effects = effects.flatMap((f): EnemyEffect[] => (f.kind === 'damage' ? [f, { kind: 'statusPlayer', name: '中毒', amount: 1 }] : [f]));
-  }
   /*
+   * 針上帶毒：抄來的每一張攻擊多上一層中毒（每張一層，不是每一下一層：後者 3000 局實測太兇）。
+   *
    * 影分身：抄來的第一段攻擊**多打一下**。原本是整張再打一次，3000 局實測抄到多段攻擊（四連擊）時
    * 每一下都吃菁英的魔氣、整張再翻倍，菁英版打死球球近三成；改成多一下，單下的牌還是等於打兩次。
+   * 連線的魔源只算球球打出的那幾張裡的第一段。
    */
-  const clone = hero === 'ninja' ? effects.findIndex((f) => f.kind === 'damage') : -1;
-  if (clone >= 0) {
-    const f = effects[clone] as Extract<EnemyEffect, { kind: 'damage' }>;
-    effects = effects.map((x, i) => (i === clone ? { ...f, times: (f.times ?? 1) + 1 } : x));
-  }
-  const charge = hero === 'fengfeng' && ((e?.turnCount ?? 0) + 1) % 3 === 0;
-  if (charge) effects = [...effects, { kind: 'chargeNext' }];
+  let cloned = false;
+  const effects: EnemyEffect[] = picks.flatMap(({ c, p }) => learnFor(c, heroOf(p)).flatMap((f): EnemyEffect[] => {
+    if (f.kind !== 'damage') return [f];
+    if (heroOf(p) === 'feifei') return [f, { kind: 'statusPlayer', name: '中毒', amount: 1 }];
+    if (heroOf(p) !== 'ninja' || cloned) return [f];
+    cloned = true;
+    return [{ ...f, times: (f.times ?? 1) + 1 }];
+  }));
+  const charge = picks.some(({ p }) => heroOf(p) === 'fengfeng') && ((e?.turnCount ?? 0) + 1) % 3 === 0;
+  if (charge) effects.push({ kind: 'chargeNext' });
   const intent: Intent = effects.some((f) => f.kind === 'damage' || f.kind === 'damageByPlayerStatus') ? 'attack'
     : effects.some((f) => f.kind === 'block') ? 'block'
       : effects.some((f) => f.kind === 'statusPlayer') ? 'debuff' : 'buff';
@@ -269,16 +295,18 @@ export function learnedMove(cs: CombatState, e?: EnemyCombat): EnemyMove | undef
    *
    * 名字要過 `cardNameFor`（稽核 2026-09-12 低-1）：菲菲手上的牌面寫「絕學·連珠針」，
    * 紀錄卻寫「絕學·貓爪抓」，同一張牌兩個名字。鏡子學的是**被照的那一位**的牌組，
-   * 所以看的是 `p.hero`，不是本機這一位。
+   * 所以看的是出牌那一位的 `p.hero`，不是本機這一位。
    */
-  const nameOf = (c: CardInstance): string => {
+  const nameOf = (c: CardInstance, p: PlayerCombat): string => {
     const def = cardById[c.cardId];
     if (!def) return cardStats(c).name;
     // 升級的「＋」照 `cardStats` 的規矩自己補（那支是 `def.name + '＋'`）
-    return cardNameFor(def, cs.player.hero) + (c.upgraded ? '＋' : '');
+    return cardNameFor(def, p.hero) + (c.upgraded ? '＋' : '');
   };
   // 招牌寫在括號裡，不跟牌名混在一起（戰報「照著打出『貓抓、影分身』」會讓人以為有一張叫影分身的牌，推前審查 低-5）
-  const tags = [...(clone >= 0 ? ['影分身'] : []), ...(charge ? ['蓄氣'] : [])];
-  const label = picks.map(nameOf).join('、') + (tags.length ? `（${tags.join('、')}）` : '');
-  return { intent, label, effects, learned: picks.map((c) => ({ cardId: c.cardId, upgraded: c.upgraded })) };
+  const tags = [...(cloned ? ['影分身'] : []), ...(charge ? ['蓄氣'] : [])];
+  const label = picks.map(({ c, p }) => nameOf(c, p)).join('、') + (tags.length ? `（${tags.join('、')}）` : '');
+  // 連線的魔源另記出牌者：亮牌面、翻牌名時照那一位的版本（單機與影子不帶這欄，局面跟以前一樣）
+  const learned = picks.map(({ c, p }) => ({ cardId: c.cardId, upgraded: c.upgraded, ...(multi && p.hero ? { hero: p.hero } : {}) }));
+  return { intent, label, effects, learned };
 }

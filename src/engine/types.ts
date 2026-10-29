@@ -593,7 +593,7 @@ export type EnemyEffect =
 export interface EnemyMove {
   intent: Intent; label: string; effects: EnemyEffect[];
   /** 照著學的招（鏡中球球）：這一招是從球球牌組抄來的哪幾張牌（含升級旗標，亮牌面才會畫對版本），見 engine/mimic.ts */
-  learned?: { cardId: string; upgraded: boolean }[];
+  learned?: { cardId: string; upgraded: boolean; hero?: Hero }[];   // hero＝出牌那一位：只有連線的魔源真身會帶（兩位的牌都學），沒帶＝座位 0
 }
 export type EnemyPool = '弱' | '中' | '強' | '大魔物' | '塔主' | '召喚';
 /** 地獄關主某個形態額外開的機制（跟所在關數給的取聯集，見 engine/hell.ts 的 `mechActive`）：快＝紫霧、亂＝偷牌封牌、狡猾＝看穿 */

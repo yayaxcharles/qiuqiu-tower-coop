@@ -2328,7 +2328,11 @@ registerScreen('combat', (app, root, props) => {
        * 連線時我是球球、對面是菲菲的話，鏡子抄的是她的牌，牌子上寫「絕學·連珠針」，
        * 亮出來的牌面卻會是球球的畫與「絕學·貓爪抓」——同一張牌兩個名字，正是 2026-09-12 修過的那個毛病。
        */
-      for (const c of learned) if (cardById[c.cardId]) cardsEl.append(cardNode({ uid: 0, cardId: c.cardId, upgraded: c.upgraded }, { small: true, ...(cs.player.hero ? { hero: cs.player.hero } : {}) }));
+      // 連線的魔源真身兩位的牌都學，各張帶出牌者（`c.hero`），照那一位的版本畫（2026-10-30）
+      for (const c of learned) {
+        const hero = c.hero ?? cs.player.hero;
+        if (cardById[c.cardId]) cardsEl.append(cardNode({ uid: 0, cardId: c.cardId, upgraded: c.upgraded }, { small: true, ...(hero ? { hero } : {}) }));
+      }
       node.querySelector('.sprite-box')?.append(cardsEl);
     }
     const picture = node.querySelector<HTMLElement>('.sprite-box');
