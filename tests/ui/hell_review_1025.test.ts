@@ -24,7 +24,8 @@ describe('地獄審查 2026-10-25', () => {
   });
 
   it('中-3 等地獄包的期間連按出發：只跑最後一筆', () => {
-    expect(APP).toContain('const last = this.hellWaiters.splice(0).filter((w) => w.seq === this.navSeq).pop();');
+    // 開局動作只跑最後一筆；連線接回（keep）另外照叫（推前審查 2026-10-30）
+    expect(APP).toContain('const last = all.filter((w) => !w.keep && w.seq === this.navSeq).pop();');
     expect(APP).not.toMatch(/for \(const w of this\.hellWaiters\.splice\(0\)\)/);
   });
 
