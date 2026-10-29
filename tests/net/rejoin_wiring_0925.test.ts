@@ -47,7 +47,8 @@ describe('接回的接線', () => {
     expect(wait).toBeGreaterThan(0);
     expect(wait, '等地獄包要在 useRun 之前').toBeLessThan(resync.indexOf('session.useRun(run)'));
     // 載好之後重跑一次 resyncTo：checkRun 這次會連遭遇一起驗（見 hell_unloaded_1024.test.ts）
-    expect(between(resync, 'app.whenHellReady(', 'return;\n  }')).toMatch(/resyncTo\(app, session, seat, json, why\)/);
+    // 等的期間主機重送：只用最新那份（hellResync），載好只接回一次
+    expect(between(resync, 'app.whenHellReady(', 'return;\n  }')).toMatch(/resyncTo\(app, session, last\.seat, last\.json, last\.why\)/);
   });
 
   it('大廳：開新的一局先清掉上一局留在分頁裡的記錄，才建會話', () => {

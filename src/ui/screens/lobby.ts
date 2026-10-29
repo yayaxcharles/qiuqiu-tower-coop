@@ -125,6 +125,9 @@ const coopHeroes: [Hero, Hero] = ['ninja', 'ninja'];
  * 清掉戰鬥與蓋在上面的劇情層，兩個人一起回到那一層的地圖。讀不回來（存檔點壞了）才照舊停下。
  * 告訴玩家「剛剛那一格要重來」，技術原因放在滑鼠提示與主控台。
  */
+/** 等地獄包的期間收到的最新一份存檔點（主機重送幾次都只留最後一份；載好只接回一次，不然會重複進地圖） */
+const hellResync = new WeakMap<CoopSession, { seat: number; json: string; why: string }>();
+
 function resyncTo(app: App, session: CoopSession, seat: number, json: string, why: string): void {
   let run: RunState | null = null;
   try { run = checkRun(JSON.parse(json) as Partial<RunState>); } catch { run = null; }
@@ -134,8 +137,14 @@ function resyncTo(app: App, session: CoopSession, seat: number, json: string, wh
   // 先載好再整個重跑一次（這次連遭遇一起驗），不然一開戰就「未知的遭遇」卡在地圖（審查 2026-10-30 第 1 條）。載不到就收線回標題，提示由 `whenHellReady` 顯示
   if (app.hellPending(run.difficulty ?? 1)) {
     const alive = (): boolean => app.coop === session && !session.stopped;
-    app.whenHellReady(run.difficulty ?? 1, () => { if (alive()) resyncTo(app, session, seat, json, why); },
-      () => { if (alive()) { session.leave(); app.leaveCoop(); app.show('title'); } }, true);
+    const waiting = hellResync.has(session);
+    hellResync.set(session, { seat, json, why });
+    if (waiting) return;   // 已經在等了：載好時用最新那份
+    app.whenHellReady(run.difficulty ?? 1, () => {
+      const last = hellResync.get(session);
+      hellResync.delete(session);
+      if (alive() && last) resyncTo(app, session, last.seat, last.json, last.why);
+    }, () => { hellResync.delete(session); if (alive()) { session.leave(); app.leaveCoop(); app.show('title'); } }, true);
     return;
   }
   // 劇情幻燈片、過場影片、對白這些蓋在上面的層：演完會自己接下一個畫面，重新同步之後不能再接。
