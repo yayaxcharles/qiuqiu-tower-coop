@@ -308,6 +308,29 @@ describe('地獄第二關：封牌', () => {
     if (a) expect(canPlay(cs, a.uid, cs.enemies[0]!.uid).ok).toBe(true);
   });
 
+  it('同一輪兩隻分別封攻擊、封技能：下一回合兩類都封（審查 2026-10-30 第 4 條：以前只留後出手那一張）', () => {
+    const cs = start('rats2', { act: 2 }, ['sanjo', 'sanjo', 'tanding', 'tanding', 'tanding', 'sanjo', 'sanjo', 'tanding', 'tanding', 'tanding']);
+    sealType(cs, cs.enemies[0]!, 'attack');
+    sealType(cs, cs.enemies[0]!, 'skill');
+    endTurn(cs);
+    const a = cs.player.hand.find((c) => typeOf(c) === 'attack');
+    const s = cs.player.hand.find((c) => typeOf(c) === 'skill');
+    expect(a && s, '手上兩類都要有，否則這條什麼都沒驗').toBeTruthy();
+    expect(canPlay(cs, a!.uid, cs.enemies[0]!.uid).ok).toBe(false);
+    expect(canPlay(cs, s!.uid).ok).toBe(false);
+    endTurn(cs);                                            // 只管那一個回合
+    expect(cs.hell?.sealed).toBeUndefined();
+  });
+
+  it('同一類封兩次、或舊存檔裡的單一封條：照舊只封那一類（局面雜湊的內容跟以前一樣）', () => {
+    const cs = start();
+    sealType(cs, cs.enemies[0]!, 'attack');
+    sealType(cs, cs.enemies[0]!, 'attack');
+    expect(cs.hell?.sealNext).toBe('attack');
+    endTurn(cs);
+    expect(cs.hell?.sealed).toBe('attack');
+  });
+
   it('sealNeverBlocksPower：能力牌不被封（攻擊與技能都封過一遍）', () => {
     for (const ty of ['attack', 'skill'] as const) {
       const cs = start('rats2', { act: 2 }, [...STARTER_DECK]);

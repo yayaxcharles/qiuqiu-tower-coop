@@ -16,8 +16,8 @@ import type { CardDef, CardType, CombatState, Effect, EnemyCombat, EnemyPhase, H
 export interface HellState {
   act: 1 | 2 | 3;
   miasmaLeft?: number;                 // 只有第一關（與魔源第一形態）有；0＝已歸零
-  sealNext?: 'attack' | 'skill';       // 魔物剛貼的封條：下一個玩家回合才生效
-  sealed?: 'attack' | 'skill';         // 這個玩家回合被封住的那一類牌（兩位一起封）
+  sealNext?: 'attack' | 'skill' | 'both';  // 魔物剛貼的封條：下一個玩家回合才生效（同一輪兩類都貼＝both）
+  sealed?: 'attack' | 'skill' | 'both';    // 這個玩家回合被封住的那一類牌（兩位一起封）
   lastPlays?: { attack: number; skill: number };  // Task 6
   seeThrough?: 'attack' | 'skill' | null;          // Task 6
   doom?: number;                   // 魔源真身的滅世倒數：0＝這一輪頭上亮著滅世（放完下一輪重新起算）
@@ -244,7 +244,9 @@ export function returnAllStolen(cs: CombatState): void {
 /** 封牌：記下「下一個玩家回合封哪一類」。一般難度（`cs.hell` 沒有）什麼都不做 */
 export function sealType(cs: CombatState, e: EnemyCombat, type: 'attack' | 'skill'): void {
   if (!cs.hell) return;
-  cs.hell.sealNext = type;
+  // 同一輪另一隻貼了另一類：兩類都封（兩張意圖牌都預告了）。只貼一類時存的值跟以前一樣，舊存檔與局面雜湊不變
+  const prev = cs.hell.sealNext;
+  cs.hell.sealNext = prev && prev !== type ? 'both' : type;
   log(cs, type === 'attack' ? '{e}貼上封條：下一回合打不出攻擊牌' : '{e}貼上封條：下一回合打不出技能牌', { e: E(e) });
 }
 
@@ -263,7 +265,8 @@ export function endSeal(cs: CombatState): void {
 /** 這類牌現在被封了嗎（`canPlay` 用）：能力牌從不被封 */
 export function isSealed(cs: CombatState, type: CardType): 'attack' | 'skill' | null {
   const s = cs.hell?.sealed;
-  return s && type === s ? s : null;
+  if (type !== 'attack' && type !== 'skill') return null;
+  return s === type || s === 'both' ? type : null;
 }
 
 // ===== 第三關「狡猾」：看穿、嘲諷、同伴倒下暴怒 =====

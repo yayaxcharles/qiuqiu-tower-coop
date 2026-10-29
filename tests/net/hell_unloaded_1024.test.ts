@@ -86,4 +86,45 @@ describe('地獄包未載時', () => {
     expect(calls).toEqual(['go-loaded', 'go-d1']);
     vi.doUnmock('../../src/ui/dialogue');
   });
+
+  it('whenHellReady：地獄包卡著不回（沒斷網）20 秒就走失敗那條、清掉載入中旗標（審查 2026-10-30 第 5 條）', async () => {
+    vi.resetModules();
+    vi.useFakeTimers();
+    vi.doMock('../../src/ui/dialogue', async (orig) => ({ ...(await orig<object>()), notice: () => undefined }));
+    vi.doMock('../../src/content/enemies', async (orig) => ({ ...(await orig<object>()), ensureHell: () => new Promise<void>(() => undefined) }));
+    try {
+      const { App } = await import('../../src/ui/app');
+      const bars: boolean[] = [];
+      const fake = { hellPending: () => true, navSeq: 0, hellLoading: false, hellWaiters: [] as unknown[], hellBar: (_t: string, reload = false) => { bars.push(reload); return null; } };
+      const whenReady = App.prototype.whenHellReady as (this: typeof fake, d: number, go: () => void, fail: () => void) => void;
+      const calls: string[] = [];
+      whenReady.call(fake, 6, () => calls.push('go'), () => calls.push('fail'));
+      await vi.advanceTimersByTimeAsync(19000);
+      expect(calls).toEqual([]);
+      expect(fake.hellLoading).toBe(true);
+      await vi.advanceTimersByTimeAsync(2000);
+      expect(calls).toEqual(['fail']);
+      expect(fake.hellLoading, '下一次再按會重新開始，不是只排進清單').toBe(false);
+      expect(bars, '載入中一條、失敗（附重新整理）一條').toEqual([false, true]);
+    } finally {
+      vi.useRealTimers();
+      vi.doUnmock('../../src/content/enemies');
+      vi.doUnmock('../../src/ui/dialogue');
+    }
+  });
+
+  it('checkRun 在地獄包未載時照收遭遇 id 不存在的地獄局（所以連線接回要在 resyncTo 先載好再驗，審查 2026-10-30 第 1 條）', async () => {
+    const hellRun = newCoopRun('hell-bad-resync', 6, 'ninja', 'ninja');
+    hellRun.map.nodes.find((n) => n.encounterId)!.encounterId = 'hell_no_such_encounter';
+    const json = JSON.stringify(hellRun);
+    vi.resetModules();
+    const enemies = await import('../../src/content/enemies');
+    const save = await import('../../src/engine/save');
+    expect(enemies.isHellLoaded()).toBe(false);
+    const run = save.checkRun(JSON.parse(json) as Partial<RunState>);
+    expect(run, '沒載地獄包時略過遭遇檢查').not.toBeNull();
+    await enemies.ensureHell();
+    expect(save.encountersKnown(run!), '載好之後補驗才抓得到').toBe(false);
+    expect(save.checkRun(JSON.parse(json) as Partial<RunState>), '載好之後再跑一次 checkRun 也抓得到').toBeNull();
+  });
 });

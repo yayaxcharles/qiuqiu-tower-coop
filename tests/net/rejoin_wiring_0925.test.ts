@@ -40,6 +40,16 @@ describe('接回的接線', () => {
     expect(guard).toMatch(/e\.preventDefault\(\);/);
   });
 
+  it('大廳：重新同步收到地獄局而地獄包還沒載，先等載好（再驗一次遭遇）才 useRun（審查 2026-10-30 第 1 條）', () => {
+    const resync = between(LOBBY, 'function resyncTo(', '\n}\n');
+    const wait = resync.indexOf('app.whenHellReady(');
+    expect(resync).toMatch(/if \(app\.hellPending\(run\.difficulty \?\? 1\)\)/);
+    expect(wait).toBeGreaterThan(0);
+    expect(wait, '等地獄包要在 useRun 之前').toBeLessThan(resync.indexOf('session.useRun(run)'));
+    // 載好之後重跑一次 resyncTo：checkRun 這次會連遭遇一起驗（見 hell_unloaded_1024.test.ts）
+    expect(between(resync, 'app.whenHellReady(', 'return;\n  }')).toMatch(/resyncTo\(app, session, seat, json, why\)/);
+  });
+
   it('大廳：開新的一局先清掉上一局留在分頁裡的記錄，才建會話', () => {
     const start = between(LOBBY, 'function startCoop(', '\n}\n');
     const clearAt = start.indexOf('clearRejoin();');

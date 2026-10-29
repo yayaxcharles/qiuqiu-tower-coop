@@ -354,7 +354,13 @@ export class App {
     if (this.hellLoading) return;
     this.hellLoading = true;
     const bar = this.hellBar(i18nT('地獄資料載入中…'));
+    // 網路沒斷但一直卡著：20 秒（載入中提示條消失那一刻）當失敗，不然旗標一直留著、之後再按只排進清單、畫面沒提示（審查 2026-10-30 第 5 條）
+    let done = false;
+    const timer = setTimeout(() => settle(false), 20000);
     const settle = (ok: boolean): void => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
       this.hellLoading = false;
       bar?.remove();
       if (!ok) this.hellBar(i18nT('地獄資料載入失敗，請重新整理頁面再試一次。'), true);

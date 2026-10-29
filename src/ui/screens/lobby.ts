@@ -130,6 +130,14 @@ function resyncTo(app: App, session: CoopSession, seat: number, json: string, wh
   try { run = checkRun(JSON.parse(json) as Partial<RunState>); } catch { run = null; }
   // `why` 來自 `net/session.ts` 的 `onResync`（`stop`/`desync` 的原因，固定清單）；`troubleBanner` 顯示時才翻譯（見那裡的 i18n-dynamic）
   if (!run) { troubleBanner(app, `${why}（存檔點讀不回來）`); session.leave(); return; }
+  // 主機傳來地獄局、這台還沒載地獄包（自己還沒存檔點就被回收重整，接回前照難度 1 沒載）：`checkRun` 剛剛略過了遭遇檢查，
+  // 先載好再整個重跑一次（這次連遭遇一起驗），不然一開戰就「未知的遭遇」卡在地圖（審查 2026-10-30 第 1 條）。載不到就收線回標題，提示由 `whenHellReady` 顯示
+  if (app.hellPending(run.difficulty ?? 1)) {
+    app.whenHellReady(run.difficulty ?? 1, () => {
+      if (app.coop === session && !session.stopped) resyncTo(app, session, seat, json, why);
+    }, () => { session.leave(); app.leaveCoop(); app.show('title'); });
+    return;
+  }
   // 劇情幻燈片、過場影片、對白這些蓋在上面的層：演完會自己接下一個畫面，重新同步之後不能再接。
   // 要走 `dropPendingFlows` 收（連畫面鎖一起解開），不能只拔節點（推前稽核 高-2）；過關走路那層沒有鎖，直接拔
   app.dropPendingFlows();

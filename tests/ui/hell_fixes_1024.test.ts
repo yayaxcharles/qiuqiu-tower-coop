@@ -21,7 +21,9 @@ describe('地獄最終審查修正（2026-10-24）', () => {
 
   it('sealChip：戰鬥畫面在 cs.hell.sealed 有值時才顯示「封：攻擊／技能」', () => {
     expect(COMBAT).toMatch(/const sealed = cs\.hell\?\.sealed;/);
-    expect(COMBAT).toMatch(/sealed === undefined \? null : el\('b', \{ class: 'miasma seal' \}/);
+    // 兩類同時封（both）並排兩個（審查 2026-10-30 第 4 條）；沒封是空陣列，整個不出現
+    expect(COMBAT).toMatch(/\(sealed === 'both' \? \['attack', 'skill'\] : sealed \? \[sealed\] : \[\]\)\.map/);
+    expect(COMBAT).toMatch(/el\('b', \{ class: 'miasma seal' \}/);
     expect(COMBAT).toContain("t('封：攻擊')");
     expect(COMBAT).toContain("t('封：技能')");
   });
